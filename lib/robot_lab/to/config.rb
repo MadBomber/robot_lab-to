@@ -27,10 +27,9 @@ module RobotLab
       end
 
       # Keys defined in defaults.yml — super is safe
-      def model                    = @model            || super
+      def model                    = @model || super
       def max_consecutive_failures = @max_consecutive_failures || super
-      def max_tool_rounds          = super
-      def max_retries              = super
+
       def run_dir                  = @run_dir          || super
       def commit_format            = @commit_format    || super
       def debug?                   = @debug.nil? ? super : @debug

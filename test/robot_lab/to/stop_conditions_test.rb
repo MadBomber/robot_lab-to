@@ -76,6 +76,36 @@ module RobotLab
           refute sc.stop_when_met?(result)
         end
       end
+
+      def test_before_passes_when_under_token_limit
+        stub_run do |run, _dir|
+          run.input_tokens  = 400
+          run.output_tokens = 100
+          config = config_with(max_tokens: 1_000)
+          sc = StopConditions.new(config, run)
+          assert_nil sc.before?  # 500 < 1000, no abort
+        end
+      end
+
+      def test_before_raises_when_token_limit_exceeded
+        stub_run do |run, _dir|
+          run.input_tokens  = 800
+          run.output_tokens = 300
+          config = config_with(max_tokens: 1_000)
+          sc = StopConditions.new(config, run)
+          assert_raises(AbortError) { sc.before? }  # 1100 >= 1000
+        end
+      end
+
+      def test_after_raises_when_token_limit_exceeded
+        stub_run do |run, _dir|
+          run.input_tokens  = 1_500
+          run.output_tokens = 0
+          config = config_with(max_tokens: 1_000)
+          sc = StopConditions.new(config, run)
+          assert_raises(AbortError) { sc.after? }
+        end
+      end
     end
   end
 end

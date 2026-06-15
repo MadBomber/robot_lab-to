@@ -62,6 +62,44 @@ module RobotLab
         @cm.reset_hard
         refute @cm.staged?
       end
+
+      def test_current_branch_returns_branch_name
+        File.write(File.join(@tmpdir, "README.md"), "hello")
+        system("git", "-C", @tmpdir, "add", "-A", out: File::NULL, err: File::NULL)
+        system("git", "-C", @tmpdir, "commit", "-m", "init", out: File::NULL, err: File::NULL)
+        branch = @cm.current_branch
+        refute branch.nil?
+        refute branch.empty?
+      end
+
+      def test_commit_raises_commit_failed_error_on_failure
+        # Commit with nothing staged should fail
+        err = assert_raises(CommitFailedError) { @cm.commit("nothing staged") }
+        refute_nil err.output
+      end
+
+      def test_changed_files_since_lists_new_files
+        File.write(File.join(@tmpdir, "a.rb"), "init")
+        system("git", "-C", @tmpdir, "add", "-A", out: File::NULL, err: File::NULL)
+        system("git", "-C", @tmpdir, "commit", "-m", "init", out: File::NULL, err: File::NULL)
+        base = @cm.head_sha
+
+        File.write(File.join(@tmpdir, "b.rb"), "new")
+        system("git", "-C", @tmpdir, "add", "-A", out: File::NULL, err: File::NULL)
+        system("git", "-C", @tmpdir, "commit", "-m", "add b", out: File::NULL, err: File::NULL)
+
+        files = @cm.changed_files_since(base)
+        assert_includes files, "b.rb"
+        refute_includes files, "a.rb"
+      end
+
+      def test_changed_files_since_empty_when_no_changes
+        File.write(File.join(@tmpdir, "a.rb"), "init")
+        system("git", "-C", @tmpdir, "add", "-A", out: File::NULL, err: File::NULL)
+        system("git", "-C", @tmpdir, "commit", "-m", "init", out: File::NULL, err: File::NULL)
+        base = @cm.head_sha
+        assert_empty @cm.changed_files_since(base)
+      end
     end
   end
 end

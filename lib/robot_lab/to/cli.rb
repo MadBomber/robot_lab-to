@@ -22,8 +22,8 @@ module RobotLab
 
         objective = args.first || read_stdin_objective
         if objective.nil? || objective.strip.empty?
-          $stderr.puts "Error: objective required (pass as argument or via stdin)"
-          $stderr.puts parser.help_line
+          warn "Error: objective required (pass as argument or via stdin)"
+          warn parser
           exit 1
         end
 
@@ -32,6 +32,7 @@ module RobotLab
 
       private
 
+      # rubocop:disable Metrics/MethodLength, Metrics/BlockLength
       def build_parser(opts)
         OptionParser.new do |p|
           p.banner = "Usage: robot-to [objective] [options]"
@@ -89,6 +90,7 @@ module RobotLab
           end
         end
       end
+      # rubocop:enable Metrics/MethodLength, Metrics/BlockLength
 
       def read_stdin_objective
         return nil if $stdin.tty?

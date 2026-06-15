@@ -22,7 +22,7 @@ module RobotLab
       attr_reader :reason
 
       def initialize(reason)
-        super(reason)
+        super
         @reason = reason
       end
     end

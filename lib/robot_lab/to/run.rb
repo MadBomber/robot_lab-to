@@ -32,7 +32,11 @@ module RobotLab
         h = secs / 3600
         m = (secs % 3600) / 60
         s = secs % 60
-        h > 0 ? "#{h}h #{m}m #{s}s" : m > 0 ? "#{m}m #{s}s" : "#{s}s"
+        if h.positive?
+          "#{h}h #{m}m #{s}s"
+        else
+          m.positive? ? "#{m}m #{s}s" : "#{s}s"
+        end
       end
 
       # Derive run_id from current timestamp + random hex suffix.

@@ -30,7 +30,7 @@ module RobotLab
       # Called by the orchestrator's token-tracking callback mid-iteration.
       # Returns the abort reason string if exceeded, nil otherwise.
       def token_limit_exceeded?
-        return nil unless @config.max_tokens
+        return false unless @config.max_tokens
 
         @run.total_tokens >= @config.max_tokens
       end

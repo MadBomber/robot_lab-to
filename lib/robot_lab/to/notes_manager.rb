@@ -29,7 +29,7 @@ module RobotLab
       end
 
       def append_success(result, iteration)
-        changes_md  = bullet_list(result.key_changes)
+        changes_md = bullet_list(result.key_changes)
         learnings_md = bullet_list(result.key_learnings)
         append(<<~MD)
 

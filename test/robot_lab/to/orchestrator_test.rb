@@ -1,0 +1,282 @@
+# frozen_string_literal: true
+
+require "test_helper"
+require "open3"
+
+module RobotLab
+  module To
+    class OrchestratorTest < Minitest::Test
+      # Robot that always calls submit_iteration_result (success or failure).
+      class FakeRobot
+        def initialize(tool, success: true, write_file: nil)
+          @tool       = tool
+          @success    = success
+          @write_file = write_file
+        end
+
+        def run(_objective)
+          File.write(@write_file, "robot change #{rand}") if @write_file
+          @tool.execute(
+            success: @success,
+            summary: @success ? "made progress" : "nothing useful",
+            key_changes: @write_file ? [@write_file] : [],
+            key_learnings: []
+          )
+        end
+      end
+
+      # Robot that never calls submit_iteration_result.
+      class SilentRobot
+        def initialize(_tool, **) = nil
+        def run(_objective) = nil
+      end
+
+      # Robot that sets should_fully_stop on the first call.
+      class StopRobot
+        def initialize(tool, **) = @tool = tool
+
+        def run(_objective)
+          @tool.execute(success: true, summary: "objective met",
+                        key_changes: [], key_learnings: [], should_fully_stop: true)
+        end
+      end
+
+      def setup
+        @tmpdir = Dir.mktmpdir
+        system("git", "-C", @tmpdir, "init", "-q")
+        system("git", "-C", @tmpdir, "config", "user.email", "test@test.com")
+        system("git", "-C", @tmpdir, "config", "user.name", "Test")
+        File.write(File.join(@tmpdir, "README.md"), "init")
+        system("git", "-C", @tmpdir, "add", "-A")
+        system("git", "-C", @tmpdir, "commit", "-m", "init", out: File::NULL, err: File::NULL)
+      end
+
+      def teardown
+        FileUtils.rm_rf(@tmpdir)
+      end
+
+      def stub_build(robot_class, **robot_opts, &)
+        fake = ->(**kw) { robot_class.new(kw[:tools].first, **robot_opts) }
+        RobotLab.stub(:build, fake, &)
+      end
+
+      def run_orch(objective: "test objective", **config_opts)
+        config = Config.new(max_iterations: 1, **config_opts)
+        Dir.chdir(@tmpdir) do
+          Orchestrator.new(objective, config).run
+        end
+      end
+
+      def git_log_count
+        out, = Open3.capture3("git", "-C", @tmpdir, "log", "--oneline")
+        out.lines.count
+      end
+
+      def test_success_without_file_changes_makes_no_commit
+        stub_build(FakeRobot) { run_orch }
+        assert_equal 1, git_log_count
+      end
+
+      def test_success_with_file_changes_makes_commit
+        stub_build(FakeRobot, write_file: File.join(@tmpdir, "change.rb")) do
+          run_orch
+        end
+        assert_equal 2, git_log_count
+      end
+
+      def test_failure_result_makes_no_commit
+        stub_build(FakeRobot, success: false) { run_orch }
+        assert_equal 1, git_log_count
+      end
+
+      def test_nil_result_treated_as_failure_and_increments_counter
+        stub_build(SilentRobot, max_consecutive_failures: 1) { run_orch }
+        assert_equal 1, git_log_count
+      end
+
+      def test_max_iterations_stops_loop
+        call_count = 0
+        counting_build = lambda do |**kw|
+          call_count += 1
+          FakeRobot.new(kw[:tools].first)
+        end
+        config = Config.new(max_iterations: 3)
+        RobotLab.stub(:build, counting_build) do
+          Dir.chdir(@tmpdir) { Orchestrator.new("test", config).run }
+        end
+        assert_equal 3, call_count
+      end
+
+      def test_consecutive_failures_abort
+        config = Config.new(max_consecutive_failures: 2)
+        call_count = 0
+        counting_build = lambda do |**kw|
+          call_count += 1
+          FakeRobot.new(kw[:tools].first, success: false)
+        end
+        RobotLab.stub(:build, counting_build) do
+          Dir.chdir(@tmpdir) { Orchestrator.new("test", config).run }
+        end
+        assert_equal 2, call_count
+      end
+
+      def test_stop_when_aborts_after_robot_sets_flag
+        call_count = 0
+        counting_build = lambda do |**kw|
+          call_count += 1
+          StopRobot.new(kw[:tools].first)
+        end
+        config = Config.new(stop_when: "objective met")
+        RobotLab.stub(:build, counting_build) do
+          Dir.chdir(@tmpdir) { Orchestrator.new("test", config).run }
+        end
+        assert_equal 1, call_count
+      end
+
+      def test_commit_message_uses_summary
+        stub_build(FakeRobot, write_file: File.join(@tmpdir, "x.rb")) do
+          run_orch
+        end
+        out, = Open3.capture3("git", "-C", @tmpdir, "log", "--format=%s", "-1")
+        assert_includes out, "made progress"
+      end
+
+      def test_conventional_commit_format
+        stub_build(FakeRobot, write_file: File.join(@tmpdir, "x.rb")) do
+          run_orch(commit_format: "conventional")
+        end
+        out, = Open3.capture3("git", "-C", @tmpdir, "log", "--format=%s", "-1")
+        assert_match(/\Achore:/, out)
+      end
+
+      def test_notes_file_created_on_run
+        stub_build(FakeRobot) { run_orch }
+        notes_files = Dir.glob(File.join(@tmpdir, ".robot_lab_to", "runs", "**", "notes.md"))
+        refute_empty notes_files
+      end
+
+      def test_run_requires_initial_commit
+        Dir.mktmpdir do |empty_dir|
+          system("git", "-C", empty_dir, "init", "-q")
+          Dir.chdir(empty_dir) { Orchestrator.new("test", Config.new).run }
+          # AbortError captured internally — no unhandled exception
+        end
+      end
+
+      def test_permanent_error_aborts_cleanly
+        raising_build = lambda do |**_kw|
+          r = Object.new
+          r.define_singleton_method(:run) { |_| raise PermanentError, "credit exhausted" }
+          r
+        end
+        RobotLab.stub(:build, raising_build) do
+          Dir.chdir(@tmpdir) { Orchestrator.new("test", Config.new).run }
+        end
+      end
+
+      def test_runtime_error_with_no_retries_aborts_cleanly
+        raising_build = lambda do |**_kw|
+          r = Object.new
+          r.define_singleton_method(:run) { |_| raise "network blip" }
+          r
+        end
+        config = Config.new(max_retries: 0)
+        RobotLab.stub(:build, raising_build) do
+          Dir.chdir(@tmpdir) { Orchestrator.new("test", config).run }
+        end
+      end
+
+      # Subclass makes backoff instant so retry tests don't sleep 60s.
+      class FastOrchestrator < Orchestrator
+        private
+
+        def setup_run
+          super
+          @backoff.define_singleton_method(:sleep_for) { |_| }
+        end
+      end
+
+      def test_runtime_error_retries_then_aborts
+        call_count = 0
+        raising_build = lambda do |**_kw|
+          call_count += 1
+          r = Object.new
+          r.define_singleton_method(:run) { |_| raise "flaky" }
+          r
+        end
+        config = Config.new(max_retries: 2)
+        RobotLab.stub(:build, raising_build) do
+          Dir.chdir(@tmpdir) { FastOrchestrator.new("test", config).run }
+        end
+        # 1 initial attempt + 2 retries = 3 build calls within execute_iteration
+        assert_equal 3, call_count
+      end
+
+      # Robot that calls on_content to simulate token usage reporting.
+      class TokenReportingRobot
+        def initialize(tool, on_content:, input: 1_000, output: 500)
+          @tool       = tool
+          @on_content = on_content
+          @input      = input
+          @output     = output
+        end
+
+        def run(_objective)
+          @on_content.call("chunk", { input_tokens: @input, output_tokens: @output })
+          @tool.execute(success: true, summary: "done", key_changes: [], key_learnings: [])
+        end
+      end
+
+      def test_token_tracker_records_usage_and_stops_on_limit
+        call_count = 0
+        fake_build = lambda do |**kw|
+          call_count += 1
+          TokenReportingRobot.new(kw[:tools].first, on_content: kw[:on_content],
+                                  input: 900, output: 200)
+        end
+        config = Config.new(max_tokens: 1_000)  # 1100 reported > 1000 limit
+        RobotLab.stub(:build, fake_build) do
+          Dir.chdir(@tmpdir) { Orchestrator.new("test", config).run }
+        end
+        assert_equal 1, call_count
+      end
+
+      def test_token_tracker_nil_usage_does_not_crash
+        fake_build = lambda do |**kw|
+          kw[:on_content].call("chunk", nil)  # nil usage
+          FakeRobot.new(kw[:tools].first)
+        end
+        config = Config.new(max_iterations: 1)
+        RobotLab.stub(:build, fake_build) do
+          Dir.chdir(@tmpdir) { Orchestrator.new("test", config).run }
+        end
+      end
+
+      # Subclass that makes git commit always fail (patches only the @git singleton).
+      class CommitFailOrchestrator < Orchestrator
+        private
+
+        def setup_run
+          super
+          @git.define_singleton_method(:commit) do |_msg|
+            raise CommitFailedError.new("gpg failed", output: "sign error")
+          end
+        end
+      end
+
+      def test_commit_failed_error_preserved_for_next_iteration
+        write_path = File.join(@tmpdir, "change.rb")
+        commit_call = 0
+        fake_build = lambda do |**kw|
+          commit_call += 1
+          FakeRobot.new(kw[:tools].first, write_file: write_path)
+        end
+        config = Config.new(max_iterations: 1)
+        RobotLab.stub(:build, fake_build) do
+          Dir.chdir(@tmpdir) { CommitFailOrchestrator.new("test", config).run }
+        end
+        assert_equal 1, commit_call
+      end
+    end
+  end
+end

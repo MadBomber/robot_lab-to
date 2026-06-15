@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "securerandom"
-require "pathname"
 
 module RobotLab
   module To
@@ -26,10 +25,27 @@ module RobotLab
       def run
         setup_run
         install_signal_handlers
-
         @logger.log("orchestrator:start", run_id: @run.run_id, objective: @objective,
                                           branch: @run.branch, model: @config.model)
+        main_loop
+      rescue AbortError => e
+        @abort_reason = e.reason
+        @logger.log("orchestrator:abort", reason: @abort_reason)
+      rescue PermanentError => e
+        @abort_reason = "permanent error: #{e.message}"
+        @git&.reset_hard unless @pending_commit_failure
+        @logger.log("orchestrator:abort", reason: @abort_reason, permanent: true)
+      rescue => e
+        @abort_reason = "fatal: #{e.message}"
+        @git&.reset_hard unless @pending_commit_failure
+        @logger.log("orchestrator:fatal", error: e.class.to_s, message: e.message)
+      ensure
+        finalize_run
+      end
 
+      private
+
+      def main_loop
         loop do
           break if @stop_requested
 
@@ -49,19 +65,9 @@ module RobotLab
           @stop_conditions.after?
           break if @stop_requested
         end
+      end
 
-      rescue AbortError => e
-        @abort_reason = e.reason
-        @logger.log("orchestrator:abort", reason: @abort_reason)
-      rescue PermanentError => e
-        @abort_reason = "permanent error: #{e.message}"
-        @git&.reset_hard unless @pending_commit_failure
-        @logger.log("orchestrator:abort", reason: @abort_reason, permanent: true)
-      rescue => e
-        @abort_reason = "fatal: #{e.message}"
-        @git&.reset_hard unless @pending_commit_failure
-        @logger.log("orchestrator:fatal", error: e.class.to_s, message: e.message)
-      ensure
+      def finalize_run
         if @run
           @logger.log("orchestrator:end",
                       iterations: @run.iteration, commits: @run.commits,
@@ -71,11 +77,9 @@ module RobotLab
           ExitSummary.new(@run, @config, abort_reason: @abort_reason).print
         else
           @logger.close
-          $stderr.puts "robot-to: #{@abort_reason}" if @abort_reason
+          warn "robot-to: #{@abort_reason}" if @abort_reason
         end
       end
-
-      private
 
       def setup_run
         @git = CommitManager.new
@@ -120,7 +124,6 @@ module RobotLab
         @logger.log("agent:run:end", iteration: @run.iteration)
 
         tool.captured_result || IterationResult.not_submitted
-
       rescue PermanentError
         raise
       rescue => e
@@ -148,13 +151,14 @@ module RobotLab
         @run.consecutive_failures = 0
         @run.consecutive_errors   = 0
         @stop_conditions.stop_when_met?(result)
+        nil
       end
 
       def handle_failure(result)
         @git.reset_hard unless @pending_commit_failure
         @notes.append_failure(result, @run.iteration)
         @run.consecutive_failures += 1
-        @run.consecutive_errors   = 0
+        @run.consecutive_errors = 0
         @logger.log("iteration:failure", iteration: @run.iteration, summary: result.summary)
       end
 
@@ -167,17 +171,16 @@ module RobotLab
         @run.commits += 1
         @pending_commit_failure = nil
         @logger.log("commit:success", iteration: @run.iteration, message: message)
-
       rescue CommitFailedError => e
         @pending_commit_failure = e
         @run.consecutive_failures += 1
-        @run.consecutive_errors   = 0
+        @run.consecutive_errors = 0
         @logger.log("commit:failed", iteration: @run.iteration, output: e.output)
       end
 
       def commit_message(result)
         if @config.commit_format == "conventional"
-          type  = result.respond_to?(:type)  ? (result.type  || "chore") : "chore"
+          type  = result.respond_to?(:type)  ? (result.type || "chore") : "chore"
           scope = result.respond_to?(:scope) ? result.scope : nil
           tag   = scope ? "#{type}(#{scope})" : type
           "#{tag}: #{result.summary}"
@@ -212,8 +215,14 @@ module RobotLab
       end
 
       def install_signal_handlers
-        trap("INT")  { @stop_requested = true; @backoff.interrupt! }
-        trap("TERM") { @stop_requested = true; @backoff.interrupt! }
+        trap("INT")  do
+          @stop_requested = true
+          @backoff.interrupt!
+        end
+        trap("TERM") do
+          @stop_requested = true
+          @backoff.interrupt!
+        end
       end
 
       def auth_error?(e)

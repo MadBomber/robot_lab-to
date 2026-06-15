@@ -16,9 +16,8 @@ require "robot_lab/to"
 require "minitest/autorun"
 require "minitest/reporters"
 require "tmpdir"
-require "pathname"
 
-# rubocop:disable Style/FileOpen, Style/GlobalStdStream, Layout/LineLength
+# rubocop:disable Style/FileOpen, Style/GlobalStdStream
 $stdout = File.open("test_output.txt", "w").tap { |f| f.sync = true }
 
 class TerminalSummaryReporter < Minitest::Reporters::BaseReporter
@@ -31,7 +30,7 @@ class TerminalSummaryReporter < Minitest::Reporters::BaseReporter
     STDOUT.flush
   end
 end
-# rubocop:enable Style/FileOpen, Style/GlobalStdStream, Layout/LineLength
+# rubocop:enable Style/FileOpen, Style/GlobalStdStream
 
 Minitest::Reporters.use! [
   Minitest::Reporters::DefaultReporter.new(color: false, slow_count: 5),
@@ -61,4 +60,4 @@ module RobotLab
   end
 end
 
-include RobotLab::To::TestHelpers
+Minitest::Test.include RobotLab::To::TestHelpers

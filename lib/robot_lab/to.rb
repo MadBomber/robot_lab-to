@@ -24,8 +24,8 @@ module RobotLab
       # @param objective [String] what the robot should work toward
       # @param opts [Hash] configuration overrides (model:, max_iterations:, etc.)
       # @return [void]
-      def run(objective, **opts)
-        config = Config.new(**opts)
+      def run(objective, **)
+        config = Config.new(**)
         suppress_llm_logging unless config.debug?
         Orchestrator.new(objective, config).run
       end

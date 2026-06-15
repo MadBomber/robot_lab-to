@@ -1,0 +1,10 @@
+# frozen_string_literal: true
+# robot_lab-to — autonomous overnight agent loop ("takeover") for RobotLab.
+
+import_up "repo_dev.loki"
+
+class Tasks
+  @@gem_name ||= "robot_lab-to".freeze
+
+  header "robot_lab-to v#{gem_version} — autonomous overnight loop harness"
+end
