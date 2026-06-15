@@ -212,6 +212,8 @@ module RobotLab
         assert_equal 3, call_count
       end
 
+      MockChunk = Struct.new(:input_tokens, :output_tokens)
+
       # Robot that calls on_content to simulate token usage reporting.
       class TokenReportingRobot
         def initialize(tool, on_content:, input: 1_000, output: 500)
@@ -222,7 +224,7 @@ module RobotLab
         end
 
         def run(_objective)
-          @on_content.call("chunk", { input_tokens: @input, output_tokens: @output })
+          @on_content.call(MockChunk.new(@input, @output))
           @tool.execute(success: true, summary: "done", key_changes: [], key_learnings: [])
         end
       end
@@ -241,9 +243,9 @@ module RobotLab
         assert_equal 1, call_count
       end
 
-      def test_token_tracker_nil_usage_does_not_crash
+      def test_token_tracker_nil_tokens_does_not_crash
         fake_build = lambda do |**kw|
-          kw[:on_content].call("chunk", nil)  # nil usage
+          kw[:on_content].call(MockChunk.new(nil, nil))  # nil tokens in chunk
           FakeRobot.new(kw[:tools].first)
         end
         config = Config.new(max_iterations: 1)

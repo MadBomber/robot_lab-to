@@ -20,6 +20,7 @@ module RobotLab
         @logger                 = JsonlLogger.new  # buffers pre-open events
         @run                    = nil
         @git                    = nil
+        @runner_thread          = nil
       end
 
       def run
@@ -27,6 +28,7 @@ module RobotLab
         install_signal_handlers
         @logger.log("orchestrator:start", run_id: @run.run_id, objective: @objective,
                                           branch: @run.branch, model: @config.model)
+        progress "run #{@run.run_id} → branch #{@run.branch}"
         main_loop
       rescue AbortError => e
         @abort_reason = e.reason
@@ -53,6 +55,7 @@ module RobotLab
 
           @run.iteration += 1
           @logger.log("iteration:start", iteration: @run.iteration)
+          progress "iteration #{@run.iteration} (#{@config.model})..."
 
           result = execute_iteration
 
@@ -120,7 +123,7 @@ module RobotLab
         robot  = build_robot(tool, prompt)
 
         @logger.log("agent:run:start", iteration: @run.iteration)
-        robot.run(@objective)
+        run_robot_with_interrupt(robot)
         @logger.log("agent:run:end", iteration: @run.iteration)
 
         tool.captured_result || IterationResult.not_submitted
@@ -160,6 +163,7 @@ module RobotLab
         @run.consecutive_failures += 1
         @run.consecutive_errors = 0
         @logger.log("iteration:failure", iteration: @run.iteration, summary: result.summary)
+        progress "iteration #{@run.iteration} failed: #{result.summary}"
       end
 
       def attempt_commit(result)
@@ -171,11 +175,13 @@ module RobotLab
         @run.commits += 1
         @pending_commit_failure = nil
         @logger.log("commit:success", iteration: @run.iteration, message: message)
+        progress "iteration #{@run.iteration} committed: #{message}"
       rescue CommitFailedError => e
         @pending_commit_failure = e
         @run.consecutive_failures += 1
         @run.consecutive_errors = 0
         @logger.log("commit:failed", iteration: @run.iteration, output: e.output)
+        progress "iteration #{@run.iteration} commit failed — queued for repair"
       end
 
       def commit_message(result)
@@ -201,28 +207,47 @@ module RobotLab
       end
 
       def token_tracker
-        lambda do |_content, usage|
-          return unless usage
-
-          @run.input_tokens  += usage[:input_tokens].to_i
-          @run.output_tokens += usage[:output_tokens].to_i
+        lambda do |chunk|
+          @run.input_tokens  += chunk.input_tokens.to_i
+          @run.output_tokens += chunk.output_tokens.to_i
 
           return unless @stop_conditions.token_limit_exceeded?
 
           @stop_requested = true
           @backoff.interrupt!
+          @runner_thread&.raise(Interrupt)
         end
       end
 
+      def run_robot_with_interrupt(robot)
+        thread_error = nil
+        @runner_thread = Thread.new do
+          robot.run(@objective)
+        rescue Interrupt
+          # killed by signal handler — main loop checks @stop_requested
+        rescue => e
+          thread_error = e
+        end
+        @runner_thread.join
+        @runner_thread = nil
+        raise thread_error if thread_error
+      end
+
       def install_signal_handlers
-        trap("INT")  do
+        trap("INT") do
           @stop_requested = true
           @backoff.interrupt!
+          @runner_thread&.raise(Interrupt)
         end
         trap("TERM") do
           @stop_requested = true
           @backoff.interrupt!
+          @runner_thread&.raise(Interrupt)
         end
+      end
+
+      def progress(msg)
+        warn "robot-to: #{msg}"
       end
 
       def auth_error?(e)

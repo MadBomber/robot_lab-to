@@ -7,4 +7,15 @@ class Tasks
   @@gem_name ||= "robot_lab-to".freeze
 
   header "robot_lab-to v#{gem_version} — autonomous overnight loop harness"
+
+  desc "Remove all local robot-to/* branches left over from test runs"
+  def clean_up
+    sh "git checkout develop"
+    branches = `git branch --list 'robot-to/*'`.split.map(&:strip)
+    if branches.empty?
+      puts "No robot-to/* branches to remove."
+    else
+      branches.each { |b| sh "git branch -d #{b}" }
+    end
+  end
 end
