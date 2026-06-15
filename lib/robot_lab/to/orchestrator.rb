@@ -57,6 +57,10 @@ module RobotLab
         @abort_reason = "permanent error: #{e.message}"
         @git&.reset_hard unless @pending_commit_failure
         @logger.log("orchestrator:abort", reason: @abort_reason, permanent: true)
+      rescue => e
+        @abort_reason = "fatal: #{e.message}"
+        @git&.reset_hard unless @pending_commit_failure
+        @logger.log("orchestrator:fatal", error: e.class.to_s, message: e.message)
       ensure
         if @run
           @logger.log("orchestrator:end",
@@ -120,6 +124,8 @@ module RobotLab
       rescue PermanentError
         raise
       rescue => e
+        raise PermanentError, "API authentication failed: #{e.message}" if auth_error?(e)
+
         @logger.log("agent:run:error", iteration: @run.iteration,
                                        error: e.class.to_s, message: e.message)
         @git.reset_hard unless @pending_commit_failure
@@ -127,7 +133,7 @@ module RobotLab
         @run.consecutive_failures += 1
         @run.consecutive_errors   += 1
 
-        if @run.consecutive_errors <= @config.max_retries
+        if @run.consecutive_errors <= @config.max_retries && !@stop_requested
           @logger.log("backoff:start", consecutive_errors: @run.consecutive_errors)
           @backoff.sleep_for(@run.consecutive_errors)
           @logger.log("backoff:end")
@@ -208,6 +214,13 @@ module RobotLab
       def install_signal_handlers
         trap("INT")  { @stop_requested = true; @backoff.interrupt! }
         trap("TERM") { @stop_requested = true; @backoff.interrupt! }
+      end
+
+      def auth_error?(e)
+        klass = e.class.name.to_s
+        klass.include?("Unauthorized") ||
+          klass.include?("Authentication") ||
+          e.message.to_s.match?(/invalid api key|unauthorized|authentication failed/i)
       end
     end
   end

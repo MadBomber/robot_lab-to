@@ -26,7 +26,17 @@ module RobotLab
       # @return [void]
       def run(objective, **opts)
         config = Config.new(**opts)
+        suppress_llm_logging unless config.debug?
         Orchestrator.new(objective, config).run
+      end
+
+      private
+
+      def suppress_llm_logging
+        require "logger"
+        null = Logger.new(File::NULL)
+        RubyLLM.configure { |c| c.logger = null } if defined?(RubyLLM)
+        RobotLab.configure { |c| c.logger = null } if RobotLab.respond_to?(:configure)
       end
     end
   end
