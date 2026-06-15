@@ -1,0 +1,17 @@
+defaults:
+  model: claude-sonnet-4
+  max_tool_rounds: 100
+  max_consecutive_failures: 3
+  max_retries: 2
+  commit_format: default
+  run_dir: .robot_lab_to
+  debug: false
+
+development:
+  debug: false
+
+test:
+  debug: false
+
+production:
+  debug: false

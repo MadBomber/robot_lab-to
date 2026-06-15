@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Activate bundler if running from the gem's own dev environment.
+if File.exist?(File.expand_path("../Gemfile", __dir__))
+  require "bundler/setup"
+end
+
+require "robot_lab"
+require "robot_lab/to"
+
+Signal.trap("INT") { exit 130 }
+
+RobotLab::To::CLI.run(ARGV)

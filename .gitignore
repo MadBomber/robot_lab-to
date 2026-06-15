@@ -1,0 +1,7 @@
+*.gem
+pkg/
+coverage/
+test_output.txt
+Gemfile.lock
+Gemfile.local.lock
+.robot_lab_to/
