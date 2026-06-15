@@ -5,8 +5,12 @@ require "test_helper"
 module RobotLab
   module To
     class ConfigTest < Minitest::Test
+      def test_default_provider
+        assert_equal "openai", Config.new.provider
+      end
+
       def test_default_model
-        assert_equal "claude-sonnet-4", Config.new.model
+        assert_equal "gpt-5.5", Config.new.model
       end
 
       def test_default_max_consecutive_failures

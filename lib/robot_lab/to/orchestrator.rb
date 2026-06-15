@@ -200,6 +200,7 @@ module RobotLab
           name: "robot-to-#{@run.run_id}-#{@run.iteration}",
           system_prompt: system_prompt,
           tools: [submit_tool],
+          provider: @config.provider&.to_sym,
           model: @config.model,
           max_tool_rounds: @config.max_tool_rounds,
           on_content: token_tracker

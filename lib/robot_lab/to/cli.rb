@@ -41,8 +41,13 @@ module RobotLab
           p.separator ""
           p.separator "Options:"
 
+          p.on("--provider NAME", String,
+               "LLM provider to use (default: openai)") do |v|
+            opts[:provider] = v
+          end
+
           p.on("--model MODEL", String,
-               "LLM model to use (default: claude-sonnet-4)") do |v|
+               "LLM model to use (default: gpt-5.5)") do |v|
             opts[:model] = v
           end
 

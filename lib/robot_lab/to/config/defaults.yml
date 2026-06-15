@@ -1,5 +1,6 @@
 defaults:
-  model: claude-sonnet-4
+  provider: openai
+  model: gpt-5.5
   max_tool_rounds: 100
   max_consecutive_failures: 3
   max_retries: 2

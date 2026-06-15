@@ -18,7 +18,7 @@ module RobotLab
       auto_configure!
 
       # Runtime CLI overrides — applied after load.
-      attr_writer :model, :max_iterations, :max_tokens, :stop_when,
+      attr_writer :provider, :model, :max_iterations, :max_tokens, :stop_when,
                   :max_consecutive_failures, :run_dir, :commit_format, :debug
 
       def initialize(**overrides)
@@ -27,6 +27,7 @@ module RobotLab
       end
 
       # Keys defined in defaults.yml — super is safe
+      def provider                 = @provider || super
       def model                    = @model || super
       def max_consecutive_failures = @max_consecutive_failures || super
 

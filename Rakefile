@@ -82,39 +82,41 @@ end
 
 desc 'Run all quality checks: tests (with coverage), RuboCop, Flog, and Flay'
 task :quality do
-  results = {}
+  gates = [
+    ['Tests + Coverage', 'bundle exec rake test'],
+    ['RuboCop',          'bundle exec rubocop'],
+    ['Flog Complexity',  'bundle exec rake flog_check'],
+    ['Flay Duplication', 'bundle exec rake flay_check']
+  ]
 
-  puts "\n#{'=' * 60}"
-  puts 'Quality Gate: Tests + Coverage'
-  puts '=' * 60
-  results[:tests] = system('bundle exec rake test') ? :pass : :fail
-
-  puts "\n#{'=' * 60}"
-  puts 'Quality Gate: RuboCop'
-  puts '=' * 60
-  results[:rubocop] = system('bundle exec rubocop') ? :pass : :fail
-
-  puts "\n#{'=' * 60}"
-  puts 'Quality Gate: Flog Complexity'
-  puts '=' * 60
-  results[:flog] = system('bundle exec rake flog_check') ? :pass : :fail
-
-  puts "\n#{'=' * 60}"
-  puts 'Quality Gate: Flay Duplication'
-  puts '=' * 60
-  results[:flay] = system('bundle exec rake flay_check') ? :pass : :fail
-
-  puts "\n#{'=' * 60}"
-  puts 'Quality Summary'
-  puts '=' * 60
-  results.each do |gate, status|
-    icon = status == :pass ? 'PASS' : 'FAIL'
-    puts "  [#{icon}] #{gate}"
+  results = gates.map do |label, command|
+    puts "\n#{'=' * 60}"
+    puts "Quality Gate: #{label}"
+    puts '=' * 60
+    [label, system(command) ? :pass : :fail]
   end
+
+  green = ->(s) { "\e[32m#{s}\e[0m" }
+  red   = ->(s) { "\e[31m#{s}\e[0m" }
+  width = results.map { |label, _| label.length }.max
+
+  puts "\n#{'=' * 60}"
+  puts 'Quality Gate Summary'
+  puts '=' * 60
+  results.each do |label, status|
+    badge = status == :pass ? green.call('PASS') : red.call('FAIL')
+    puts "  [#{badge}] #{label.ljust(width)}"
+  end
+  puts '-' * 60
+
+  passed = results.count { |_, s| s == :pass }
+  failed = results.count { |_, s| s == :fail }
+  tally  = "#{passed} passed, #{failed} failed"
+  puts "  #{failed.zero? ? green.call(tally) : red.call(tally)}"
   puts '=' * 60
 
-  abort "\nQuality gate failed" if results.values.any?(:fail)
-  puts "\nAll quality gates passed."
+  abort "\n#{red.call('Quality gate failed.')}" unless failed.zero?
+  puts "\n#{green.call('All quality gates passed.')}"
 end
 
 namespace :docs do
