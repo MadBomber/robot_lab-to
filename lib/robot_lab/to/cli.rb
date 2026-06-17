@@ -32,7 +32,7 @@ module RobotLab
 
       private
 
-      # rubocop:disable Metrics/MethodLength, Metrics/BlockLength
+      # rubocop:disable Metrics/MethodLength, Metrics/BlockLength, Metrics/AbcSize
       def build_parser(opts)
         OptionParser.new do |p|
           p.banner = "Usage: robot-to [objective] [options]"
@@ -71,6 +71,16 @@ module RobotLab
             opts[:max_consecutive_failures] = v
           end
 
+          p.on("--verify-command CMD", String,
+               "Command that must pass before a successful iteration is committed") do |v|
+            opts[:verify_command] = v
+          end
+
+          p.on("--verify-timeout SECONDS", Integer,
+               "Timeout for --verify-command (default: 600)") do |v|
+            opts[:verify_timeout] = v
+          end
+
           p.on("--run-dir PATH", String,
                "Directory for run state (default: .robot_lab_to)") do |v|
             opts[:run_dir] = v
@@ -95,7 +105,7 @@ module RobotLab
           end
         end
       end
-      # rubocop:enable Metrics/MethodLength, Metrics/BlockLength
+      # rubocop:enable Metrics/MethodLength, Metrics/BlockLength, Metrics/AbcSize
 
       def read_stdin_objective
         return nil if $stdin.tty?

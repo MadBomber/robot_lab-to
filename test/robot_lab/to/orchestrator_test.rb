@@ -31,6 +31,24 @@ module RobotLab
         def run(_objective) = nil
       end
 
+      # Silent on the first run; submits (with a file change) only when nudged.
+      class NudgeThenSubmitRobot
+        def initialize(tool, write_file:)
+          @tool       = tool
+          @write_file = write_file
+          @calls      = 0
+        end
+
+        def run(_task)
+          @calls += 1
+          return nil if @calls < 2
+
+          File.write(@write_file, "recovered #{rand}")
+          @tool.execute(success: true, summary: "recovered after nudge",
+                        key_changes: [@write_file], key_learnings: [])
+        end
+      end
+
       # Robot that sets should_fully_stop on the first call.
       class StopRobot
         def initialize(tool, **) = @tool = tool
@@ -92,6 +110,38 @@ module RobotLab
       def test_nil_result_treated_as_failure_and_increments_counter
         stub_build(SilentRobot, max_consecutive_failures: 1) { run_orch }
         assert_equal 1, git_log_count
+      end
+
+      def test_nudge_recovers_missing_submit_and_commits
+        path = File.join(@tmpdir, "recovered.rb")
+        # Default max_submit_nudges (1): silent first run, submits on the nudge.
+        stub_build(NudgeThenSubmitRobot, write_file: path) { run_orch }
+        assert_equal 2, git_log_count
+      end
+
+      def test_no_nudge_when_disabled_treats_missing_submit_as_failure
+        path = File.join(@tmpdir, "recovered.rb")
+        stub_build(NudgeThenSubmitRobot, write_file: path) do
+          run_orch(max_submit_nudges: 0, max_consecutive_failures: 1)
+        end
+        assert_equal 1, git_log_count
+      end
+
+      def test_verify_pass_allows_commit
+        path = File.join(@tmpdir, "feature.rb")
+        stub_build(FakeRobot, write_file: path) do
+          run_orch(verify_command: "true")
+        end
+        assert_equal 2, git_log_count
+      end
+
+      def test_verify_failure_rolls_back_and_blocks_commit
+        path = File.join(@tmpdir, "feature.rb")
+        stub_build(FakeRobot, write_file: path) do
+          run_orch(verify_command: "exit 1", max_consecutive_failures: 1)
+        end
+        assert_equal 1, git_log_count
+        refute File.exist?(path), "verify failure should roll back the robot's changes"
       end
 
       def test_max_iterations_stops_loop

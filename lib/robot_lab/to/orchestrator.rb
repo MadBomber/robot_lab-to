@@ -11,6 +11,15 @@ module RobotLab
     class Orchestrator
       SIGNAL_STOP = "graceful_stop"
 
+      # Sent to a robot that ended its turn without calling submit_result
+      # (the "thinks but doesn't act" degenerate case).
+      SUBMIT_NUDGE = <<~MSG
+        You ended your turn without calling submit_result. You MUST call it now:
+        report success: true with a one-sentence summary (and key_changes if you
+        modified files), or success: false with what blocked you. Do not do any
+        further work first -- just submit the result of what you have done.
+      MSG
+
       def initialize(objective, config)
         @objective              = objective
         @config                 = config
@@ -21,6 +30,7 @@ module RobotLab
         @run                    = nil
         @git                    = nil
         @runner_thread          = nil
+        @verifier               = nil
       end
 
       def run
@@ -115,6 +125,14 @@ module RobotLab
         @builder = PromptBuilder.new(@config)
         @backoff = Backoff.new
         @stop_conditions = StopConditions.new(@config, @run)
+        @verifier = build_verifier
+      end
+
+      def build_verifier
+        cmd = @config.verify_command.to_s.strip
+        return nil if cmd.empty?
+
+        Verifier.new(cmd, work_dir: Dir.pwd, timeout: @config.verify_timeout)
       end
 
       def execute_iteration
@@ -125,6 +143,8 @@ module RobotLab
         @logger.log("agent:run:start", iteration: @run.iteration)
         run_robot_with_interrupt(robot)
         @logger.log("agent:run:end", iteration: @run.iteration)
+
+        nudge_for_missing_submit(robot, tool) if tool.captured_result.nil?
 
         tool.captured_result || IterationResult.not_submitted
       rescue PermanentError
@@ -148,12 +168,53 @@ module RobotLab
         raise
       end
 
+      # A robot that ends its turn without calling submit_result is the
+      # "thinks but doesn't act" degenerate case. Rather than burning the
+      # iteration as a failure, re-prompt the same robot (preserving its chat
+      # context) up to max_submit_nudges times to call submit_result.
+      def nudge_for_missing_submit(robot, tool)
+        @config.max_submit_nudges.times do |i|
+          break if @stop_requested
+
+          attempt = i + 1
+          @logger.log("agent:nudge", iteration: @run.iteration, attempt: attempt)
+          progress "iteration #{@run.iteration}: no result submitted — " \
+                   "nudging (#{attempt}/#{@config.max_submit_nudges})"
+          run_robot_with_interrupt(robot, SUBMIT_NUDGE)
+          break if tool.captured_result
+        end
+      end
+
       def handle_success(result)
+        verdict = verify_result
+        return handle_verify_failure(result, verdict) if verdict && !verdict.passed?
+
         @notes.append_success(result, @run.iteration)
         attempt_commit(result)
         @run.consecutive_failures = 0
         @run.consecutive_errors   = 0
         @stop_conditions.stop_when_met?(result)
+        nil
+      end
+
+      # Independent gate: the robot claimed success, but it only counts if the
+      # configured verify_command passes. Returns nil when verification is off.
+      def verify_result
+        return nil unless @verifier
+
+        @logger.log("verify:start", iteration: @run.iteration, command: @config.verify_command)
+        verdict = @verifier.run
+        @logger.log("verify:#{verdict.passed? ? "pass" : "fail"}", iteration: @run.iteration)
+        verdict
+      end
+
+      def handle_verify_failure(result, verdict)
+        @git.reset_hard unless @pending_commit_failure
+        @notes.append_verify_failure(result, verdict.output, @run.iteration)
+        @run.consecutive_failures += 1
+        @run.consecutive_errors    = 0
+        @logger.log("iteration:verify_failure", iteration: @run.iteration)
+        progress "iteration #{@run.iteration} verification failed — rolled back"
         nil
       end
 
@@ -220,10 +281,10 @@ module RobotLab
         end
       end
 
-      def run_robot_with_interrupt(robot)
+      def run_robot_with_interrupt(robot, task = @objective)
         thread_error = nil
         @runner_thread = Thread.new do
-          robot.run(@objective)
+          robot.run(task)
         rescue Interrupt
           # killed by signal handler — main loop checks @stop_requested
         rescue => e

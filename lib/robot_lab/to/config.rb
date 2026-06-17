@@ -19,7 +19,8 @@ module RobotLab
 
       # Runtime CLI overrides — applied after load.
       attr_writer :provider, :model, :max_iterations, :max_tokens, :stop_when,
-                  :max_consecutive_failures, :run_dir, :commit_format, :debug
+                  :max_consecutive_failures, :max_submit_nudges,
+                  :verify_command, :verify_timeout, :run_dir, :commit_format, :debug
 
       def initialize(**overrides)
         super()
@@ -30,6 +31,8 @@ module RobotLab
       def provider                 = @provider || super
       def model                    = @model || super
       def max_consecutive_failures = @max_consecutive_failures || super
+      def max_submit_nudges        = @max_submit_nudges        || super
+      def verify_timeout           = @verify_timeout           || super
 
       def run_dir                  = @run_dir          || super
       def commit_format            = @commit_format    || super
@@ -39,6 +42,7 @@ module RobotLab
       def max_iterations           = @max_iterations
       def max_tokens               = @max_tokens
       def stop_when                = @stop_when
+      def verify_command           = @verify_command
     end
   end
 end

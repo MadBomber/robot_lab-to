@@ -25,6 +25,26 @@ module RobotLab
         assert_equal 2, Config.new.max_retries
       end
 
+      def test_default_max_submit_nudges
+        assert_equal 1, Config.new.max_submit_nudges
+      end
+
+      def test_max_submit_nudges_override
+        assert_equal 0, Config.new(max_submit_nudges: 0).max_submit_nudges
+      end
+
+      def test_verify_command_nil_by_default
+        assert_nil Config.new.verify_command
+      end
+
+      def test_verify_command_override
+        assert_equal "rake test", Config.new(verify_command: "rake test").verify_command
+      end
+
+      def test_default_verify_timeout
+        assert_equal 600, Config.new.verify_timeout
+      end
+
       def test_default_commit_format
         assert_equal "default", Config.new.commit_format
       end

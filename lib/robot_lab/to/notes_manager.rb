@@ -14,8 +14,7 @@ module RobotLab
       end
 
       def setup(run)
-        @path.parent.mkpath
-        @path.write(<<~HEADER)
+        AtomicFile.write(@path, <<~HEADER)
           # robot-to run: #{run.run_id}
 
           Objective: #{run.objective}
@@ -57,6 +56,20 @@ module RobotLab
         MD
       end
 
+      def append_verify_failure(result, output, iteration)
+        append(<<~MD)
+
+          ### Iteration #{iteration} [VERIFY FAILED]
+
+          **Summary:** #{result.summary}
+
+          **Verification output:**
+          ```
+          #{output}
+          ```
+        MD
+      end
+
       def append_error(error, iteration)
         append(<<~MD)
 
@@ -69,7 +82,7 @@ module RobotLab
       private
 
       def append(text)
-        File.open(@path, "a") { |f| f.write(text) }
+        AtomicFile.append(@path, text)
       end
 
       def bullet_list(items)
