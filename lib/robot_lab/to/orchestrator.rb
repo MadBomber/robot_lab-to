@@ -136,6 +136,20 @@ module RobotLab
       end
 
       def execute_iteration
+        run_agent_iteration
+      rescue PermanentError
+        raise
+      rescue => e
+        raise PermanentError, "API authentication failed: #{e.message}" if auth_error?(e)
+
+        record_iteration_error(e)
+        retry if retry_after_backoff?
+        raise
+      end
+
+      # The happy path: build a fresh robot, run it, and return its submitted
+      # result (or a not-submitted marker).
+      def run_agent_iteration
         tool   = Tools::SubmitResult.new
         prompt = @builder.build(@run, @notes.read, pending_commit_failure: @pending_commit_failure)
         robot  = build_robot(tool, prompt)
@@ -147,25 +161,28 @@ module RobotLab
         nudge_for_missing_submit(robot, tool) if tool.captured_result.nil?
 
         tool.captured_result || IterationResult.not_submitted
-      rescue PermanentError
-        raise
-      rescue => e
-        raise PermanentError, "API authentication failed: #{e.message}" if auth_error?(e)
+      end
 
+      # Roll back the working tree, record the failure in notes, and bump the
+      # consecutive failure/error counters.
+      def record_iteration_error(e)
         @logger.log("agent:run:error", iteration: @run.iteration,
                                        error: e.class.to_s, message: e.message)
         @git.reset_hard unless @pending_commit_failure
         @notes.append_error(e, @run.iteration)
         @run.consecutive_failures += 1
         @run.consecutive_errors   += 1
+      end
 
-        if @run.consecutive_errors <= @config.max_retries && !@stop_requested
-          @logger.log("backoff:start", consecutive_errors: @run.consecutive_errors)
-          @backoff.sleep_for(@run.consecutive_errors)
-          @logger.log("backoff:end")
-          retry
-        end
-        raise
+      # True when the iteration should be retried — within the retry budget and
+      # not stopping. Sleeps out the backoff as a side effect before returning.
+      def retry_after_backoff?
+        return false unless @run.consecutive_errors <= @config.max_retries && !@stop_requested
+
+        @logger.log("backoff:start", consecutive_errors: @run.consecutive_errors)
+        @backoff.sleep_for(@run.consecutive_errors)
+        @logger.log("backoff:end")
+        true
       end
 
       # A robot that ends its turn without calling submit_result is the
