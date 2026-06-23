@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 640" font-family="Helvetica, Arial, sans-serif" role="img" aria-label="robot-to architecture">
+  <defs>
+    <marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+  <style>
+    .t  { fill:#ffffff; font-size:13px; font-weight:600; }
+    .s  { fill:#e2e8f0; font-size:10px; }
+    .hd { fill:#cbd5e1; font-size:12px; font-weight:700; letter-spacing:.5px; }
+    .lg { fill:#cbd5e1; font-size:11px; }
+  </style>
+
+  <!-- CLI / entry -->
+  <rect x="360" y="16" width="180" height="46" rx="10" fill="#0ea5e9"/>
+  <text x="450" y="38" text-anchor="middle" class="t">robot-to CLI / To.run</text>
+  <text x="450" y="54" text-anchor="middle" class="s">CLI · Config (myway_config)</text>
+  <line x1="450" y1="62" x2="450" y2="86" stroke="#94a3b8" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- Orchestrator -->
+  <rect x="330" y="88" width="240" height="52" rx="10" fill="#475569"/>
+  <text x="450" y="110" text-anchor="middle" class="t">Orchestrator</text>
+  <text x="450" y="127" text-anchor="middle" class="s">main loop · setup → iterate → finalize</text>
+
+  <!-- collaborators row -->
+  <text x="60" y="172" class="hd">PER-RUN COLLABORATORS</text>
+  <g>
+    <rect x="40" y="184" width="150" height="46" rx="9" fill="#6366f1"/>
+    <text x="115" y="205" text-anchor="middle" class="t">PromptBuilder</text>
+    <text x="115" y="221" text-anchor="middle" class="s">per-iteration system prompt</text>
+
+    <rect x="200" y="184" width="150" height="46" rx="9" fill="#f59e0b"/>
+    <text x="275" y="205" text-anchor="middle" class="t">CommitManager</text>
+    <text x="275" y="221" text-anchor="middle" class="s">git via Open3 (no shell)</text>
+
+    <rect x="360" y="184" width="150" height="46" rx="9" fill="#a855f7"/>
+    <text x="435" y="205" text-anchor="middle" class="t">NotesManager</text>
+    <text x="435" y="221" text-anchor="middle" class="s">notes.md memory</text>
+
+    <rect x="520" y="184" width="150" height="46" rx="9" fill="#64748b"/>
+    <text x="595" y="205" text-anchor="middle" class="t">StopConditions</text>
+    <text x="595" y="221" text-anchor="middle" class="s">iters · tokens · failures</text>
+
+    <rect x="680" y="184" width="160" height="46" rx="9" fill="#64748b"/>
+    <text x="760" y="205" text-anchor="middle" class="t">Verifier</text>
+    <text x="760" y="221" text-anchor="middle" class="s">independent test gate</text>
+  </g>
+  <g>
+    <rect x="120" y="244" width="150" height="46" rx="9" fill="#64748b"/>
+    <text x="195" y="265" text-anchor="middle" class="t">Backoff</text>
+    <text x="195" y="281" text-anchor="middle" class="s">interruptible retry</text>
+
+    <rect x="280" y="244" width="150" height="46" rx="9" fill="#64748b"/>
+    <text x="355" y="265" text-anchor="middle" class="t">JsonlLogger</text>
+    <text x="355" y="281" text-anchor="middle" class="s">run.log events</text>
+
+    <rect x="440" y="244" width="150" height="46" rx="9" fill="#64748b"/>
+    <text x="515" y="265" text-anchor="middle" class="t">ExitSummary</text>
+    <text x="515" y="281" text-anchor="middle" class="s">post-run report</text>
+
+    <rect x="600" y="244" width="150" height="46" rx="9" fill="#a855f7"/>
+    <text x="675" y="265" text-anchor="middle" class="t">Run</text>
+    <text x="675" y="281" text-anchor="middle" class="s">run state object</text>
+  </g>
+  <line x1="450" y1="140" x2="450" y2="180" stroke="#94a3b8" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- robot -->
+  <text x="60" y="330" class="hd">PER-ITERATION ROBOT (RobotLab)</text>
+  <rect x="330" y="342" width="240" height="50" rx="10" fill="#3b82f6"/>
+  <text x="450" y="364" text-anchor="middle" class="t">RobotLab::Robot</text>
+  <text x="450" y="380" text-anchor="middle" class="s">RubyLLM agent · persistent chat</text>
+  <line x1="450" y1="290" x2="450" y2="340" stroke="#94a3b8" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- tools -->
+  <rect x="120" y="420" width="150" height="46" rx="9" fill="#16a34a"/>
+  <text x="195" y="441" text-anchor="middle" class="t">SubmitResult</text>
+  <text x="195" y="457" text-anchor="middle" class="s">reports iteration result</text>
+
+  <rect x="290" y="420" width="320" height="46" rx="9" fill="#16a34a"/>
+  <text x="450" y="441" text-anchor="middle" class="t">File tools — read · write · edit · bash</text>
+  <text x="450" y="457" text-anchor="middle" class="s">attached only when local_guards is on</text>
+  <line x1="420" y1="392" x2="240" y2="418" stroke="#94a3b8" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="460" y1="392" x2="460" y2="418" stroke="#94a3b8" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- guards -->
+  <text x="630" y="412" class="hd">GUARDRAILS (Hooks)</text>
+  <rect x="630" y="420" width="250" height="92" rx="10" fill="#dc2626"/>
+  <text x="755" y="440" text-anchor="middle" class="t">RobotLab::Hook guards</text>
+  <text x="755" y="460" text-anchor="middle" class="s">write_guard · read_before_edit</text>
+  <text x="755" y="476" text-anchor="middle" class="s">checkpoint · quality_monitor</text>
+  <text x="755" y="496" text-anchor="middle" class="s">intercept tool calls for small models</text>
+  <line x1="610" y1="450" x2="628" y2="455" stroke="#94a3b8" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- run state output -->
+  <rect x="290" y="540" width="320" height="60" rx="10" fill="#334155"/>
+  <text x="450" y="562" text-anchor="middle" class="t">.robot_lab_to/runs/&lt;run_id&gt;/</text>
+  <text x="450" y="580" text-anchor="middle" class="s">notes.md · run.log (JSONL) · checkpoints/</text>
+  <text x="450" y="595" text-anchor="middle" class="s">+ git branch robot-to/&lt;slug&gt;</text>
+  <line x1="450" y1="466" x2="450" y2="538" stroke="#94a3b8" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- legend -->
+  <g transform="translate(40,548)">
+    <rect x="0" y="0" width="14" height="11" rx="3" fill="#475569"/><text x="20" y="9" class="lg">orchestrator / control</text>
+    <rect x="0" y="18" width="14" height="11" rx="3" fill="#3b82f6"/><text x="20" y="27" class="lg">robot / LLM</text>
+    <rect x="0" y="36" width="14" height="11" rx="3" fill="#16a34a"/><text x="20" y="45" class="lg">tools</text>
+    <rect x="140" y="0" width="14" height="11" rx="3" fill="#dc2626"/><text x="160" y="9" class="lg">guardrails</text>
+    <rect x="140" y="18" width="14" height="11" rx="3" fill="#a855f7"/><text x="160" y="27" class="lg">memory / state</text>
+    <rect x="140" y="36" width="14" height="11" rx="3" fill="#f59e0b"/><text x="160" y="45" class="lg">git</text>
+  </g>
+</svg>
