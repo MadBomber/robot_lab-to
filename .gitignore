@@ -1,3 +1,4 @@
+site/
 *_output.txt
 *.gem
 pkg/
