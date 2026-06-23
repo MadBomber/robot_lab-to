@@ -274,15 +274,30 @@ module RobotLab
       end
 
       def build_robot(submit_tool, system_prompt)
-        RobotLab.build(
+        robot = RobotLab.build(
           name: "robot-to-#{@run.run_id}-#{@run.iteration}",
           system_prompt: system_prompt,
-          tools: [submit_tool],
+          local_tools: iteration_tools(submit_tool),
           provider: @config.provider&.to_sym,
           model: @config.model,
           max_tool_rounds: @config.max_tool_rounds,
-          on_content: token_tracker
+          on_content: (@config.stream? ? token_tracker : nil)
         )
+        Guards.install(robot, run: @run) if @config.local_guards?
+        robot
+      end
+
+      # Submit tool is always first (callers read tools.first). When local_guards
+      # is on, the robot also gets the built-in workspace tools the guards
+      # protect; otherwise behavior is unchanged (submit-only).
+      def iteration_tools(submit_tool)
+        return [submit_tool] unless @config.local_guards?
+
+        [submit_tool,
+         Tools::Read.new,
+         Tools::Write.new,
+         Tools::Edit.new,
+         Tools::Bash.new]
       end
 
       def token_tracker
@@ -300,8 +315,9 @@ module RobotLab
 
       def run_robot_with_interrupt(robot, task = @objective)
         thread_error = nil
+        result = nil
         @runner_thread = Thread.new do
-          robot.run(task)
+          result = robot.run(task)
         rescue Interrupt
           # killed by signal handler — main loop checks @stop_requested
         rescue => e
@@ -310,6 +326,23 @@ module RobotLab
         @runner_thread.join
         @runner_thread = nil
         raise thread_error if thread_error
+
+        # Streaming runs account tokens per-chunk via token_tracker; non-streaming
+        # runs (required for local models whose tool calls don't survive the
+        # OpenAI-compatible stream) account them from the result instead.
+        account_tokens(result) unless @config.stream?
+        result
+      end
+
+      # Add a non-streaming run's token usage to the run totals and trip the
+      # stop flag if the budget is now exhausted (the mid-stream interrupt that
+      # token_tracker provides isn't available without streaming).
+      def account_tokens(result)
+        return unless result
+
+        @run.input_tokens  += result.input_tokens.to_i  if result.respond_to?(:input_tokens)
+        @run.output_tokens += result.output_tokens.to_i if result.respond_to?(:output_tokens)
+        @stop_requested = true if @stop_conditions.token_limit_exceeded?
       end
 
       def install_signal_handlers

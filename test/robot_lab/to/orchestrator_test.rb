@@ -74,7 +74,7 @@ module RobotLab
       end
 
       def stub_build(robot_class, **robot_opts, &)
-        fake = ->(**kw) { robot_class.new(kw[:tools].first, **robot_opts) }
+        fake = ->(**kw) { robot_class.new(kw[:local_tools].first, **robot_opts) }
         RobotLab.stub(:build, fake, &)
       end
 
@@ -88,6 +88,41 @@ module RobotLab
       def git_log_count
         out, = Open3.capture3("git", "-C", @tmpdir, "log", "--oneline")
         out.lines.count
+      end
+
+      # Build a robot through the orchestrator's real build_robot (no LLM call —
+      # RobotLab.build constructs offline; the network is only touched on #run).
+      def built_robot(submit_tool, **config_opts)
+        config = Config.new(model: "test-model", provider: :openai, **config_opts)
+        orch   = Orchestrator.new("objective", config)
+        robot  = nil
+        stub_run do |run, _dir|
+          orch.instance_variable_set(:@run, run)
+          robot = orch.send(:build_robot, submit_tool, "sys")
+        end
+        robot
+      end
+
+      # Regression: build_robot once passed tool instances via `tools:`, which
+      # Robot.new treats as a name-allowlist filter — so the submit tool never
+      # reached the model and every iteration failed as "did not submit". The
+      # instances must go through `local_tools:`.
+      def test_build_robot_attaches_submit_tool_via_local_tools
+        submit = Tools::SubmitResult.new
+        assert_includes built_robot(submit).local_tools, submit,
+                        "submit tool must be attached via local_tools: so the model can call it"
+      end
+
+      def test_build_robot_attaches_only_submit_without_local_guards
+        submit = Tools::SubmitResult.new
+        assert_equal [submit], built_robot(submit, local_guards: false).local_tools
+      end
+
+      def test_build_robot_attaches_file_tools_when_local_guards_enabled
+        submit = Tools::SubmitResult.new
+        tools  = built_robot(submit, local_guards: true).local_tools
+        assert_includes tools, submit
+        assert_equal %w[bash edit read write], (tools - [submit]).map(&:name).sort
       end
 
       def test_success_without_file_changes_makes_no_commit
@@ -148,7 +183,7 @@ module RobotLab
         call_count = 0
         counting_build = lambda do |**kw|
           call_count += 1
-          FakeRobot.new(kw[:tools].first)
+          FakeRobot.new(kw[:local_tools].first)
         end
         config = Config.new(max_iterations: 3)
         RobotLab.stub(:build, counting_build) do
@@ -162,7 +197,7 @@ module RobotLab
         call_count = 0
         counting_build = lambda do |**kw|
           call_count += 1
-          FakeRobot.new(kw[:tools].first, success: false)
+          FakeRobot.new(kw[:local_tools].first, success: false)
         end
         RobotLab.stub(:build, counting_build) do
           Dir.chdir(@tmpdir) { Orchestrator.new("test", config).run }
@@ -174,7 +209,7 @@ module RobotLab
         call_count = 0
         counting_build = lambda do |**kw|
           call_count += 1
-          StopRobot.new(kw[:tools].first)
+          StopRobot.new(kw[:local_tools].first)
         end
         config = Config.new(stop_when: "objective met")
         RobotLab.stub(:build, counting_build) do
@@ -283,7 +318,7 @@ module RobotLab
         call_count = 0
         fake_build = lambda do |**kw|
           call_count += 1
-          TokenReportingRobot.new(kw[:tools].first, on_content: kw[:on_content],
+          TokenReportingRobot.new(kw[:local_tools].first, on_content: kw[:on_content],
                                   input: 900, output: 200)
         end
         config = Config.new(max_tokens: 1_000)  # 1100 reported > 1000 limit
@@ -296,7 +331,7 @@ module RobotLab
       def test_token_tracker_nil_tokens_does_not_crash
         fake_build = lambda do |**kw|
           kw[:on_content].call(MockChunk.new(nil, nil))  # nil tokens in chunk
-          FakeRobot.new(kw[:tools].first)
+          FakeRobot.new(kw[:local_tools].first)
         end
         config = Config.new(max_iterations: 1)
         RobotLab.stub(:build, fake_build) do
@@ -321,7 +356,7 @@ module RobotLab
         commit_call = 0
         fake_build = lambda do |**kw|
           commit_call += 1
-          FakeRobot.new(kw[:tools].first, write_file: write_path)
+          FakeRobot.new(kw[:local_tools].first, write_file: write_path)
         end
         config = Config.new(max_iterations: 1)
         RobotLab.stub(:build, fake_build) do

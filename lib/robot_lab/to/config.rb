@@ -20,7 +20,8 @@ module RobotLab
       # Runtime CLI overrides — applied after load.
       attr_writer :provider, :model, :max_iterations, :max_tokens, :stop_when,
                   :max_consecutive_failures, :max_submit_nudges,
-                  :verify_command, :verify_timeout, :run_dir, :commit_format, :debug
+                  :verify_command, :verify_timeout, :run_dir, :commit_format,
+                  :local_guards, :stream, :debug
 
       def initialize(**overrides)
         super()
@@ -36,6 +37,8 @@ module RobotLab
 
       def run_dir                  = @run_dir          || super
       def commit_format            = @commit_format    || super
+      def local_guards?            = @local_guards.nil? ? super : @local_guards
+      def stream?                  = @stream.nil? ? super : @stream
       def debug?                   = @debug.nil? ? super : @debug
 
       # CLI-only options with no YAML default (nil means "no limit / not set")

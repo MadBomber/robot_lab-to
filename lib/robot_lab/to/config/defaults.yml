@@ -8,6 +8,8 @@ defaults:
   verify_timeout: 600
   commit_format: default
   run_dir: .robot_lab_to
+  local_guards: false
+  stream: true
   debug: false
 
 development:

@@ -91,6 +91,14 @@ module RobotLab
             opts[:commit_format] = v
           end
 
+          p.on("--local-guards", "Add built-in file tools + small-model guardrails (for local models)") do
+            opts[:local_guards] = true
+          end
+
+          p.on("--no-stream", "Disable response streaming (required for local Ollama tool calls)") do
+            opts[:stream] = false
+          end
+
           p.on("--debug", "Enable verbose JSONL logging to stderr") do
             opts[:debug] = true
           end

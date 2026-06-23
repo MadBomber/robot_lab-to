@@ -49,6 +49,16 @@ module RobotLab
         assert opts[:debug]
       end
 
+      def test_local_guards_flag
+        opts = captured_run_args(["do work", "--local-guards"])
+        assert opts[:local_guards]
+      end
+
+      def test_no_stream_flag
+        opts = captured_run_args(["do work", "--no-stream"])
+        assert_equal false, opts[:stream]
+      end
+
       def test_commit_format_conventional
         opts = captured_run_args(["do work", "--commit-format", "conventional"])
         assert_equal "conventional", opts[:commit_format]

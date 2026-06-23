@@ -56,6 +56,26 @@ module RobotLab
           yield run, dir
         end
       end
+
+      # Minimal stand-in for a tool — ToolCallHookContext derives tool_name from
+      # #name, which is all the guards inspect.
+      FakeTool = Struct.new(:name)
+
+      # Build a tool-call hook context for a guard test.
+      def tool_ctx(tool_name, args = {})
+        RobotLab::ToolCallHookContext.new(tool: FakeTool.new(tool_name.to_s), tool_args: args)
+      end
+
+      # Build a run-family hook context (for before_run).
+      def run_ctx
+        RobotLab::RunHookContext.new(robot: nil, request: nil)
+      end
+
+      # Dispatch a guard hook the way RobotLab::Hooks does — inside the guard's
+      # namespace so ctx.local resolves. Yields the block to around_* hooks.
+      def dispatch(guard, hook, ctx, &)
+        ctx.with_namespace(guard.namespace) { guard.public_send(hook, ctx, &) }
+      end
     end
   end
 end
