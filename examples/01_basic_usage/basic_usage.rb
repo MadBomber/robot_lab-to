@@ -228,6 +228,10 @@ end
 # RobotLab.on (below) makes it apply to each per-iteration robot the orchestrator
 # builds — no need to touch the orchestrator itself.
 #
+# We hand-write it here to show how the hook system works. If you just want live
+# narration without writing your own, robot_lab ships one: `RobotLab::Narrator.enable!`
+# — the 02_advanced_usage example uses it.
+#
 # Hook methods must never raise (an exception would abort the iteration), so each
 # is wrapped defensively.
 class FeedbackHook < RobotLab::Hook

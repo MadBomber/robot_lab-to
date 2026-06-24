@@ -125,6 +125,11 @@ the orchestrator needed. It implements three hook methods:
 This is a compact, practical example of the robot_lab hook system; the guardrails
 shipped with `--local-guards` use the same mechanism.
 
+> **Don't want to write your own?** robot_lab ships a ready-made narrator —
+> `RobotLab::Narrator.enable!` — which does exactly this. The
+> [02_advanced_usage](../02_advanced_usage/README.md#live-feedback) example uses
+> it. We hand-write the hook here to teach the API.
+
 > **Note:** robot_lab-to's own `robot-to: …` progress lines use `Kernel#warn`,
 > which is silenced when Ruby warnings are disabled (`$VERBOSE` is `nil`, common
 > under `bundle exec`). The hook writes to `$stderr` directly, so its narration
