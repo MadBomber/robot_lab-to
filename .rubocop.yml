@@ -173,3 +173,9 @@ Metrics/BlockLength:
     - 'Rakefile'
     - '*.gemspec'
     - 'test/**/*'
+
+# robot-to deliberately uses $stderr.puts (not warn) for user-facing progress
+# and error output. Kernel#warn is silenced when Ruby warnings are disabled
+# ($VERBOSE is nil, common under `bundle exec`), which would hide that output.
+Style/StderrPuts:
+  Enabled: false

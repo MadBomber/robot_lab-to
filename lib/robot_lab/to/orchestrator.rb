@@ -90,7 +90,7 @@ module RobotLab
           ExitSummary.new(@run, @config, abort_reason: @abort_reason).print
         else
           @logger.close
-          warn "robot-to: #{@abort_reason}" if @abort_reason
+          progress(@abort_reason) if @abort_reason
         end
       end
 
@@ -358,8 +358,11 @@ module RobotLab
         end
       end
 
+      # Live progress to stderr. Uses $stderr.puts rather than Kernel#warn,
+      # which is silenced when Ruby warnings are disabled ($VERBOSE is nil —
+      # common under `bundle exec`), hiding progress from the user.
       def progress(msg)
-        warn "robot-to: #{msg}"
+        $stderr.puts "robot-to: #{msg}"
       end
 
       def auth_error?(e)

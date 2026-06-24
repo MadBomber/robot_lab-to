@@ -22,8 +22,9 @@ module RobotLab
 
         objective = args.first || read_stdin_objective
         if objective.nil? || objective.strip.empty?
-          warn "Error: objective required (pass as argument or via stdin)"
-          warn parser
+          # $stderr.puts, not warn: warn is silenced when $VERBOSE is nil.
+          $stderr.puts "Error: objective required (pass as argument or via stdin)"
+          $stderr.puts parser
           exit 1
         end
 
