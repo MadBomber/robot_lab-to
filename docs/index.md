@@ -1,3 +1,8 @@
+<p align="center">
+  <img src="assets/images/robot_lab-to.jpg" alt="robot_lab-to" width="320"><br />
+  "Robot, takeover!"
+</p>
+
 # robot_lab-to
 
 **Autonomous overnight agent loop for [RobotLab](https://github.com/MadBomber/robot_lab) — run a robot while you sleep.**

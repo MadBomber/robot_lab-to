@@ -1,3 +1,8 @@
+<div align="center">
+  <img src="docs/assets/images/robot_lab-to.jpg" alt="robot_lab-to" width="320"><br />
+  "Robot, takeover!"
+</div>
+
 # robot_lab-to
 
 **Autonomous overnight agent loop for [RobotLab](https://github.com/MadBomber/robot_lab) — run a robot while you sleep.**
@@ -148,6 +153,45 @@ bundled defaults → ~/.config/robot_lab/to.yml → ROBOT_LAB_TO_* env → CLI f
 
 Run `robot-to --help` for all flags, or see the
 [Configuration reference](https://madbomber.github.io/robot_lab-to/configuration/settings/).
+
+### Environment variables
+
+Every persistent setting can be set with a `ROBOT_LAB_TO_*` environment variable
+(integers and booleans are coerced automatically). An env var overrides the
+bundled default and the user config file, but is overridden by a CLI flag.
+
+| Environment variable | Setting | Default |
+|----------------------|---------|---------|
+| `ROBOT_LAB_TO_PROVIDER` | LLM provider | `openai` |
+| `ROBOT_LAB_TO_MODEL` | Model identifier | `gpt-5.5` |
+| `ROBOT_LAB_TO_STREAM` | Stream responses (`--no-stream` to disable) | `true` |
+| `ROBOT_LAB_TO_LOCAL_GUARDS` | Attach file tools + small-model guardrails | `false` |
+| `ROBOT_LAB_TO_MAX_TOOL_ROUNDS` | Max tool-call rounds per iteration | `100` |
+| `ROBOT_LAB_TO_MAX_CONSECUTIVE_FAILURES` | Abort after N consecutive failures | `3` |
+| `ROBOT_LAB_TO_MAX_RETRIES` | Retries for transient (e.g. API) errors | `2` |
+| `ROBOT_LAB_TO_MAX_SUBMIT_NUDGES` | Re-prompts when no result is submitted | `1` |
+| `ROBOT_LAB_TO_VERIFY_TIMEOUT` | Timeout (seconds) for `--verify-command` | `600` |
+| `ROBOT_LAB_TO_COMMIT_FORMAT` | `default` or `conventional` | `default` |
+| `ROBOT_LAB_TO_RUN_DIR` | Directory for run state | `.robot_lab_to` |
+| `ROBOT_LAB_TO_DEBUG` | Keep verbose provider logging enabled | `false` |
+
+```bash
+export ROBOT_LAB_TO_MODEL="gpt-oss:20b"
+export ROBOT_LAB_TO_LOCAL_GUARDS=true
+export ROBOT_LAB_TO_STREAM=false
+```
+
+> **Per-run settings have no env var.** `--max-iterations`, `--max-tokens`,
+> `--stop-when`, and `--verify-command` are intentionally CLI-only (they default
+> to "unset / no limit") and must be passed on the command line or to
+> `RobotLab::To.run`.
+
+### Provider credentials
+
+API keys are read by the underlying provider (via RobotLab / RubyLLM), **not** by
+`robot_lab-to` itself — e.g. `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`. Local
+[Ollama](https://ollama.com) models need no key; see the
+[Local Models guide](https://madbomber.github.io/robot_lab-to/local-models/ollama/).
 
 ---
 
