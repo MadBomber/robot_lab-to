@@ -72,6 +72,11 @@ module RobotLab
             opts[:max_consecutive_failures] = v
           end
 
+          p.on("--max-verify-repairs N", Integer,
+               "Repair-in-place attempts when --verify-command fails (default: 2)") do |v|
+            opts[:max_verify_repairs] = v
+          end
+
           p.on("--verify-command CMD", String,
                "Command that must pass before a successful iteration is committed") do |v|
             opts[:verify_command] = v

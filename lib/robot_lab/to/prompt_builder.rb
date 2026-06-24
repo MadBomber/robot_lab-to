@@ -8,15 +8,47 @@ module RobotLab
         @config = config
       end
 
-      def build(run, notes_content, pending_commit_failure: nil)
-        sections = [role_section(run), notes_section(run, notes_content),
-                    task_section, submit_section]
+      def build(run, notes_content, workspace: nil, pending_commit_failure: nil)
+        sections = [role_section(run), notes_section(run, notes_content)]
+        sections << workspace_section(workspace) if workspace && !workspace.empty?
+        sections << task_section
+        sections << verify_section if @config.verify_command
+        sections << submit_section
         sections << repair_section(pending_commit_failure) if pending_commit_failure
         sections << stop_when_section(@config.stop_when) if @config.stop_when
         sections.join("\n\n")
       end
 
       private
+
+      # R3: front-load the project layout so the robot doesn't burn its first
+      # several tool calls re-discovering the workspace (ls/find/read) every run.
+      def workspace_section(files)
+        listing = files.first(200).map { |f| "- #{f}" }.join("\n")
+        <<~MD.chomp
+          ## Project Files
+
+          The project already contains the files below — read them directly instead
+          of re-discovering the layout. (Files you create appear here next iteration.)
+
+          #{listing}
+        MD
+      end
+
+      # R1: name the exact command the orchestrator will grade this iteration by,
+      # so the robot can satisfy it instead of guessing.
+      def verify_section
+        <<~MD.chomp
+          ## Verification — how this iteration is judged
+
+          After your change, the orchestrator runs this EXACT command and only commits
+          if it exits 0 — otherwise everything is rolled back:
+
+              #{@config.verify_command}
+
+          Run it yourself and make it pass BEFORE calling submit_iteration_result.
+        MD
+      end
 
       def role_section(run)
         <<~MD.chomp

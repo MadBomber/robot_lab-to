@@ -32,6 +32,19 @@ module RobotLab
         refute @cm.staged?
       end
 
+      def test_tracked_files_lists_committed_paths
+        File.write(File.join(@tmpdir, "a.rb"), "1")
+        FileUtils.mkdir_p(File.join(@tmpdir, "test"))
+        File.write(File.join(@tmpdir, "test", "a_test.rb"), "2")
+        system("git", "-C", @tmpdir, "add", "-A", out: File::NULL, err: File::NULL)
+        system("git", "-C", @tmpdir, "commit", "-m", "init", out: File::NULL, err: File::NULL)
+        assert_equal ["a.rb", "test/a_test.rb"], @cm.tracked_files.sort
+      end
+
+      def test_tracked_files_empty_before_any_commit
+        assert_empty @cm.tracked_files
+      end
+
       def test_staged_true_after_add_all
         File.write(File.join(@tmpdir, "README.md"), "hello")
         @cm.add_all

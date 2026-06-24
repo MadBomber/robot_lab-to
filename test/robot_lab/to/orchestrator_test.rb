@@ -59,6 +59,23 @@ module RobotLab
         end
       end
 
+      # Submits success, but its first attempt fails verification; the repair
+      # re-run (driven by the orchestrator) fixes it so verification then passes.
+      class RepairRobot
+        def initialize(tool, write_file:)
+          @tool = tool
+          @write_file = write_file
+          @calls = 0
+        end
+
+        def run(_task)
+          @calls += 1
+          File.write(@write_file, @calls >= 2 ? "good" : "bad")
+          @tool.execute(success: true, summary: "attempt #{@calls}",
+                        key_changes: [@write_file], key_learnings: [])
+        end
+      end
+
       def setup
         @tmpdir = Dir.mktmpdir
         system("git", "-C", @tmpdir, "init", "-q")
@@ -177,6 +194,43 @@ module RobotLab
         end
         assert_equal 1, git_log_count
         refute File.exist?(path), "verify failure should roll back the robot's changes"
+      end
+
+      def test_repair_in_place_fixes_verify_failure_then_commits
+        path = File.join(@tmpdir, "marker.txt")
+        stub_build(RepairRobot, write_file: path) do
+          run_orch(verify_command: "grep -q good marker.txt")
+        end
+        assert_equal 2, git_log_count, "the repaired iteration should commit"
+        assert_equal "good", File.read(path)
+      end
+
+      def test_max_verify_repairs_zero_disables_repair
+        path = File.join(@tmpdir, "marker.txt")
+        stub_build(RepairRobot, write_file: path) do
+          run_orch(verify_command: "grep -q good marker.txt",
+                   max_verify_repairs: 0, max_consecutive_failures: 1)
+        end
+        assert_equal 1, git_log_count, "with no repair budget, verify failure rolls back"
+      end
+
+      def test_account_tokens_accumulates_robot_cumulative_delta
+        config = Config.new(stream: false)
+        stub_run do |run, _dir|
+          orch = Orchestrator.new("obj", config)
+          orch.instance_variable_set(:@run, run)
+          orch.instance_variable_set(:@stop_conditions, StopConditions.new(config, run))
+          counter = Struct.new(:total_input_tokens, :total_output_tokens)
+
+          orch.send(:account_tokens, counter.new(100, 40))
+          assert_equal 100, run.input_tokens
+          assert_equal 40, run.output_tokens
+
+          # cumulative grows; only the delta is added
+          orch.send(:account_tokens, counter.new(160, 70))
+          assert_equal 160, run.input_tokens
+          assert_equal 70, run.output_tokens
+        end
       end
 
       def test_max_iterations_stops_loop

@@ -19,7 +19,7 @@ module RobotLab
 
       # Runtime CLI overrides — applied after load.
       attr_writer :provider, :model, :max_iterations, :max_tokens, :stop_when,
-                  :max_consecutive_failures, :max_submit_nudges,
+                  :max_consecutive_failures, :max_submit_nudges, :max_verify_repairs,
                   :verify_command, :verify_timeout, :run_dir, :commit_format,
                   :local_guards, :stream, :debug
 
@@ -33,6 +33,7 @@ module RobotLab
       def model                    = @model || super
       def max_consecutive_failures = @max_consecutive_failures || super
       def max_submit_nudges        = @max_submit_nudges        || super
+      def max_verify_repairs       = @max_verify_repairs       || super
       def verify_timeout           = @verify_timeout           || super
 
       def run_dir                  = @run_dir          || super

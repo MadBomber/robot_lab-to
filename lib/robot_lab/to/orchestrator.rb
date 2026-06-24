@@ -31,6 +31,10 @@ module RobotLab
         @git                    = nil
         @runner_thread          = nil
         @verifier               = nil
+        @robot                  = nil
+        @submit_tool            = nil
+        @accounted_in           = 0
+        @accounted_out          = 0
       end
 
       def run
@@ -150,17 +154,28 @@ module RobotLab
       # The happy path: build a fresh robot, run it, and return its submitted
       # result (or a not-submitted marker).
       def run_agent_iteration
-        tool   = Tools::SubmitResult.new
-        prompt = @builder.build(@run, @notes.read, pending_commit_failure: @pending_commit_failure)
-        robot  = build_robot(tool, prompt)
+        @accounted_in = @accounted_out = 0
+        @submit_tool = Tools::SubmitResult.new
+        prompt = @builder.build(@run, @notes.read, workspace: workspace_digest,
+                                                   pending_commit_failure: @pending_commit_failure)
+        @robot = build_robot(@submit_tool, prompt)
 
         @logger.log("agent:run:start", iteration: @run.iteration)
-        run_robot_with_interrupt(robot)
+        run_robot_with_interrupt(@robot)
         @logger.log("agent:run:end", iteration: @run.iteration)
 
-        nudge_for_missing_submit(robot, tool) if tool.captured_result.nil?
+        nudge_for_missing_submit(@robot, @submit_tool) if @submit_tool.captured_result.nil?
 
-        tool.captured_result || IterationResult.not_submitted
+        @submit_tool.captured_result || IterationResult.not_submitted
+      end
+
+      # R3: tracked files give the robot the project layout up front, so it does
+      # not re-explore the workspace every iteration. nil when unavailable.
+      def workspace_digest
+        files = @git.tracked_files
+        files.empty? ? nil : files
+      rescue StandardError
+        nil
       end
 
       # Roll back the working tree, record the failure in notes, and bump the
@@ -204,6 +219,7 @@ module RobotLab
 
       def handle_success(result)
         verdict = verify_result
+        result, verdict = repair_until_verified(result, verdict) if verdict && !verdict.passed?
         return handle_verify_failure(result, verdict) if verdict && !verdict.passed?
 
         @notes.append_success(result, @run.iteration)
@@ -233,6 +249,45 @@ module RobotLab
         @logger.log("iteration:verify_failure", iteration: @run.iteration)
         progress "iteration #{@run.iteration} verification failed — rolled back"
         nil
+      end
+
+      # R2: when the gate fails on a claimed success, hand the failure output back
+      # to the SAME robot (its chat + the working tree are intact) and let it fix
+      # the code, re-verifying after each attempt. Only fall back to a full
+      # rollback once the repair budget is spent — a near-miss no longer discards
+      # all the work, and nothing commits until the gate is green.
+      def repair_until_verified(result, verdict)
+        budget = @config.max_verify_repairs.to_i
+        return [result, verdict] if budget.zero? || @robot.nil?
+
+        budget.times do |i|
+          break if @stop_requested
+
+          @logger.log("verify:repair", iteration: @run.iteration, attempt: i + 1)
+          progress "iteration #{@run.iteration}: verification failed — repairing (#{i + 1}/#{budget})"
+          begin
+            run_robot_with_interrupt(@robot, repair_prompt(verdict))
+          rescue StandardError => e
+            @logger.log("verify:repair_error", iteration: @run.iteration, message: e.message)
+            break
+          end
+          result  = @submit_tool.captured_result || result
+          verdict = verify_result
+          break if verdict.passed?
+        end
+
+        [result, verdict]
+      end
+
+      def repair_prompt(verdict)
+        <<~MSG
+          Your changes did NOT pass verification. Running `#{@config.verify_command}` failed:
+
+          #{verdict.output}
+
+          Fix the code so that command exits 0, then call submit_iteration_result again.
+          Build on the work already in the project — do not start over.
+        MSG
       end
 
       def handle_failure(result)
@@ -329,19 +384,25 @@ module RobotLab
 
         # Streaming runs account tokens per-chunk via token_tracker; non-streaming
         # runs (required for local models whose tool calls don't survive the
-        # OpenAI-compatible stream) account them from the result instead.
-        account_tokens(result) unless @config.stream?
+        # OpenAI-compatible stream) account them from the robot instead.
+        account_tokens(robot) unless @config.stream?
         result
       end
 
-      # Add a non-streaming run's token usage to the run totals and trip the
-      # stop flag if the budget is now exhausted (the mid-stream interrupt that
-      # token_tracker provides isn't available without streaming).
-      def account_tokens(result)
-        return unless result
+      # R4: account a non-streaming run's tokens from the robot's CUMULATIVE
+      # totals (which include every tool round), not just the final response's
+      # usage. @accounted_* is reset per iteration (fresh robot starts at zero),
+      # so adding the delta accumulates correctly across the initial run, nudges,
+      # and repairs without double-counting. Trips the stop flag on budget.
+      def account_tokens(robot)
+        return unless robot.respond_to?(:total_input_tokens)
 
-        @run.input_tokens  += result.input_tokens.to_i  if result.respond_to?(:input_tokens)
-        @run.output_tokens += result.output_tokens.to_i if result.respond_to?(:output_tokens)
+        in_total  = robot.total_input_tokens.to_i
+        out_total = robot.total_output_tokens.to_i
+        @run.input_tokens  += in_total - @accounted_in
+        @run.output_tokens += out_total - @accounted_out
+        @accounted_in  = in_total
+        @accounted_out = out_total
         @stop_requested = true if @stop_conditions.token_limit_exceeded?
       end
 

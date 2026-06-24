@@ -17,6 +17,14 @@ module RobotLab
         assert_equal 3, Config.new.max_consecutive_failures
       end
 
+      def test_default_max_verify_repairs
+        assert_equal 2, Config.new.max_verify_repairs
+      end
+
+      def test_max_verify_repairs_override
+        assert_equal 0, Config.new(max_verify_repairs: 0).max_verify_repairs
+      end
+
       def test_default_max_tool_rounds
         assert_equal 100, Config.new.max_tool_rounds
       end

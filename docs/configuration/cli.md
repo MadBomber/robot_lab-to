@@ -30,6 +30,7 @@ echo "Add request logging middleware and tests" | robot-to
 | `--max-consecutive-failures` | `N` | `3` | Abort after `N` consecutive failures. |
 | `--verify-command` | `CMD` | *unset* | Command that must pass before a success is committed. |
 | `--verify-timeout` | `SECONDS` | `600` | Timeout for `--verify-command`. |
+| `--max-verify-repairs` | `N` | `2` | Repair-in-place attempts when `--verify-command` fails before rolling back. |
 | `--commit-format` | `default`\|`conventional` | `default` | Commit message format. |
 | `--run-dir` | `PATH` | `.robot_lab_to` | Directory for run state. |
 | `--local-guards` | — | off | Add built-in file tools + small-model guardrails. |

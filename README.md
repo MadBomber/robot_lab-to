@@ -168,6 +168,7 @@ bundled default and the user config file, but is overridden by a CLI flag.
 | `ROBOT_LAB_TO_LOCAL_GUARDS` | Attach file tools + small-model guardrails | `false` |
 | `ROBOT_LAB_TO_MAX_TOOL_ROUNDS` | Max tool-call rounds per iteration | `100` |
 | `ROBOT_LAB_TO_MAX_CONSECUTIVE_FAILURES` | Abort after N consecutive failures | `3` |
+| `ROBOT_LAB_TO_MAX_VERIFY_REPAIRS` | Repair-in-place attempts on verify failure | `2` |
 | `ROBOT_LAB_TO_MAX_RETRIES` | Retries for transient (e.g. API) errors | `2` |
 | `ROBOT_LAB_TO_MAX_SUBMIT_NUDGES` | Re-prompts when no result is submitted | `1` |
 | `ROBOT_LAB_TO_VERIFY_TIMEOUT` | Timeout (seconds) for `--verify-command` | `600` |

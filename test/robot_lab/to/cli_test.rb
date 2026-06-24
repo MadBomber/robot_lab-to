@@ -69,6 +69,11 @@ module RobotLab
         assert_equal 7, opts[:max_consecutive_failures]
       end
 
+      def test_max_verify_repairs_flag
+        opts = captured_run_args(["do work", "--max-verify-repairs", "4"])
+        assert_equal 4, opts[:max_verify_repairs]
+      end
+
       def test_run_dir_flag
         opts = captured_run_args(["do work", "--run-dir", "/tmp/runs"])
         assert_equal "/tmp/runs", opts[:run_dir]

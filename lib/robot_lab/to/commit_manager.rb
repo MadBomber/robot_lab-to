@@ -82,6 +82,15 @@ module RobotLab
         out.lines.map(&:chomp).reject(&:empty?)
       end
 
+      # All tracked files — the project's committed layout. Excludes the run dir
+      # (it's in .git/info/exclude), so it's a clean workspace digest.
+      def tracked_files
+        out, _err, status = Open3.capture3(GIT_ENV, "git", "ls-files", chdir: @work_dir)
+        return [] unless status.success?
+
+        out.lines.map(&:chomp).reject(&:empty?)
+      end
+
       private
 
       def git(*args)

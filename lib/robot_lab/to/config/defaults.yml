@@ -5,6 +5,7 @@ defaults:
   max_consecutive_failures: 3
   max_retries: 2
   max_submit_nudges: 1
+  max_verify_repairs: 2
   verify_timeout: 600
   commit_format: default
   run_dir: .robot_lab_to

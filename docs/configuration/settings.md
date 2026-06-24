@@ -59,6 +59,18 @@ Stop once cumulative input+output tokens reach `N`. CLI-only.
 Abort after `N` consecutive failed iterations. Resets to zero on each successful,
 committed iteration. The primary safety net against a run going nowhere.
 
+### `max_verify_repairs`
+
+- **Default:** `2`
+- **CLI:** `--max-verify-repairs N`
+
+When the robot claims success but `verify_command` fails, the orchestrator hands
+the failure output back to the **same** robot — its chat and working tree intact —
+and lets it fix the code, re-verifying after each attempt, up to `N` times before
+rolling the iteration back. Nothing commits until the gate is green, so the git
+history stays clean; a near-miss just isn't discarded. Set to `0` to roll back
+immediately on the first verify failure. See [Verification Gate](../concepts/verification.md).
+
 ### `stop_when`
 
 - **Default:** *(unset)*

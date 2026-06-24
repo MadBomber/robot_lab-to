@@ -10,6 +10,38 @@ module RobotLab
         @builder = PromptBuilder.new(@config)
       end
 
+      def test_includes_verify_section_naming_the_command
+        config  = Config.new(verify_command: "bundle exec rake test")
+        builder = PromptBuilder.new(config)
+        stub_run do |run, _dir|
+          prompt = builder.build(run, "")
+          assert_includes prompt, "Verification"
+          assert_includes prompt, "bundle exec rake test"
+          assert_includes prompt, "make it pass BEFORE"
+        end
+      end
+
+      def test_omits_verify_section_without_command
+        stub_run do |run, _dir|
+          refute_includes @builder.build(run, ""), "## Verification"
+        end
+      end
+
+      def test_includes_workspace_section_when_files_given
+        stub_run do |run, _dir|
+          prompt = @builder.build(run, "", workspace: ["test/a_test.rb", "lib/a.rb"])
+          assert_includes prompt, "## Project Files"
+          assert_includes prompt, "- test/a_test.rb"
+          assert_includes prompt, "- lib/a.rb"
+        end
+      end
+
+      def test_omits_workspace_section_when_empty
+        stub_run do |run, _dir|
+          refute_includes @builder.build(run, "", workspace: []), "## Project Files"
+        end
+      end
+
       def test_includes_objective_and_iteration
         stub_run do |run, _dir|
           run.iteration = 3
