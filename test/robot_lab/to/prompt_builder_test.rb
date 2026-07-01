@@ -97,6 +97,45 @@ module RobotLab
           assert_includes prompt, "submit_iteration_result"
         end
       end
+
+      def resolved_decision(question: "404 or 410?", resolution: "410 Gone")
+        Decision.new(id: "d-1", status: "resolved", blocking: true,
+                     created_at: "2026-07-01T12:00:00Z", created_iteration: 1,
+                     resolved_at: "2026-07-01T13:00:00Z", resolution: resolution,
+                     question: question, situation: "", options: [], recommendation: "",
+                     body: "", path: "/tmp/d-1.md")
+      end
+
+      def test_includes_decision_guidance_when_enabled
+        stub_run do |run, _dir|
+          prompt = @builder.build(run, "")
+          assert_includes prompt, "When to Ask for a Human Decision"
+          assert_includes prompt, "request_decision"
+        end
+      end
+
+      def test_omits_decision_guidance_when_disabled
+        config  = Config.new(decisions_enabled: false)
+        builder = PromptBuilder.new(config)
+        stub_run do |run, _dir|
+          refute_includes builder.build(run, ""), "When to Ask for a Human Decision"
+        end
+      end
+
+      def test_injects_answered_decisions
+        stub_run do |run, _dir|
+          prompt = @builder.build(run, "", resolved_decisions: [resolved_decision])
+          assert_includes prompt, "Answered Decisions"
+          assert_includes prompt, "404 or 410?"
+          assert_includes prompt, "410 Gone"
+        end
+      end
+
+      def test_omits_answered_section_when_none
+        stub_run do |run, _dir|
+          refute_includes @builder.build(run, "", resolved_decisions: []), "Answered Decisions"
+        end
+      end
     end
   end
 end

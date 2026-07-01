@@ -12,6 +12,10 @@ defaults:
   local_guards: false
   stream: true
   debug: false
+  decisions_enabled: true
+  decision_mode: wait          # wait = poll until resolved; exit = stop and require --resume
+  decision_wait_poll: 30       # seconds between polls while waiting on a blocking decision
+  decision_timeout: null       # max seconds to wait (null = wait indefinitely)
 
 development:
   debug: false

@@ -27,6 +27,17 @@ module RobotLab
         end
       end
 
+      # Sleep a fixed number of seconds, interruptibly (1s ticks). Used for
+      # polling a blocking decision file. Does NOT reset @interrupted: once a
+      # signal fires, subsequent waits return immediately so shutdown is prompt.
+      def sleep_seconds(seconds)
+        seconds.to_i.times do
+          return if @interrupted
+
+          sleep(1)
+        end
+      end
+
       def interrupt!
         @interrupted = true
       end

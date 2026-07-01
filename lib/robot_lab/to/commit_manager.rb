@@ -27,6 +27,11 @@ module RobotLab
         git("checkout", "-b", name)
       end
 
+      # Switch to an existing branch (used when resuming a prior run).
+      def checkout_branch(name)
+        git("checkout", name)
+      end
+
       def staged?
         _out, _err, status = Open3.capture3(GIT_ENV, "git", "diff", "--cached", "--quiet",
                                             chdir: @work_dir)

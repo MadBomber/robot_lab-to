@@ -120,6 +120,34 @@ module RobotLab
       def test_unknown_override_key_ignored
         Config.new(nonexistent_key: "value")  # should not raise
       end
+
+      def test_decisions_enabled_default_true
+        assert Config.new.decisions_enabled?
+      end
+
+      def test_decisions_enabled_override
+        refute Config.new(decisions_enabled: false).decisions_enabled?
+      end
+
+      def test_decision_mode_default_wait
+        assert_equal "wait", Config.new.decision_mode
+      end
+
+      def test_decision_mode_override
+        assert_equal "exit", Config.new(decision_mode: "exit").decision_mode
+      end
+
+      def test_decision_wait_poll_default
+        assert_equal 30, Config.new.decision_wait_poll
+      end
+
+      def test_decision_timeout_default_nil
+        assert_nil Config.new.decision_timeout
+      end
+
+      def test_decision_timeout_override
+        assert_equal 3_600, Config.new(decision_timeout: 3_600).decision_timeout
+      end
     end
   end
 end

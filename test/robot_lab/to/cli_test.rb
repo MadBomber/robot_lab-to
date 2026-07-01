@@ -101,6 +101,61 @@ module RobotLab
       ensure
         $stdin = original_stdin
       end
+
+      def test_decision_mode_flag
+        opts = captured_run_args(["do work", "--decision-mode", "exit"])
+        assert_equal "exit", opts[:decision_mode]
+      end
+
+      def test_decision_timeout_and_poll_flags
+        opts = captured_run_args(["do work", "--decision-timeout", "3600", "--decision-poll", "15"])
+        assert_equal 3_600, opts[:decision_timeout]
+        assert_equal 15, opts[:decision_wait_poll]
+      end
+
+      def test_no_decisions_flag
+        opts = captured_run_args(["do work", "--no-decisions"])
+        assert_equal false, opts[:decisions_enabled]
+      end
+
+      def test_resume_routes_to_resume_with_run_id
+        received = nil
+        opts = {}
+        fake = lambda do |run_id, **o|
+          received = run_id
+          opts = o
+        end
+        RobotLab::To.stub(:resume, fake) { CLI.run(["--resume", "20260701-120000-abc123"]) }
+        assert_equal "20260701-120000-abc123", received
+        refute opts.key?(:resume)
+        refute opts.key?(:version)
+      end
+
+      def test_decisions_subcommand_no_runs_exits
+        Dir.mktmpdir do |dir|
+          Dir.chdir(dir) do
+            _out, err = capture_io do
+              assert_raises(SystemExit) { CLI.run(["decisions"]) }
+            end
+            assert_includes err, "No runs found"
+          end
+        end
+      end
+
+      def test_decisions_subcommand_lists_pending
+        Dir.mktmpdir do |dir|
+          Dir.chdir(dir) do
+            run_id = "20260701-120000-abc123"
+            mgr = DecisionManager.new(File.join(dir, ".robot_lab_to", "runs", run_id, "decisions"))
+            mgr.setup
+            mgr.record(question: "404 or 410?", blocking: true, iteration: 1)
+            out, = capture_io { CLI.run(["decisions", run_id]) }
+            assert_includes out, run_id
+            assert_includes out, "404 or 410?"
+            assert_includes out, "[BLOCKING]"
+          end
+        end
+      end
     end
   end
 end

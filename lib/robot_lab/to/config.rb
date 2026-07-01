@@ -21,7 +21,8 @@ module RobotLab
       attr_writer :provider, :model, :max_iterations, :max_tokens, :stop_when,
                   :max_consecutive_failures, :max_submit_nudges, :max_verify_repairs,
                   :verify_command, :verify_timeout, :run_dir, :commit_format,
-                  :local_guards, :stream, :debug
+                  :local_guards, :stream, :debug,
+                  :decisions_enabled, :decision_mode, :decision_wait_poll, :decision_timeout
 
       def initialize(**overrides)
         super()
@@ -41,6 +42,12 @@ module RobotLab
       def local_guards?            = @local_guards.nil? ? super : @local_guards
       def stream?                  = @stream.nil? ? super : @stream
       def debug?                   = @debug.nil? ? super : @debug
+
+      def decisions_enabled?       = @decisions_enabled.nil? ? super : @decisions_enabled
+      def decision_mode            = @decision_mode      || super
+      def decision_wait_poll       = @decision_wait_poll || super
+      # nil = wait indefinitely
+      def decision_timeout         = @decision_timeout   || super
 
       # CLI-only options with no YAML default (nil means "no limit / not set")
       def max_iterations           = @max_iterations

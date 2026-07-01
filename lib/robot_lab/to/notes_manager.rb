@@ -79,6 +79,18 @@ module RobotLab
         MD
       end
 
+      def append_decision(decision, iteration)
+        append(<<~MD)
+
+          ### Iteration #{iteration} [DECISION]
+
+          **Raised:** #{decision.question}
+          **Blocking:** #{decision.blocking? ? "yes" : "no"}
+          **Recommendation:** #{decision.recommendation}
+          **File:** #{decision.path}
+        MD
+      end
+
       private
 
       def append(text)

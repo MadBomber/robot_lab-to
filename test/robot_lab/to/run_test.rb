@@ -84,6 +84,64 @@ module RobotLab
         assert_equal 0, run.consecutive_failures
         assert_equal 0, run.consecutive_errors
       end
+
+      def test_run_dir_defaults_to_notes_parent
+        run = make_run(notes_path: "/tmp/runs/abc/notes.md")
+        assert_equal Pathname.new("/tmp/runs/abc"), run.run_dir
+      end
+
+      def test_decisions_path_defaults_under_run_dir
+        run = make_run(notes_path: "/tmp/runs/abc/notes.md")
+        assert_equal Pathname.new("/tmp/runs/abc/decisions"), run.decisions_path
+      end
+
+      def test_state_path_is_run_json_under_run_dir
+        run = make_run(run_dir: "/tmp/runs/abc")
+        assert_equal Pathname.new("/tmp/runs/abc/run.json"), run.state_path
+      end
+
+      def test_explicit_run_dir_and_decisions_path_override
+        run = make_run(run_dir: "/data/r1", decisions_path: "/data/r1/dec")
+        assert_equal Pathname.new("/data/r1"), run.run_dir
+        assert_equal Pathname.new("/data/r1/dec"), run.decisions_path
+      end
+
+      def test_to_h_round_trips_through_load
+        with_tmp_dir do |dir|
+          run = make_run(run_dir: dir.to_s)
+          run.iteration = 7
+          run.commits = 3
+          run.consecutive_failures = 1
+          run.consecutive_errors = 2
+          run.input_tokens = 900
+          run.output_tokens = 400
+          path = dir.join("run.json")
+          File.write(path, JSON.pretty_generate(run.to_h))
+
+          loaded = Run.load(path)
+          assert_equal run.run_id, loaded.run_id
+          assert_equal run.objective, loaded.objective
+          assert_equal run.branch, loaded.branch
+          assert_equal run.base_commit, loaded.base_commit
+          assert_equal 7, loaded.iteration
+          assert_equal 3, loaded.commits
+          assert_equal 1, loaded.consecutive_failures
+          assert_equal 2, loaded.consecutive_errors
+          assert_equal 900, loaded.input_tokens
+          assert_equal 400, loaded.output_tokens
+        end
+      end
+
+      def test_load_restores_started_at
+        with_tmp_dir do |dir|
+          run = make_run(run_dir: dir.to_s)
+          run.instance_variable_set(:@started_at, Time.now - 3_600)
+          path = dir.join("run.json")
+          File.write(path, JSON.pretty_generate(run.to_h))
+          loaded = Run.load(path)
+          assert_operator loaded.elapsed_seconds, :>=, 3_599
+        end
+      end
     end
   end
 end

@@ -7,10 +7,13 @@ require_relative "to/run"
 require_relative "to/atomic_file"
 require_relative "to/jsonl_logger"
 require_relative "to/notes_manager"
+require_relative "to/decision"
+require_relative "to/decision_manager"
 require_relative "to/commit_manager"
 require_relative "to/verifier"
 require_relative "to/config"
 require_relative "to/tools/submit_result"
+require_relative "to/tools/request_decision"
 require_relative "to/tools/file_tool"
 require_relative "to/tools/read"
 require_relative "to/tools/write"
@@ -36,6 +39,14 @@ module RobotLab
         config = Config.new(**)
         suppress_llm_logging unless config.debug?
         Orchestrator.new(objective, config).run
+      end
+
+      # Resume a paused run by id (used for cron/exit-mode operation). The
+      # objective and prior state are loaded from the run's run.json.
+      def resume(run_id, **)
+        config = Config.new(**)
+        suppress_llm_logging unless config.debug?
+        Orchestrator.new(nil, config, resume_run_id: run_id).run
       end
 
       private

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "securerandom"
+require "json"
 
 module RobotLab
   module To
@@ -8,6 +9,11 @@ module RobotLab
     #
     # Creates a new robot per iteration, reads the iteration result from SubmitResultTool,
     # then commits, rolls back, or queues repair depending on the outcome.
+    #
+    # Human-in-the-loop is asynchronous: when the robot raises a decision it must
+    # not make alone, it is written to a decision file (see DecisionManager). A
+    # blocking decision either pauses the loop (decision_mode: wait) or stops the
+    # run for a later `--resume` (decision_mode: exit).
     class Orchestrator
       SIGNAL_STOP = "graceful_stop"
 
@@ -20,9 +26,10 @@ module RobotLab
         further work first -- just submit the result of what you have done.
       MSG
 
-      def initialize(objective, config)
+      def initialize(objective, config, resume_run_id: nil)
         @objective              = objective
         @config                 = config
+        @resume_run_id          = resume_run_id
         @stop_requested         = false
         @abort_reason           = nil
         @pending_commit_failure = nil
@@ -33,16 +40,21 @@ module RobotLab
         @verifier               = nil
         @robot                  = nil
         @submit_tool            = nil
+        @decisions              = nil
+        @decision_tool          = nil
+        @injected_decisions     = []
         @accounted_in           = 0
         @accounted_out          = 0
       end
 
       def run
-        setup_run
+        @resume_run_id ? setup_resume : setup_run
         install_signal_handlers
-        @logger.log("orchestrator:start", run_id: @run.run_id, objective: @objective,
-                                          branch: @run.branch, model: @config.model)
-        progress "run #{@run.run_id} → branch #{@run.branch}"
+        unless @resume_run_id
+          @logger.log("orchestrator:start", run_id: @run.run_id, objective: @objective,
+                                            branch: @run.branch, model: @config.model)
+          progress "run #{@run.run_id} → branch #{@run.branch}"
+        end
         main_loop
       rescue AbortError => e
         @abort_reason = e.reason
@@ -65,6 +77,9 @@ module RobotLab
         loop do
           break if @stop_requested
 
+          handle_blocking_decisions
+          break if @stop_requested
+
           @stop_conditions.before?
 
           @run.iteration += 1
@@ -79,6 +94,7 @@ module RobotLab
             handle_failure(result)
           end
 
+          persist_run_state
           @stop_conditions.after?
           break if @stop_requested
         end
@@ -100,17 +116,11 @@ module RobotLab
 
       def setup_run
         @git = CommitManager.new
-
-        unless @git.head_exists?
-          raise AbortError, "No commits found. robot-to requires at least one commit. " \
-                            "Run: git commit --allow-empty -m 'initial'"
-        end
+        ensure_head!
 
         run_id     = Run.generate_id
         branch     = Run.branch_name(@objective)
         run_dir    = Pathname.new(@config.run_dir).join("runs", run_id)
-        notes_path = run_dir.join("notes.md")
-        log_path   = run_dir.join("run.log")
 
         @git.create_branch(branch)
         base_commit = @git.head_sha
@@ -119,17 +129,99 @@ module RobotLab
         run_dir.mkpath
 
         @run = Run.new(run_id: run_id, objective: @objective, branch: branch,
-                       base_commit: base_commit, notes_path: notes_path, log_path: log_path)
+                       base_commit: base_commit, notes_path: run_dir.join("notes.md"),
+                       log_path: run_dir.join("run.log"), run_dir: run_dir)
 
-        @logger.open(log_path)
+        @logger.open(@run.log_path)
 
-        @notes   = NotesManager.new(notes_path)
+        @notes = NotesManager.new(@run.notes_path)
         @notes.setup(@run)
 
-        @builder = PromptBuilder.new(@config)
-        @backoff = Backoff.new
+        build_collaborators
+        persist_run_state
+      end
+
+      # Resume a prior run from its run.json — enables external scheduling (cron):
+      # each tick re-enters the loop on the same branch and advances or re-pauses.
+      def setup_resume
+        @git = CommitManager.new
+        ensure_head!
+
+        state_path = Pathname.new(@config.run_dir).join("runs", @resume_run_id, "run.json")
+        raise AbortError, "no resumable run at #{state_path}" unless state_path.exist?
+
+        @run       = Run.load(state_path)
+        @objective = @run.objective
+        @git.checkout_branch(@run.branch)
+
+        @logger.open(@run.log_path)
+        @notes = NotesManager.new(@run.notes_path)  # append — do NOT re-setup (would clobber history)
+
+        build_collaborators
+
+        @logger.log("orchestrator:resume", run_id: @run.run_id, iteration: @run.iteration,
+                                           branch: @run.branch, model: @config.model)
+        progress "resumed run #{@run.run_id} at iteration #{@run.iteration} → branch #{@run.branch}"
+      end
+
+      # Shared setup used by both a fresh run and a resume.
+      def build_collaborators
+        @builder         = PromptBuilder.new(@config)
+        @backoff         = Backoff.new
         @stop_conditions = StopConditions.new(@config, @run)
-        @verifier = build_verifier
+        @verifier        = build_verifier
+        @decisions       = DecisionManager.new(@run.decisions_path)
+        @decisions.setup
+      end
+
+      def ensure_head!
+        return if @git.head_exists?
+
+        raise AbortError, "No commits found. robot-to requires at least one commit. " \
+                          "Run: git commit --allow-empty -m 'initial'"
+      end
+
+      # If a blocking decision is unresolved, either wait for a human (wait mode)
+      # or stop the run so it can be resumed later (exit mode).
+      def handle_blocking_decisions
+        return unless @config.decisions_enabled?
+        return unless @decisions&.blocking_pending?
+
+        pending = @decisions.blocking_pending
+        @logger.log("decision:blocking", count: pending.size, mode: @config.decision_mode)
+
+        if @config.decision_mode.to_s == "exit"
+          persist_run_state
+          paths = pending.map(&:path).join("\n  ")
+          raise AbortError, "awaiting human decision — resolve then resume:\n  #{paths}\n  " \
+                            "robot-to --resume #{@run.run_id}"
+        else
+          wait_for_decisions(pending)
+        end
+      end
+
+      # Poll the decision files until every blocking decision is resolved, the run
+      # is signaled to stop, or decision_timeout elapses.
+      def wait_for_decisions(pending)
+        progress "awaiting human decision on #{pending.size} item(s):"
+        pending.each { |d| progress "  #{d.path}" }
+        @logger.log("decision:wait:start", count: pending.size)
+        deadline = @config.decision_timeout ? monotonic + @config.decision_timeout.to_i : nil
+
+        loop do
+          return if @stop_requested
+
+          @backoff.sleep_seconds(@config.decision_wait_poll)
+          return if @stop_requested
+          break unless @decisions.blocking_pending?
+
+          if deadline && monotonic >= deadline
+            raise AbortError, "awaiting human decision (timed out after #{@config.decision_timeout}s)"
+          end
+        end
+
+        @logger.log("decision:wait:resolved")
+        progress "decision resolved — resuming"
       end
 
       def build_verifier
@@ -155,9 +247,13 @@ module RobotLab
       # result (or a not-submitted marker).
       def run_agent_iteration
         @accounted_in = @accounted_out = 0
-        @submit_tool = Tools::SubmitResult.new
+        @submit_tool   = Tools::SubmitResult.new
+        @decision_tool = @config.decisions_enabled? ? Tools::RequestDecision.new : nil
+        @injected_decisions = @config.decisions_enabled? ? @decisions.resolved_open : []
+
         prompt = @builder.build(@run, @notes.read, workspace: workspace_digest,
-                                                   pending_commit_failure: @pending_commit_failure)
+                                                   pending_commit_failure: @pending_commit_failure,
+                                                   resolved_decisions: @injected_decisions)
         @robot = build_robot(@submit_tool, prompt)
 
         @logger.log("agent:run:start", iteration: @run.iteration)
@@ -166,7 +262,23 @@ module RobotLab
 
         nudge_for_missing_submit(@robot, @submit_tool) if @submit_tool.captured_result.nil?
 
+        persist_raised_decisions
         @submit_tool.captured_result || IterationResult.not_submitted
+      end
+
+      # Write each decision the robot raised this iteration to its own file and
+      # record it in notes.md. Blocking ones are caught at the top of the next
+      # loop pass by handle_blocking_decisions.
+      def persist_raised_decisions
+        return unless @decision_tool
+
+        @decision_tool.captured_requests.each do |req|
+          decision = @decisions.record(**req, iteration: @run.iteration)
+          @notes.append_decision(decision, @run.iteration)
+          @logger.log("decision:raised", id: decision.id, blocking: decision.blocking,
+                                          question: decision.question)
+          progress "iteration #{@run.iteration} raised decision: #{decision.question}"
+        end
       end
 
       # R3: tracked files give the robot the project layout up front, so it does
@@ -224,10 +336,21 @@ module RobotLab
 
         @notes.append_success(result, @run.iteration)
         attempt_commit(result)
+        close_injected_decisions
         @run.consecutive_failures = 0
         @run.consecutive_errors   = 0
         @stop_conditions.stop_when_met?(result)
         nil
+      end
+
+      # A resolved decision that was injected into this successful iteration has
+      # now been acted on and committed, so close it — it should not be re-fed to
+      # future iterations. Failed iterations leave it open for the next pass.
+      def close_injected_decisions
+        return if @injected_decisions.nil? || @injected_decisions.empty?
+
+        @injected_decisions.each { |d| @decisions.close(d) }
+        @injected_decisions = []
       end
 
       # Independent gate: the robot claimed success, but it only counts if the
@@ -328,6 +451,15 @@ module RobotLab
         end
       end
 
+      # Persist run state so an external scheduler can --resume this run.
+      def persist_run_state
+        return unless @run
+
+        AtomicFile.write(@run.state_path, JSON.pretty_generate(@run.to_h))
+      rescue SystemCallError => e
+        @logger.log("run_state:write_failed", message: e.message)
+      end
+
       def build_robot(submit_tool, system_prompt)
         robot = RobotLab.build(
           name: "robot-to-#{@run.run_id}-#{@run.iteration}",
@@ -342,17 +474,15 @@ module RobotLab
         robot
       end
 
-      # Submit tool is always first (callers read tools.first). When local_guards
-      # is on, the robot also gets the built-in workspace tools the guards
-      # protect; otherwise behavior is unchanged (submit-only).
+      # Submit tool is always first (callers read tools.first). The decision tool
+      # follows when decisions are enabled. When local_guards is on, the robot
+      # also gets the built-in workspace tools the guards protect.
       def iteration_tools(submit_tool)
-        return [submit_tool] unless @config.local_guards?
+        tools = [submit_tool]
+        tools << @decision_tool if @decision_tool
+        return tools unless @config.local_guards?
 
-        [submit_tool,
-         Tools::Read.new,
-         Tools::Write.new,
-         Tools::Edit.new,
-         Tools::Bash.new]
+        tools + [Tools::Read.new, Tools::Write.new, Tools::Edit.new, Tools::Bash.new]
       end
 
       def token_tracker
@@ -424,6 +554,10 @@ module RobotLab
       # common under `bundle exec`), hiding progress from the user.
       def progress(msg)
         $stderr.puts "robot-to: #{msg}"
+      end
+
+      def monotonic
+        Process.clock_gettime(Process::CLOCK_MONOTONIC)
       end
 
       def auth_error?(e)

@@ -76,6 +76,25 @@ module RobotLab
         end
       end
 
+      # Raises a decision (blocking or not) then submits success with a file change.
+      # Built with both the submit tool (local_tools[0]) and decision tool (local_tools[1]).
+      class DecisionRobot
+        def initialize(submit, decision, blocking:, write_file:)
+          @submit = submit
+          @decision = decision
+          @blocking = blocking
+          @write_file = write_file
+        end
+
+        def run(_task)
+          File.write(@write_file, "work #{rand}")
+          @decision.execute(question: "404 or 410?", situation: "public API contract",
+                            options: %w[404 410], recommendation: "410 Gone", blocking: @blocking)
+          @submit.execute(success: true, summary: "did work",
+                          key_changes: [@write_file], key_learnings: [])
+        end
+      end
+
       def setup
         @tmpdir = Dir.mktmpdir
         system("git", "-C", @tmpdir, "init", "-q")
@@ -417,6 +436,151 @@ module RobotLab
           Dir.chdir(@tmpdir) { CommitFailOrchestrator.new("test", config).run }
         end
         assert_equal 1, commit_call
+      end
+
+      # ---- Decision files (async human-in-the-loop) --------------------------
+
+      def latest_run_id
+        Dir.glob(File.join(@tmpdir, ".robot_lab_to", "runs", "*"))
+           .select { |p| File.directory?(p) }.sort.map { |p| File.basename(p) }.last
+      end
+
+      def decisions_for(run_id)
+        DecisionManager.new(File.join(@tmpdir, ".robot_lab_to", "runs", run_id, "decisions"))
+      end
+
+      # Resolve a decision file the way a human would (edit in place).
+      def resolve_file(decision, answer: "go with 410")
+        raw = File.read(decision.path)
+        File.write(decision.path,
+                   raw.sub("status: pending", "status: resolved")
+                      .sub("resolution:", "resolution: #{answer}"))
+      end
+
+      # Build an orchestrator with the collaborators handle_blocking_decisions
+      # needs, without running the full loop.
+      def orch_with_decisions(dir, **config_opts)
+        orch = Orchestrator.new("obj", Config.new(**config_opts))
+        mgr  = DecisionManager.new(dir.join("decisions"))
+        mgr.setup
+        run  = Run.new(run_id: "rid", objective: "obj", branch: "b", base_commit: "c",
+                       notes_path: dir.join("notes.md"), log_path: dir.join("run.log"), run_dir: dir)
+        orch.instance_variable_set(:@decisions, mgr)
+        orch.instance_variable_set(:@run, run)
+        orch.instance_variable_set(:@backoff, Backoff.new)
+        orch.instance_variable_set(:@logger, JsonlLogger.new)
+        [orch, mgr]
+      end
+
+      def test_iteration_tools_includes_decision_tool_when_present
+        submit   = Tools::SubmitResult.new
+        decision = Tools::RequestDecision.new
+        orch     = Orchestrator.new("o", Config.new)
+        orch.instance_variable_set(:@decision_tool, decision)
+        assert_equal [submit, decision], orch.send(:iteration_tools, submit)
+      end
+
+      def test_iteration_tools_with_local_guards_orders_submit_then_decision_then_files
+        submit   = Tools::SubmitResult.new
+        decision = Tools::RequestDecision.new
+        orch     = Orchestrator.new("o", Config.new(local_guards: true))
+        orch.instance_variable_set(:@decision_tool, decision)
+        tools = orch.send(:iteration_tools, submit)
+        assert_equal submit, tools[0]
+        assert_equal decision, tools[1]
+        assert_equal %w[bash edit read write], tools[2..].map(&:name).sort
+      end
+
+      def test_decisions_disabled_attaches_no_decision_tool
+        submit = Tools::SubmitResult.new
+        orch   = Orchestrator.new("o", Config.new(decisions_enabled: false))
+        assert_equal [submit], orch.send(:iteration_tools, submit)
+      end
+
+      def test_non_blocking_decision_records_file_and_still_commits
+        path  = File.join(@tmpdir, "feature.rb")
+        build = ->(**kw) { DecisionRobot.new(kw[:local_tools][0], kw[:local_tools][1], blocking: false, write_file: path) }
+        RobotLab.stub(:build, build) do
+          run_orch(objective: "obj")
+        end
+        assert_equal 2, git_log_count, "a non-blocking decision must not stop the iteration from committing"
+        mgr = decisions_for(latest_run_id)
+        assert_equal 1, mgr.pending.size
+        refute mgr.blocking_pending?
+      end
+
+      def test_handle_blocking_decisions_exit_mode_aborts_with_resume_hint
+        with_tmp_dir do |dir|
+          orch, mgr = orch_with_decisions(dir, decision_mode: "exit")
+          mgr.record(question: "Q?", blocking: true, iteration: 1)
+          err = assert_raises(AbortError) { orch.send(:handle_blocking_decisions) }
+          assert_match(/awaiting human decision/, err.reason)
+          assert_match(/--resume rid/, err.reason)
+        end
+      end
+
+      def test_wait_mode_returns_once_decision_resolved
+        with_tmp_dir do |dir|
+          orch, mgr = orch_with_decisions(dir, decision_mode: "wait", decision_wait_poll: 1)
+          d = mgr.record(question: "Q?", blocking: true, iteration: 1)
+          resolver = Thread.new do
+            sleep 0.2
+            resolve_file(d)
+          end
+          orch.send(:handle_blocking_decisions)
+          resolver.join
+          refute mgr.blocking_pending?, "wait mode should return only after the block clears"
+        end
+      end
+
+      def test_wait_mode_times_out
+        with_tmp_dir do |dir|
+          orch, mgr = orch_with_decisions(dir, decision_mode: "wait", decision_timeout: 0)
+          mgr.record(question: "Q?", blocking: true, iteration: 1)
+          orch.instance_variable_get(:@backoff).define_singleton_method(:sleep_seconds) { |_| }
+          err = assert_raises(AbortError) { orch.send(:handle_blocking_decisions) }
+          assert_match(/timed out/, err.reason)
+        end
+      end
+
+      def test_exit_mode_pauses_then_resume_completes_the_run
+        path   = File.join(@tmpdir, "feature.rb")
+        build1 = ->(**kw) { DecisionRobot.new(kw[:local_tools][0], kw[:local_tools][1], blocking: true, write_file: path) }
+        config1 = Config.new(decision_mode: "exit", max_iterations: 5)
+        RobotLab.stub(:build, build1) do
+          Dir.chdir(@tmpdir) { Orchestrator.new("obj", config1).run }
+        end
+        assert_equal 2, git_log_count, "the pre-pause iteration commits its safe work"
+
+        run_id = latest_run_id
+        mgr    = decisions_for(run_id)
+        assert mgr.blocking_pending?, "exit mode leaves the blocking decision pending"
+        mgr.blocking_pending.each { |d| resolve_file(d) }
+
+        more   = File.join(@tmpdir, "more.rb")
+        build2 = ->(**kw) { FakeRobot.new(kw[:local_tools][0], write_file: more) }
+        config2 = Config.new(decision_mode: "exit", max_iterations: 2)
+        RobotLab.stub(:build, build2) do
+          Dir.chdir(@tmpdir) { Orchestrator.new(nil, config2, resume_run_id: run_id).run }
+        end
+        assert_equal 3, git_log_count, "resume continues on the same branch and commits again"
+        # the resolved decision was consumed and closed
+        assert_empty decisions_for(run_id).resolved_open
+      end
+
+      def test_resume_missing_state_aborts_cleanly
+        Dir.chdir(@tmpdir) do
+          Orchestrator.new(nil, Config.new, resume_run_id: "nope-0000").run
+          # AbortError captured internally — no unhandled exception
+        end
+      end
+
+      def test_run_state_json_written
+        stub_build(FakeRobot) { run_orch }
+        state = Dir.glob(File.join(@tmpdir, ".robot_lab_to", "runs", "**", "run.json"))
+        refute_empty state
+        data = JSON.parse(File.read(state.first))
+        assert_equal "test objective", data["objective"]
       end
     end
   end
