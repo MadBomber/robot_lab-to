@@ -1032,6 +1032,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#max_verify_repairs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        max_verify_repairs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#stop_when" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1710,6 +1721,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#max_verify_repairs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        max_verify_repairs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#stop_when" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2007,6 +2029,17 @@ streaming off, tokens are accounted from each iteration's result instead. See
 </ul>
 <p>Abort after <code>N</code> consecutive failed iterations. Resets to zero on each successful,
 committed iteration. The primary safety net against a run going nowhere.</p>
+<h3 id="max_verify_repairs"><code>max_verify_repairs</code><a class="headerlink" href="#max_verify_repairs" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Default:</strong> <code>2</code></li>
+<li><strong>CLI:</strong> <code>--max-verify-repairs N</code></li>
+</ul>
+<p>When the robot claims success but <code>verify_command</code> fails, the orchestrator hands
+the failure output back to the <strong>same</strong> robot — its chat and working tree intact —
+and lets it fix the code, re-verifying after each attempt, up to <code>N</code> times before
+rolling the iteration back. Nothing commits until the gate is green, so the git
+history stays clean; a near-miss just isn't discarded. Set to <code>0</code> to roll back
+immediately on the first verify failure. See <a href="../../concepts/verification/">Verification Gate</a>.</p>
 <h3 id="stop_when"><code>stop_when</code><a class="headerlink" href="#stop_when" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Default:</strong> <em>(unset)</em></li>

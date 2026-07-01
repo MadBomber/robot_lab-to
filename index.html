@@ -1522,6 +1522,13 @@ work.</p>
   command you choose is the deciding authority. See <a href="concepts/verification/">Verification Gate</a>.</li>
 <li><strong>It stops on its own.</strong> Hard limits plus a natural-language stop condition mean
   you can leave it unattended. See <a href="concepts/stop-conditions/">Stop Conditions</a>.</li>
+<li><strong>It asks before overstepping.</strong> For irreversible or ambiguous choices the robot
+  writes a <strong>decision file</strong> — situation, options, and its recommendation — that
+  you resolve out-of-band instead of letting it guess. Run <code>robot-to decisions</code>
+  to see what's waiting on you.</li>
+<li><strong>Resumable &amp; cron-friendly.</strong> Run state is persisted to <code>run.json</code>, so
+  <code>robot-to --resume &lt;run_id&gt;</code> continues a stopped run and an external scheduler
+  can drive it one commit per tick.</li>
 <li><strong>Runs on local models.</strong> With <code>--local-guards</code> it ships built-in file tools and
   small-model guardrails, so it can drive a local Ollama model offline. See
   <a href="local-models/">Local Models</a>.</li>
