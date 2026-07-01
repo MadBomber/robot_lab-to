@@ -19,29 +19,54 @@ bin/console                    # IRB shell
 
 - **`Orchestrator`** — main loop: setup → iterate → commit/rollback → stop
 - **`SubmitResultTool`** — `RobotLab::Tool` the robot must call to report its result
+- **`RequestDecisionTool`** — `RobotLab::Tool` the robot calls to escalate a choice (async HITL)
 - **`IterationResult`** — `Data.define` value object (success, summary, key_changes, key_learnings, should_fully_stop)
-- **`CommitManager`** — all git ops via `Open3.capture3` (no shell interpolation)
+- **`Decision`** — `Data.define` snapshot of one decision file (status, blocking, question, recommendation, resolution)
+- **`DecisionManager`** — read/write/query decision files; parallels `NotesManager`
+- **`CommitManager`** — all git ops via `Open3.capture3` (no shell interpolation); `checkout_branch` for resume
 - **`NotesManager`** — cross-iteration memory file (notes.md); orchestrator writes, robot reads
 - **`StopConditions`** — max_iterations, max_tokens, consecutive_failures, stop_when
-- **`Backoff`** — exponential (60 × 2^n seconds), interruptible via `interrupt!`
-- **`PromptBuilder`** — builds per-iteration system prompt with objective, notes, and conditional sections
+- **`Backoff`** — exponential (60 × 2^n seconds) + fixed `sleep_seconds` for decision polling; interruptible via `interrupt!`
+- **`PromptBuilder`** — builds per-iteration system prompt with objective, notes, resolved decisions, and conditional sections
 - **`JsonlLogger`** — JSONL event log with 100-event pre-init buffer
 - **`ExitSummary`** — post-run metrics table and next-step commands
-- **`CLI`** — `OptionParser`-based, binary `robot-to`
+- **`CLI`** — `OptionParser`-based, binary `robot-to`; also `--resume` and the `decisions` subcommand
 - **`Config`** — `MywayConfig::Base`, file `~/.config/robot_lab/to.yml`, prefix `ROBOT_LAB_TO_*`
 
 ## Key Pattern: Per-Iteration Robot
 
-A fresh `RobotLab::Tool` (`SubmitResult`) and `RobotLab::Robot` are created per iteration.
-After `robot.run()` returns, the orchestrator reads `submit_tool.captured_result`.
-Nil result → treated as failure (robot never called the tool).
+A fresh `RobotLab::Tool` (`SubmitResult`, plus `RequestDecision` when decisions are
+enabled) and `RobotLab::Robot` are created per iteration. After `robot.run()`
+returns, the orchestrator reads `submit_tool.captured_result` (nil → treated as
+failure) and persists any `decision_tool.captured_requests` as decision files.
+
+## Async Human-in-the-Loop (decision files)
+
+When the robot hits a choice it must not make alone it calls `request_decision`;
+the orchestrator writes a decision file with YAML front matter + a human-readable
+body. Status lifecycle: `pending` → `resolved` (human edits the file) → `closed`
+(resolution injected into a committed iteration). A **blocking** decision gates
+the loop via `handle_blocking_decisions`: `decision_mode: wait` polls until
+resolved (`decision_wait_poll` / `decision_timeout`); `decision_mode: exit` stops
+with a `--resume` hint. See `decision_files_plan.md` in the parent workspace.
+(Note: the workspace's `hitl_plan.md` is a *separate*, synchronous terminal-gate
+design — not this feature.)
+
+## Resume / cron
+
+Each iteration writes `run.json` (`Run#to_h`). `robot-to --resume <run_id>` /
+`RobotLab::To.resume` reloads it (`Run.load`), checks out the branch, and
+re-enters the loop — so an external scheduler can drive one commit per tick.
 
 ## Run State
 
-All run state lives in `.robot_lab_to/runs/<run_id>/`:
-- `notes.md` — cross-iteration log (added to `.git/info/exclude`)
+All run state lives in `.robot_lab_to/runs/<run_id>/` (added to `.git/info/exclude`):
+- `notes.md` — cross-iteration log
 - `run.log` — JSONL event log
+- `run.json` — serialized `Run` snapshot (enables `--resume`)
+- `decisions/d-*.md` — decision files
 
 ## Testing
 
 Minitest. Git-dependent tests use `Dir.mktmpdir` with real `git init`.
+Coverage gate: 95% line / 75% branch (`rake quality` also runs rubocop + flog + flay).

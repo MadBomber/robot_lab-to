@@ -56,6 +56,13 @@ See [The Iteration Loop](concepts/iteration-loop.md) for the full lifecycle.
   command you choose is the deciding authority. See [Verification Gate](concepts/verification.md).
 - **It stops on its own.** Hard limits plus a natural-language stop condition mean
   you can leave it unattended. See [Stop Conditions](concepts/stop-conditions.md).
+- **It asks before overstepping.** For irreversible or ambiguous choices the robot
+  writes a **decision file** — situation, options, and its recommendation — that
+  you resolve out-of-band instead of letting it guess. Run `robot-to decisions`
+  to see what's waiting on you.
+- **Resumable & cron-friendly.** Run state is persisted to `run.json`, so
+  `robot-to --resume <run_id>` continues a stopped run and an external scheduler
+  can drive it one commit per tick.
 - **Runs on local models.** With `--local-guards` it ships built-in file tools and
   small-model guardrails, so it can drive a local Ollama model offline. See
   [Local Models](local-models/index.md).

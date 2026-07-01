@@ -44,6 +44,65 @@ work.
 
 ---
 
+## Human-in-the-loop: decision files
+
+The loop runs unattended, so it can't stop and ask you a question the way a chat
+agent can. Instead, when the robot hits a choice it **shouldn't make on its own**
+— an irreversible change, a public API contract, a genuine ambiguity about intent
+— it calls `request_decision` and the orchestrator writes a **decision file**:
+the situation, the options, and the robot's own recommendation (its "lean").
+
+A decision file is plain markdown with YAML front matter, under the run directory:
+
+```markdown
+---
+id: d-20260701-143022-a1b2c3
+status: pending          # you change this to: resolved
+blocking: true
+resolution:              # you fill this in
+---
+# Decision: Return 404 or 410 for deleted records?
+
+## Options
+1. 404 Not Found
+2. 410 Gone
+
+## Recommendation (robot's lean)
+Option 2 (410 Gone) — the records are permanently deleted...
+```
+
+You resolve it out-of-band by editing the file: set `status: resolved` and fill
+`resolution:`. The robot reads your answer on a later iteration and acts on it.
+
+List what's waiting on you:
+
+```bash
+robot-to decisions              # pending decisions for the latest run
+robot-to decisions <run_id>     # ...for a specific run
+```
+
+**Blocking decisions** gate the loop until you answer, in one of two modes:
+
+- `--decision-mode wait` (default) — the process stays alive and polls the
+  decision file until you resolve it (or `--decision-timeout` elapses).
+- `--decision-mode exit` — the process commits its safe work and **stops**,
+  telling you how to resume. Ideal for cron: nothing runs until you decide.
+
+### Resuming a run (and cron scheduling)
+
+Every run persists its state to `run.json`, so a stopped run can be continued on
+the same branch:
+
+```bash
+robot-to --resume <run_id>
+```
+
+This makes `robot_lab-to` schedulable — a cron entry that runs
+`robot-to --resume <run_id>` each hour advances the work or re-pauses on the next
+open decision, one commit at a time.
+
+---
+
 ## Installation
 
 Requires **Ruby >= 3.2** and a git repository with at least one commit.
@@ -110,6 +169,11 @@ RobotLab::To.run(
   command you choose (`--verify-command`) is the deciding authority.
 - **It stops on its own** — `--max-iterations`, `--max-tokens`,
   `--max-consecutive-failures`, and a natural-language `--stop-when`.
+- **Asks before overstepping** — the robot escalates irreversible or ambiguous
+  choices as **decision files** you resolve out-of-band, instead of guessing.
+- **Resumable & cron-friendly** — run state is persisted to `run.json`;
+  `robot-to --resume <run_id>` continues a stopped run, so an external scheduler
+  can drive it one commit per tick.
 - **Runs on local models** — with `--local-guards` it ships built-in file tools
   and small-model guardrails to drive a local Ollama model offline.
 
@@ -174,6 +238,9 @@ bundled default and the user config file, but is overridden by a CLI flag.
 | `ROBOT_LAB_TO_VERIFY_TIMEOUT` | Timeout (seconds) for `--verify-command` | `600` |
 | `ROBOT_LAB_TO_COMMIT_FORMAT` | `default` or `conventional` | `default` |
 | `ROBOT_LAB_TO_RUN_DIR` | Directory for run state | `.robot_lab_to` |
+| `ROBOT_LAB_TO_DECISIONS_ENABLED` | Offer the `request_decision` tool | `true` |
+| `ROBOT_LAB_TO_DECISION_MODE` | On a blocking decision: `wait` or `exit` | `wait` |
+| `ROBOT_LAB_TO_DECISION_WAIT_POLL` | Seconds between polls while waiting | `30` |
 | `ROBOT_LAB_TO_DEBUG` | Keep verbose provider logging enabled | `false` |
 
 ```bash
@@ -183,9 +250,9 @@ export ROBOT_LAB_TO_STREAM=false
 ```
 
 > **Per-run settings have no env var.** `--max-iterations`, `--max-tokens`,
-> `--stop-when`, and `--verify-command` are intentionally CLI-only (they default
-> to "unset / no limit") and must be passed on the command line or to
-> `RobotLab::To.run`.
+> `--stop-when`, `--verify-command`, and `--decision-timeout` are intentionally
+> CLI-only (they default to "unset / no limit") and must be passed on the command
+> line or to `RobotLab::To.run`.
 
 ### Provider credentials
 

@@ -10,6 +10,21 @@ and [Conventional Commits](https://www.conventionalcommits.org/) (see `COMMITS.m
 
 ### Added
 
+- **Human-in-the-loop decision files.** When the robot hits a choice it must not
+  make autonomously, it calls `request_decision` and the orchestrator writes a
+  decision file (situation, options, and its recommended "lean") under
+  `runs/<id>/decisions/`. A human resolves it out-of-band by editing the file
+  (`status: resolved` + `resolution:`); a later iteration reads the answer back.
+  New `Decision` value object, `DecisionManager`, and `RequestDecision` tool.
+- **Blocking decisions gate the loop.** `--decision-mode wait` (default) polls
+  until the decision is resolved (`--decision-poll`, `--decision-timeout`);
+  `--decision-mode exit` stops the run with a `--resume` hint. Disable with
+  `--no-decisions`.
+- **Resumable runs.** Run state is persisted to `run.json`; `robot-to --resume
+  <run_id>` (or `RobotLab::To.resume`) continues a stopped run on the same
+  branch — enabling cron/scheduled operation.
+- **`decisions` subcommand.** `robot-to decisions [run_id]` lists pending and
+  resolved decisions with their file paths.
 - **Local-model support.** Drive a local [Ollama](https://ollama.com) model
   end-to-end with `--local-guards` and `--no-stream`.
 - **Built-in workspace tools** (`read`, `write`, `edit`, `bash`) attached to the
