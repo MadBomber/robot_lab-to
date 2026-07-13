@@ -31,6 +31,14 @@ module RobotLab
           assert_instance_of Null, Evals.build(Config.new(eval: "null"))
         end
 
+        def test_named_prose
+          assert_instance_of Prose, Evals.build(Config.new(eval: "prose"))
+        end
+
+        def test_measure_alone_selects_code_not_null
+          assert_instance_of Code, Evals.build(Config.new(eval_measure: "rake cov"))
+        end
+
         def test_instance_passed_through_unchanged
           stub = StubEval.new
           assert_same stub, Evals.build(Config.new(eval: stub))

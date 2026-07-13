@@ -174,6 +174,22 @@ module RobotLab
         assert_equal "rake cov", config.eval_measure
         assert_in_delta 90.0, config.eval_target
       end
+
+      def test_prose_eval_settings_overrides
+        config = Config.new(eval_spec: "outline.md", eval_floor: "rake lint",
+                            eval_judge_model: "claude-opus-4")
+        assert_equal "outline.md", config.eval_spec
+        assert_equal "rake lint", config.eval_floor
+        assert_equal "claude-opus-4", config.eval_judge_model
+      end
+
+      def test_protect_paths_defaults_empty
+        assert_equal [], Config.new.protect_paths
+      end
+
+      def test_protect_paths_override
+        assert_equal ["a.md", "b.md"], Config.new(protect_paths: ["a.md", "b.md"]).protect_paths
+      end
     end
   end
 end

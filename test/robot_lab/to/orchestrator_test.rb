@@ -187,6 +187,32 @@ module RobotLab
         assert_equal 1, builds[0], "the run stops once the eval target is met"
       end
 
+      def test_grader_lock_installed_when_paths_protected
+        Dir.mktmpdir do |dir|
+          spec = File.join(dir, "outline.md")
+          File.write(spec, "x")
+          orch = Orchestrator.new("obj", Config.new(protect_paths: [spec]))
+          orch.instance_variable_set(:@evaluator, Evals::Null.new)
+          calls = []
+          robot = Object.new
+          robot.define_singleton_method(:on) { |guard, **kw| calls << [guard, kw] }
+          orch.send(:install_grader_lock, robot)
+          assert_equal 1, calls.size
+          assert_equal Guards::GraderLock, calls.first.first
+          assert_equal [File.expand_path(spec)], calls.first.last[:context][:paths]
+        end
+      end
+
+      def test_grader_lock_skipped_when_no_protected_paths
+        orch = Orchestrator.new("obj", Config.new)
+        orch.instance_variable_set(:@evaluator, Evals::Null.new)
+        called = false
+        robot = Object.new
+        robot.define_singleton_method(:on) { |*, **| called = true }
+        orch.send(:install_grader_lock, robot)
+        refute called
+      end
+
       # Build a robot through the orchestrator's real build_robot (no LLM call —
       # RobotLab.build constructs offline; the network is only touched on #run).
       def built_robot(submit_tool, **config_opts)

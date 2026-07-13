@@ -22,22 +22,29 @@ module RobotLab
       #
       # Phase 1 ships "code" and "null"; "prose", file paths, and "auto" arrive in
       # later phases (they raise a clear error until then).
-      def self.build(config, git: nil)
+      def self.build(config, git: CommitManager.new)
         chosen = config.respond_to?(:eval) ? config.eval : nil
         return chosen if chosen.respond_to?(:score)
         return ProcEval.new(chosen) if chosen.is_a?(Proc)
 
-        from_name(chosen, config)
+        from_name(chosen, config, git)
       end
 
-      def self.from_name(chosen, config)
+      def self.from_name(chosen, config, git)
         case chosen
         when Symbol then from_registry(chosen, config)
         when "code" then code(config)
         when "null" then Null.new
+        when "prose" then prose(config, git)
         when nil    then use_code?(config) ? code(config) : Null.new
         else raise ArgumentError, unknown_strategy(chosen)
         end
+      end
+
+      def self.prose(config, git)
+        Prose.new(objective_model: config.model, git: git,
+                  spec: config.eval_spec, floor: config.eval_floor,
+                  judge_model: config.eval_judge_model || config.model)
       end
 
       # Default to Code when any of its inputs are configured (a verify command,

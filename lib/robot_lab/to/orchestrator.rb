@@ -512,7 +512,22 @@ module RobotLab
           on_content: (@config.stream? ? token_tracker : nil)
         )
         Guards.install(robot, run: @run) if @config.local_guards?
+        install_grader_lock(robot)
         robot
+      end
+
+      # Always-on (independent of --local-guards): lock the eval's grader
+      # artifacts so the robot cannot edit the criteria it is scored against.
+      def install_grader_lock(robot)
+        paths = grader_lock_paths
+        robot.on(Guards::GraderLock, context: { paths: paths }) unless paths.empty?
+      end
+
+      def grader_lock_paths
+        (Array(@evaluator&.protected_paths) + Array(@config.protect_paths))
+          .flat_map { |glob| Dir.glob(glob) }
+          .map { |path| File.expand_path(path) }
+          .uniq
       end
 
       # Submit tool is always first (callers read tools.first). The decision tool

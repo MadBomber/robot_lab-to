@@ -25,10 +25,17 @@ module RobotLab
                   :decisions_enabled, :decision_mode, :decision_wait_poll, :decision_timeout,
                   :eval, :eval_measure, :eval_target, :require_improvement, :stop_on_plateau
 
+      # Prose/grader settings (Phase 3). attr_accessor keeps these off the reek
+      # method-count budget (Config sits at its TooManyMethods limit); they are
+      # assigned in initialize to avoid InstanceVariableAssumption.
+      attr_accessor :eval_judge_model, :eval_spec, :eval_floor, :protect_paths
+
       def initialize(**overrides)
         super()
         @eval = @eval_measure = @eval_target = nil
         @require_improvement = @stop_on_plateau = nil
+        @eval_judge_model = @eval_spec = @eval_floor = nil
+        @protect_paths = []
         overrides.each { |k, v| public_send(:"#{k}=", v) if respond_to?(:"#{k}=") }
       end
 

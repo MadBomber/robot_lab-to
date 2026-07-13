@@ -6,6 +6,7 @@ require_relative "guards/write_guard"
 require_relative "guards/read_before_edit"
 require_relative "guards/checkpoint"
 require_relative "guards/quality_monitor"
+require_relative "guards/grader_lock"
 
 module RobotLab
   module To
