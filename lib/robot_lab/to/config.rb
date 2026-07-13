@@ -22,10 +22,12 @@ module RobotLab
                   :max_consecutive_failures, :max_submit_nudges, :max_verify_repairs,
                   :verify_command, :verify_timeout, :run_dir, :commit_format,
                   :local_guards, :stream, :debug,
-                  :decisions_enabled, :decision_mode, :decision_wait_poll, :decision_timeout
+                  :decisions_enabled, :decision_mode, :decision_wait_poll, :decision_timeout,
+                  :eval, :eval_measure, :eval_target
 
       def initialize(**overrides)
         super()
+        @eval = @eval_measure = @eval_target = nil
         overrides.each { |k, v| public_send(:"#{k}=", v) if respond_to?(:"#{k}=") }
       end
 
@@ -54,6 +56,14 @@ module RobotLab
       def max_tokens               = @max_tokens
       def stop_when                = @stop_when
       def verify_command           = @verify_command
+
+      # Eval strategy selection + tuning (see RobotLab::To::Evals.build). All
+      # CLI-only / nil-default. #eval may hold a strategy name ("code"/"null"), a
+      # registered symbol, an instance responding to #score, or a proc. The
+      # judge/spec/floor readers Prose needs arrive with Phase 3.
+      def eval                     = @eval
+      def eval_measure             = @eval_measure
+      def eval_target              = @eval_target
     end
   end
 end

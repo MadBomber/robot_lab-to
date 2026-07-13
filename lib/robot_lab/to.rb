@@ -11,6 +11,12 @@ require_relative "to/decision"
 require_relative "to/decision_manager"
 require_relative "to/commit_manager"
 require_relative "to/verifier"
+require_relative "to/evals/score"
+require_relative "to/evals/context"
+require_relative "to/evals/base"
+require_relative "to/evals/null"
+require_relative "to/evals/code"
+require_relative "to/evals/factory"
 require_relative "to/config"
 require_relative "to/tools/submit_result"
 require_relative "to/tools/request_decision"
@@ -47,6 +53,14 @@ module RobotLab
         config = Config.new(**)
         suppress_llm_logging unless config.debug?
         Orchestrator.new(nil, config, resume_run_id: run_id).run
+      end
+
+      # Registry of named Eval strategies (see RobotLab::To::Evals.build). The
+      # block receives the Config and returns an object responding to #score.
+      def evals = (@evals ||= {})
+
+      def register_eval(name, &block)
+        evals[name.to_sym] = block
       end
 
       private
