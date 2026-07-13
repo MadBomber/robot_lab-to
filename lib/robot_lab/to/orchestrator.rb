@@ -292,6 +292,7 @@ module RobotLab
         @notes.append_error(e, @run.iteration)
         @run.consecutive_failures += 1
         @run.consecutive_errors   += 1
+        @run.iterations_since_improvement += 1
       end
 
       # True when the iteration should be retried — within the retry budget and
@@ -326,14 +327,53 @@ module RobotLab
         score = evaluate
         result, score = repair_until_gate(result, score) unless score.gate_ok?
         return handle_gate_failure(result, score) unless score.gate_ok?
+        return handle_no_improvement(result, score) if reject_no_improvement?(score)
 
+        commit_improvement(result, score)
+      end
+
+      # A change that passes the gate but does not beat the parent is discarded so
+      # the branch descends monotonically. Disabled by --no-require-improvement.
+      def reject_no_improvement?(score)
+        @config.require_improvement? && !score.improved?
+      end
+
+      # The commit path: record the win, then let the eval (not the robot) decide
+      # whether the objective is met.
+      def commit_improvement(result, score)
         @notes.append_success(result, @run.iteration)
         attempt_commit(result)
+        record_improvement(score)
         close_injected_decisions
+        stop_if_target_met(score, result)
+        nil
+      end
+
+      def record_improvement(score)
+        @run.last_score_value = score.value unless score.value.nil?
+        @run.iterations_since_improvement = 0
         @run.consecutive_failures = 0
         @run.consecutive_errors   = 0
+      end
+
+      # Orchestrator-owned stop: the eval's measurable target supersedes the
+      # robot's self-reported should_fully_stop; --stop-when remains as a fallback.
+      def stop_if_target_met(score, result)
+        raise AbortError, "target met: #{score.detail}" if score.met_target?
+
         @stop_conditions.stop_when_met?(result)
         nil
+      end
+
+      def handle_no_improvement(result, score)
+        iteration = @run.iteration
+        @git.reset_hard unless @pending_commit_failure
+        @notes.append_no_improvement(result, score.detail, iteration)
+        @run.iterations_since_improvement += 1
+        @run.consecutive_failures += 1
+        @run.consecutive_errors    = 0
+        @logger.log("iteration:no_improvement", iteration: iteration, detail: score.detail)
+        progress "iteration #{iteration} no improvement (#{score.detail}) — rolled back"
       end
 
       # A resolved decision that was injected into this successful iteration has
@@ -351,7 +391,8 @@ module RobotLab
       # Evals::Null (the default) reports gate_ok, so behavior matches "no gate".
       def evaluate
         ctx = Evals::Context.new(work_dir: Dir.pwd, previous_ref: @git.head_sha,
-                                 previous_value: nil, objective: @objective, iteration: @run.iteration)
+                                 previous_value: @run.last_score_value,
+                                 objective: @objective, iteration: @run.iteration)
         score = @evaluator.score(ctx)
         @logger.log("eval", iteration: @run.iteration, gate: score.gate_ok,
                             improved: score.improved, value: score.value,
@@ -364,6 +405,7 @@ module RobotLab
         @notes.append_verify_failure(result, score.output.to_s, @run.iteration)
         @run.consecutive_failures += 1
         @run.consecutive_errors    = 0
+        @run.iterations_since_improvement += 1
         @logger.log("iteration:gate_failure", iteration: @run.iteration)
         progress "iteration #{@run.iteration} verification failed — rolled back"
         nil
@@ -416,6 +458,7 @@ module RobotLab
         @notes.append_failure(result, @run.iteration)
         @run.consecutive_failures += 1
         @run.consecutive_errors = 0
+        @run.iterations_since_improvement += 1
         @logger.log("iteration:failure", iteration: @run.iteration, summary: result.summary)
         progress "iteration #{@run.iteration} failed: #{result.summary}"
       end

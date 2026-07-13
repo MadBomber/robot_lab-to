@@ -35,9 +35,15 @@ module RobotLab
         when Symbol then from_registry(chosen, config)
         when "code" then code(config)
         when "null" then Null.new
-        when nil    then blank?(config.verify_command) ? Null.new : code(config)
+        when nil    then use_code?(config) ? code(config) : Null.new
         else raise ArgumentError, unknown_strategy(chosen)
         end
+      end
+
+      # Default to Code when any of its inputs are configured (a verify command,
+      # a measure command, or a target); otherwise Null preserves legacy behavior.
+      def self.use_code?(config)
+        !blank?(config.verify_command) || !config.eval_measure.nil? || !config.eval_target.nil?
       end
 
       def self.code(config)

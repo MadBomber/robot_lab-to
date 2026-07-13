@@ -10,7 +10,8 @@ module RobotLab
       attr_reader :run_id, :objective, :branch, :base_commit, :notes_path, :log_path,
                   :run_dir, :decisions_path, :started_at
       attr_accessor :iteration, :consecutive_failures, :consecutive_errors,
-                    :commits, :input_tokens, :output_tokens
+                    :commits, :input_tokens, :output_tokens,
+                    :last_score_value, :iterations_since_improvement
 
       def initialize(run_id:, objective:, branch:, base_commit:, notes_path:, log_path:,
                      run_dir: nil, decisions_path: nil)
@@ -29,6 +30,8 @@ module RobotLab
         @commits             = 0
         @input_tokens        = 0
         @output_tokens       = 0
+        @last_score_value    = nil
+        @iterations_since_improvement = 0
       end
 
       def total_tokens     = input_tokens + output_tokens
@@ -55,7 +58,9 @@ module RobotLab
           decisions_path: decisions_path.to_s, started_at: started_at.iso8601,
           iteration: iteration, consecutive_failures: consecutive_failures,
           consecutive_errors: consecutive_errors, commits: commits,
-          input_tokens: input_tokens, output_tokens: output_tokens
+          input_tokens: input_tokens, output_tokens: output_tokens,
+          last_score_value: last_score_value,
+          iterations_since_improvement: iterations_since_improvement
         }
       end
 
@@ -72,6 +77,8 @@ module RobotLab
         run.commits              = data[:commits].to_i
         run.input_tokens         = data[:input_tokens].to_i
         run.output_tokens        = data[:output_tokens].to_i
+        run.last_score_value     = data[:last_score_value]
+        run.iterations_since_improvement = data[:iterations_since_improvement].to_i
         run.instance_variable_set(:@started_at, Time.parse(data[:started_at])) if data[:started_at]
         run
       end

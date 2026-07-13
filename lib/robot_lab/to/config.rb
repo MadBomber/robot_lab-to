@@ -23,11 +23,12 @@ module RobotLab
                   :verify_command, :verify_timeout, :run_dir, :commit_format,
                   :local_guards, :stream, :debug,
                   :decisions_enabled, :decision_mode, :decision_wait_poll, :decision_timeout,
-                  :eval, :eval_measure, :eval_target
+                  :eval, :eval_measure, :eval_target, :require_improvement, :stop_on_plateau
 
       def initialize(**overrides)
         super()
         @eval = @eval_measure = @eval_target = nil
+        @require_improvement = @stop_on_plateau = nil
         overrides.each { |k, v| public_send(:"#{k}=", v) if respond_to?(:"#{k}=") }
       end
 
@@ -64,6 +65,12 @@ module RobotLab
       def eval                     = @eval
       def eval_measure             = @eval_measure
       def eval_target              = @eval_target
+      def stop_on_plateau          = @stop_on_plateau
+
+      # CLI/Ruby-only with a hardcoded default (MywayConfig does not generate a
+      # reliable `require_improvement?` predicate). Default true per design: the
+      # loop is strictly monotone unless --no-require-improvement is passed.
+      def require_improvement?     = @require_improvement.nil? || @require_improvement
     end
   end
 end

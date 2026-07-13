@@ -95,6 +95,24 @@ module RobotLab
         end
       end
 
+      # Writes an increasing score each iteration so every iteration improves.
+      class ImprovingRobot
+        def initialize(tool, work:, score:, counter:)
+          @tool    = tool
+          @work    = work
+          @score   = score
+          @counter = counter
+        end
+
+        def run(_task)
+          @counter[0] += 1
+          File.write(@work, "change #{@counter[0]}")
+          File.write(@score, (@counter[0] * 10).to_s)
+          @tool.execute(success: true, summary: "iter #{@counter[0]}",
+                        key_changes: [@work], key_learnings: [])
+        end
+      end
+
       def setup
         @tmpdir = Dir.mktmpdir
         system("git", "-C", @tmpdir, "init", "-q")
@@ -124,6 +142,49 @@ module RobotLab
       def git_log_count
         out, = Open3.capture3("git", "-C", @tmpdir, "log", "--oneline")
         out.lines.count
+      end
+
+      # --- Phase 2: Evals scoring (improvement gate, target, plateau) ---
+
+      def test_improving_score_commits_each_iteration
+        work    = File.join(@tmpdir, "work.txt")
+        score   = File.join(@tmpdir, "score.txt")
+        counter = [0]
+        fake = ->(**kw) { ImprovingRobot.new(kw[:local_tools].first, work: work, score: score, counter: counter) }
+        RobotLab.stub(:build, fake) do
+          run_orch(max_iterations: 3, eval_measure: "cat #{score}")
+        end
+        assert_equal 4, git_log_count, "each improving iteration commits (init + 3)"
+      end
+
+      def test_flat_score_rolls_back_after_first_commit
+        path = File.join(@tmpdir, "work.txt")
+        stub_build(FakeRobot, write_file: path) do
+          run_orch(max_iterations: 2, eval_measure: "echo 50", max_consecutive_failures: 10)
+        end
+        assert_equal 2, git_log_count, "a non-improving iteration is rolled back, not committed"
+      end
+
+      def test_no_require_improvement_commits_flat_scores
+        path = File.join(@tmpdir, "work.txt")
+        stub_build(FakeRobot, write_file: path) do
+          run_orch(max_iterations: 2, eval_measure: "echo 50",
+                   require_improvement: false, max_consecutive_failures: 10)
+        end
+        assert_equal 3, git_log_count, "with the gate off, flat-scoring iterations still commit"
+      end
+
+      def test_target_met_stops_the_run
+        path   = File.join(@tmpdir, "work.txt")
+        builds = [0]
+        fake = lambda do |**kw|
+          builds[0] += 1
+          FakeRobot.new(kw[:local_tools].first, write_file: path)
+        end
+        RobotLab.stub(:build, fake) do
+          run_orch(max_iterations: 5, eval_measure: "echo 95", eval_target: 90)
+        end
+        assert_equal 1, builds[0], "the run stops once the eval target is met"
       end
 
       # Build a robot through the orchestrator's real build_robot (no LLM call —

@@ -118,6 +118,36 @@ module RobotLab
         assert_equal false, opts[:decisions_enabled]
       end
 
+      def test_eval_flag
+        opts = captured_run_args(["do work", "--eval", "code"])
+        assert_equal "code", opts[:eval]
+      end
+
+      def test_measure_flag
+        opts = captured_run_args(["do work", "--measure", "rake coverage"])
+        assert_equal "rake coverage", opts[:eval_measure]
+      end
+
+      def test_target_flag
+        opts = captured_run_args(["do work", "--target", "90"])
+        assert_in_delta 90.0, opts[:eval_target]
+      end
+
+      def test_stop_on_plateau_flag
+        opts = captured_run_args(["do work", "--stop-on-plateau", "3"])
+        assert_equal 3, opts[:stop_on_plateau]
+      end
+
+      def test_no_require_improvement_flag
+        opts = captured_run_args(["do work", "--no-require-improvement"])
+        assert_equal false, opts[:require_improvement]
+      end
+
+      def test_require_improvement_flag_on
+        opts = captured_run_args(["do work", "--require-improvement"])
+        assert_equal true, opts[:require_improvement]
+      end
+
       def test_resume_routes_to_resume_with_run_id
         received = nil
         opts = {}

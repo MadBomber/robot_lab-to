@@ -22,6 +22,12 @@ module RobotLab
         ["--verify-command CMD", String,
          "Command that must pass before a successful iteration is committed", :verify_command],
         ["--verify-timeout SECONDS", Integer, "Timeout for --verify-command (default: 600)", :verify_timeout],
+        ["--eval NAME", String, "Eval strategy: code | null (default: code when --verify-command set)", :eval],
+        ["--measure CMD", String,
+         "Command printing a numeric score; higher is better (Evals::Code)", :eval_measure],
+        ["--target FLOAT", Float, "Stop once the measured score reaches TARGET", :eval_target],
+        ["--stop-on-plateau N", Integer,
+         "Stop after N iterations with no committed improvement", :stop_on_plateau],
         ["--run-dir PATH", String, "Directory for run state (default: .robot_lab_to)", :run_dir],
         ["--commit-format FORMAT", %w[default conventional],
          "Commit message format: default or conventional", :commit_format],
@@ -135,6 +141,10 @@ module RobotLab
 
       # Boolean and terminal flags (each has bespoke behavior).
       def add_flag_options(parser, opts)
+        parser.on("--[no-]require-improvement",
+                  "Roll back gate-passing iterations that don't improve (default: on)") do |v|
+          opts[:require_improvement] = v
+        end
         parser.on("--no-decisions", "Disable the request_decision tool for this run") { opts[:decisions_enabled] = false }
         parser.on("--local-guards", "Add built-in file tools + small-model guardrails (for local models)") do
           opts[:local_guards] = true

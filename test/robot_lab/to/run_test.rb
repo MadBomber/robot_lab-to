@@ -115,6 +115,8 @@ module RobotLab
           run.consecutive_errors = 2
           run.input_tokens = 900
           run.output_tokens = 400
+          run.last_score_value = 87.5
+          run.iterations_since_improvement = 4
           path = dir.join("run.json")
           File.write(path, JSON.pretty_generate(run.to_h))
 
@@ -129,7 +131,15 @@ module RobotLab
           assert_equal 2, loaded.consecutive_errors
           assert_equal 900, loaded.input_tokens
           assert_equal 400, loaded.output_tokens
+          assert_in_delta 87.5, loaded.last_score_value
+          assert_equal 4, loaded.iterations_since_improvement
         end
+      end
+
+      def test_new_run_defaults_score_trajectory
+        run = make_run
+        assert_nil run.last_score_value
+        assert_equal 0, run.iterations_since_improvement
       end
 
       def test_load_restores_started_at
