@@ -14,7 +14,7 @@ module RobotLab
           @write_file = write_file
         end
 
-        def run(_objective)
+        def run(_objective, **)
           File.write(@write_file, "robot change #{rand}") if @write_file
           @tool.execute(
             success: @success,
@@ -28,7 +28,7 @@ module RobotLab
       # Robot that never calls submit_iteration_result.
       class SilentRobot
         def initialize(_tool, **) = nil
-        def run(_objective) = nil
+        def run(_objective, **) = nil
       end
 
       # Silent on the first run; submits (with a file change) only when nudged.
@@ -39,7 +39,7 @@ module RobotLab
           @calls      = 0
         end
 
-        def run(_task)
+        def run(_task, **)
           @calls += 1
           return nil if @calls < 2
 
@@ -53,7 +53,7 @@ module RobotLab
       class StopRobot
         def initialize(tool, **) = @tool = tool
 
-        def run(_objective)
+        def run(_objective, **)
           @tool.execute(success: true, summary: "objective met",
                         key_changes: [], key_learnings: [], should_fully_stop: true)
         end
@@ -68,7 +68,7 @@ module RobotLab
           @calls = 0
         end
 
-        def run(_task)
+        def run(_task, **)
           @calls += 1
           File.write(@write_file, @calls >= 2 ? "good" : "bad")
           @tool.execute(success: true, summary: "attempt #{@calls}",
@@ -86,7 +86,7 @@ module RobotLab
           @write_file = write_file
         end
 
-        def run(_task)
+        def run(_task, **)
           File.write(@write_file, "work #{rand}")
           @decision.execute(question: "404 or 410?", situation: "public API contract",
                             options: %w[404 410], recommendation: "410 Gone", blocking: @blocking)
@@ -104,7 +104,7 @@ module RobotLab
           @counter = counter
         end
 
-        def run(_task)
+        def run(_task, **)
           @counter[0] += 1
           File.write(@work, "change #{@counter[0]}")
           File.write(@score, (@counter[0] * 10).to_s)
@@ -468,7 +468,7 @@ module RobotLab
           @output     = output
         end
 
-        def run(_objective)
+        def run(_objective, **)
           @on_content.call(MockChunk.new(@input, @output))
           @tool.execute(success: true, summary: "done", key_changes: [], key_learnings: [])
         end

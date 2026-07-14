@@ -558,7 +558,11 @@ module RobotLab
         thread_error = nil
         result = nil
         @runner_thread = Thread.new do
-          result = robot.run(task)
+          # tools: :inherit is REQUIRED — RobotLab::Robot#run defaults to
+          # tools: :none (its prompt-driven tool selector sends nothing unless
+          # told). Without this the robot receives zero tools and can never call
+          # submit_iteration_result / read / write, so every iteration fails.
+          result = robot.run(task, tools: :inherit)
         rescue Interrupt
           # killed by signal handler — main loop checks @stop_requested
         rescue => e
