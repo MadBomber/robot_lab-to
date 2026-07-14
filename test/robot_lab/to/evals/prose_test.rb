@@ -103,8 +103,11 @@ module RobotLab
         end
 
         def fake_judge(reply)
+          # robot.run returns a RobotResult whose text is #last_text_content.
+          result = Object.new
+          result.define_singleton_method(:last_text_content) { reply }
           judge = Object.new
-          judge.define_singleton_method(:run) { |_msg| reply }
+          judge.define_singleton_method(:run) { |_msg| result }
           judge
         end
 

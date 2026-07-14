@@ -369,9 +369,14 @@ module RobotLab
         iteration = @run.iteration
         @git.reset_hard unless @pending_commit_failure
         @notes.append_no_improvement(result, score.detail, iteration)
+        # A non-improving iteration is valid work that just wasn't better -- NOT a
+        # failure. It counts toward the plateau (diminishing-returns) stop only, so
+        # it must NOT trip max_consecutive_failures, which is for the robot being
+        # genuinely broken (errors, gate failures, no submit). Conflating the two
+        # throttles legitimate exploration -- especially for prose, where "same"
+        # verdicts are common and normal.
         @run.iterations_since_improvement += 1
-        @run.consecutive_failures += 1
-        @run.consecutive_errors    = 0
+        @run.consecutive_errors = 0
         @logger.log("iteration:no_improvement", iteration: iteration, detail: score.detail)
         progress "iteration #{iteration} no improvement (#{score.detail}) — rolled back"
       end
@@ -511,7 +516,7 @@ module RobotLab
           max_tool_rounds: @config.max_tool_rounds,
           on_content: (@config.stream? ? token_tracker : nil)
         )
-        Guards.install(robot, run: @run) if @config.local_guards?
+        Guards.install(robot, run: @run, except: guard_exclusions) if @config.local_guards?
         install_grader_lock(robot)
         robot
       end
@@ -528,6 +533,12 @@ module RobotLab
           .flat_map { |glob| Dir.glob(glob) }
           .map { |path| File.expand_path(path) }
           .uniq
+      end
+
+      # Guards to skip when installing the local-guards set. Dropping WriteGuard
+      # lets the robot overwrite files it is iteratively refining.
+      def guard_exclusions
+        @config.write_guard ? [] : [Guards::WriteGuard]
       end
 
       # Submit tool is always first (callers read tools.first). The decision tool

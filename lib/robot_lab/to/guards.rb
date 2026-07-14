@@ -38,9 +38,14 @@ module RobotLab
       # @param robot [RobotLab::Robot]
       # @param run [RobotLab::To::Run, nil] supplies run_dir for checkpoints
       # @return [RobotLab::Robot] the same robot, for chaining
-      def self.install(robot, run: nil)
+      # `except:` lists guard classes to skip. Passing [WriteGuard] lets a robot
+      # overwrite existing files (WriteGuard otherwise refuses Write on an existing
+      # file and redirects to Edit -- unhelpful for iterative prose that rewrites a
+      # draft).
+      def self.install(robot, run: nil, except: [])
+        active = ALL - Array(except)
         robot.on(Guards::Checkpoint, context: { run: run }) if run
-        (ALL - [Guards::Checkpoint]).each { |guard| robot.on(guard) }
+        (active - [Guards::Checkpoint]).each { |guard| robot.on(guard) }
         robot.on(Guards::Checkpoint) unless run
         robot
       end

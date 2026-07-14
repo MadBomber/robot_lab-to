@@ -79,7 +79,9 @@ module RobotLab
 
         def ask_judge(objective, old, new)
           judge = RobotLab.build(name: "prose-judge", model: @judge_model, system_prompt: JUDGE_SYSTEM)
-          judge.run(comparison(objective, old, new)).to_s
+          # robot.run returns a RobotResult; its text is #last_text_content, NOT
+          # #to_s (which is the object's inspection string).
+          judge.run(comparison(objective, old, new)).last_text_content.to_s
         end
 
         def comparison(objective, old_text, new_text)

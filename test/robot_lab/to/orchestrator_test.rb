@@ -165,6 +165,20 @@ module RobotLab
         assert_equal 2, git_log_count, "a non-improving iteration is rolled back, not committed"
       end
 
+      def test_no_improvement_does_not_trip_the_failure_cap
+        path   = File.join(@tmpdir, "work.txt")
+        builds = [0]
+        fake = lambda do |**kw|
+          builds[0] += 1
+          FakeRobot.new(kw[:local_tools].first, write_file: path)
+        end
+        RobotLab.stub(:build, fake) do
+          # flat score: only iter 1 improves; iters 2-5 are "no improvement".
+          run_orch(max_iterations: 5, eval_measure: "echo 50", max_consecutive_failures: 2)
+        end
+        assert_equal 5, builds[0], "no-improvement iterations must not count as consecutive failures"
+      end
+
       def test_no_require_improvement_commits_flat_scores
         path = File.join(@tmpdir, "work.txt")
         stub_build(FakeRobot, write_file: path) do

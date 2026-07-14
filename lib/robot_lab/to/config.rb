@@ -27,8 +27,10 @@ module RobotLab
 
       # Prose/grader settings (Phase 3). attr_accessor keeps these off the reek
       # method-count budget (Config sits at its TooManyMethods limit); they are
-      # assigned in initialize to avoid InstanceVariableAssumption.
-      attr_accessor :eval_judge_model, :eval_spec, :eval_floor, :protect_paths
+      # assigned in initialize to avoid InstanceVariableAssumption. write_guard
+      # (default true) lets local_guards runs opt out of WriteGuard so a robot can
+      # freely overwrite files it is iteratively refining (e.g. prose drafts).
+      attr_accessor :eval_judge_model, :eval_spec, :eval_floor, :protect_paths, :write_guard
 
       def initialize(**overrides)
         super()
@@ -36,6 +38,7 @@ module RobotLab
         @require_improvement = @stop_on_plateau = nil
         @eval_judge_model = @eval_spec = @eval_floor = nil
         @protect_paths = []
+        @write_guard = true
         overrides.each { |k, v| public_send(:"#{k}=", v) if respond_to?(:"#{k}=") }
       end
 
