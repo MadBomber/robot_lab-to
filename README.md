@@ -44,6 +44,68 @@ work.
 
 ---
 
+## Scoring: evals
+
+By default a "good" iteration is one the robot *reports* as success (and that
+passes `--verify-command`, if set). That works for "don't break the build," but it
+can't answer *"is this actually better?"* — and an agent will happily report
+success on a change that made no real progress. An **eval** replaces the robot's
+self-report with an orchestrator-owned, measurable judgement, and makes the loop
+**descend toward a target** instead of merely not-breaking.
+
+Two built-in evals cover the two kinds of product.
+
+### Code — measured descent
+
+For software, "better" is measurable. Give the loop a **measure** command that
+prints a number (higher = better), and optionally a **target**:
+
+```bash
+robot-to "Raise parser coverage to 90%" \
+  --verify  "bundle exec rake test" \      # floor: must stay green (correctness)
+  --measure "bundle exec rake coverage" \  # descent signal (higher = better)
+  --target  90                             # stop once the score reaches this
+```
+
+An iteration is committed only if it **improves** the measured score *and* the
+verify floor still passes; a change that scores no better is rolled back, so the
+branch descends monotonically and the run stops itself when the target is met.
+Relax the monotonic gate with `--no-require-improvement`.
+
+### Prose — pairwise judgement
+
+For a document, an opinion piece, or a book there is no `rake coverage`. The
+**prose** eval scores each draft with an LLM judge that compares it *pairwise*
+against the last committed version — an LLM's absolute scores are too noisy to
+descend, but "is B better than A?" is reliable:
+
+```bash
+robot-to "Write an opinionated guide to the Viable Systems Model" \
+  --eval  prose \
+  --spec  outline.md \          # the spec the judge measures against
+  --floor "rake docs:lint" \    # optional mechanizable checks (links, TODOs)
+  --stop-on-plateau 3           # stop after 3 drafts with no improvement
+```
+
+A draft is committed only when the judge rules it **better** than its parent.
+There is no absolute target, so the run ends on `--stop-on-plateau` (N drafts with
+no improvement) or when you stop it.
+
+### Guarding the grader
+
+Whatever the eval, the robot must not be able to "win" by editing the criteria it
+is scored against. The **spec** and any `--protect-path` files are locked for the
+whole run — write/edit/bash attempts against them are refused. (The code test
+suite is deliberately *not* locked; adding tests is legitimate work.)
+
+### Custom evals
+
+Point `--eval` at a strategy registered with `RobotLab::To.register_eval`, or in
+Ruby pass any object responding to `#score(context)` (or a proc) as `eval:`. See
+`RobotLab::To::Evals::Base`.
+
+---
+
 ## Human-in-the-loop: decision files
 
 The loop runs unattended, so it can't stop and ask you a question the way a chat

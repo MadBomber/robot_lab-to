@@ -13,15 +13,55 @@ module RobotLab
         sections << workspace_section(workspace) if workspace && !workspace.empty?
         sections << decisions_answered_section(resolved_decisions) if resolved_decisions && !resolved_decisions.empty?
         sections << task_section
+        sections << score_feedback_section(run)
         sections << verify_section if @config.verify_command
         sections << decision_guidance_section if @config.decisions_enabled?
         sections << submit_section
         sections << repair_section(pending_commit_failure) if pending_commit_failure
         sections << stop_when_section(@config.stop_when) if @config.stop_when
-        sections.join("\n\n")
+        sections.compact.join("\n\n")
       end
 
       private
+
+      # Close the loop: tell the robot how its recent iterations scored so each
+      # attempt is a testable hypothesis against the target, not a blind guess.
+      # Returns nil for unscored runs (no measure/target/prose) so legacy runs are
+      # unchanged.
+      def score_feedback_section(run)
+        return unless scored_run?
+
+        body = [best_line(run), progress_line(run)].compact.join("\n")
+        return if body.empty?
+
+        <<~MD.chomp
+          ## Score Feedback
+
+          #{body}
+        MD
+      end
+
+      def scored_run?
+        !@config.eval_measure.nil? || !@config.eval_target.nil? ||
+          @config.eval == "prose" || !@config.eval_spec.nil?
+      end
+
+      def best_line(run)
+        return unless run.last_score_value
+
+        target = @config.eval_target ? " (target: #{@config.eval_target})" : ""
+        "Best score committed so far: #{run.last_score_value}#{target}."
+      end
+
+      def progress_line(run)
+        stalled = run.iterations_since_improvement
+        if stalled.positive?
+          "The last #{stalled} iteration(s) did not improve and were rolled back. " \
+            "A similar change will be rolled back again — try a DIFFERENT approach now."
+        elsif run.iteration > 1
+          "Your last change improved the result and was committed. Build on it."
+        end
+      end
 
       # Feed back the human's answers to questions the robot raised earlier so it
       # acts on them this iteration instead of re-raising the same decision.

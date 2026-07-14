@@ -37,7 +37,7 @@ module RobotLab
         @run                    = nil
         @git                    = nil
         @runner_thread          = nil
-        @verifier               = nil
+        @evaluator              = nil
         @robot                  = nil
         @submit_tool            = nil
         @decisions              = nil
@@ -169,7 +169,7 @@ module RobotLab
         @builder         = PromptBuilder.new(@config)
         @backoff         = Backoff.new
         @stop_conditions = StopConditions.new(@config, @run)
-        @verifier        = build_verifier
+        @evaluator       = Evals.build(@config, git: @git)
         @decisions       = DecisionManager.new(@run.decisions_path)
         @decisions.setup
       end
@@ -222,13 +222,6 @@ module RobotLab
 
         @logger.log("decision:wait:resolved")
         progress "decision resolved — resuming"
-      end
-
-      def build_verifier
-        cmd = @config.verify_command.to_s.strip
-        return nil if cmd.empty?
-
-        Verifier.new(cmd, work_dir: Dir.pwd, timeout: @config.verify_timeout)
       end
 
       def execute_iteration
@@ -299,6 +292,7 @@ module RobotLab
         @notes.append_error(e, @run.iteration)
         @run.consecutive_failures += 1
         @run.consecutive_errors   += 1
+        @run.iterations_since_improvement += 1
       end
 
       # True when the iteration should be retried — within the retry budget and
@@ -330,17 +324,56 @@ module RobotLab
       end
 
       def handle_success(result)
-        verdict = verify_result
-        result, verdict = repair_until_verified(result, verdict) if verdict && !verdict.passed?
-        return handle_verify_failure(result, verdict) if verdict && !verdict.passed?
+        score = evaluate
+        result, score = repair_until_gate(result, score) unless score.gate_ok?
+        return handle_gate_failure(result, score) unless score.gate_ok?
+        return handle_no_improvement(result, score) if reject_no_improvement?(score)
 
+        commit_improvement(result, score)
+      end
+
+      # A change that passes the gate but does not beat the parent is discarded so
+      # the branch descends monotonically. Disabled by --no-require-improvement.
+      def reject_no_improvement?(score)
+        @config.require_improvement? && !score.improved?
+      end
+
+      # The commit path: record the win, then let the eval (not the robot) decide
+      # whether the objective is met.
+      def commit_improvement(result, score)
         @notes.append_success(result, @run.iteration)
         attempt_commit(result)
+        record_improvement(score)
         close_injected_decisions
+        stop_if_target_met(score, result)
+        nil
+      end
+
+      def record_improvement(score)
+        @run.last_score_value = score.value unless score.value.nil?
+        @run.iterations_since_improvement = 0
         @run.consecutive_failures = 0
         @run.consecutive_errors   = 0
+      end
+
+      # Orchestrator-owned stop: the eval's measurable target supersedes the
+      # robot's self-reported should_fully_stop; --stop-when remains as a fallback.
+      def stop_if_target_met(score, result)
+        raise AbortError, "target met: #{score.detail}" if score.met_target?
+
         @stop_conditions.stop_when_met?(result)
         nil
+      end
+
+      def handle_no_improvement(result, score)
+        iteration = @run.iteration
+        @git.reset_hard unless @pending_commit_failure
+        @notes.append_no_improvement(result, score.detail, iteration)
+        @run.iterations_since_improvement += 1
+        @run.consecutive_failures += 1
+        @run.consecutive_errors    = 0
+        @logger.log("iteration:no_improvement", iteration: iteration, detail: score.detail)
+        progress "iteration #{iteration} no improvement (#{score.detail}) — rolled back"
       end
 
       # A resolved decision that was injected into this successful iteration has
@@ -353,23 +386,27 @@ module RobotLab
         @injected_decisions = []
       end
 
-      # Independent gate: the robot claimed success, but it only counts if the
-      # configured verify_command passes. Returns nil when verification is off.
-      def verify_result
-        return nil unless @verifier
-
-        @logger.log("verify:start", iteration: @run.iteration, command: @config.verify_command)
-        verdict = @verifier.run
-        @logger.log("verify:#{verdict.passed? ? "pass" : "fail"}", iteration: @run.iteration)
-        verdict
+      # Independent gate: the robot claimed success, but the deciding authority is
+      # the configured Eval, not the robot. Always returns a Score (never nil) --
+      # Evals::Null (the default) reports gate_ok, so behavior matches "no gate".
+      def evaluate
+        ctx = Evals::Context.new(work_dir: Dir.pwd, previous_ref: @git.head_sha,
+                                 previous_value: @run.last_score_value,
+                                 objective: @objective, iteration: @run.iteration)
+        score = @evaluator.score(ctx)
+        @logger.log("eval", iteration: @run.iteration, gate: score.gate_ok,
+                            improved: score.improved, value: score.value,
+                            met_target: score.met_target, detail: score.detail)
+        score
       end
 
-      def handle_verify_failure(result, verdict)
+      def handle_gate_failure(result, score)
         @git.reset_hard unless @pending_commit_failure
-        @notes.append_verify_failure(result, verdict.output, @run.iteration)
+        @notes.append_verify_failure(result, score.output.to_s, @run.iteration)
         @run.consecutive_failures += 1
         @run.consecutive_errors    = 0
-        @logger.log("iteration:verify_failure", iteration: @run.iteration)
+        @run.iterations_since_improvement += 1
+        @logger.log("iteration:gate_failure", iteration: @run.iteration)
         progress "iteration #{@run.iteration} verification failed — rolled back"
         nil
       end
@@ -379,36 +416,39 @@ module RobotLab
       # the code, re-verifying after each attempt. Only fall back to a full
       # rollback once the repair budget is spent — a near-miss no longer discards
       # all the work, and nothing commits until the gate is green.
-      def repair_until_verified(result, verdict)
+      def repair_until_gate(result, score)
         budget = @config.max_verify_repairs.to_i
-        return [result, verdict] if budget.zero? || @robot.nil?
+        return [result, score] if budget.zero? || @robot.nil?
 
         budget.times do |i|
           break if @stop_requested
 
-          @logger.log("verify:repair", iteration: @run.iteration, attempt: i + 1)
+          @logger.log("eval:repair", iteration: @run.iteration, attempt: i + 1)
           progress "iteration #{@run.iteration}: verification failed — repairing (#{i + 1}/#{budget})"
           begin
-            run_robot_with_interrupt(@robot, repair_prompt(verdict))
+            run_robot_with_interrupt(@robot, repair_prompt(score))
           rescue StandardError => e
-            @logger.log("verify:repair_error", iteration: @run.iteration, message: e.message)
+            @logger.log("eval:repair_error", iteration: @run.iteration, message: e.message)
             break
           end
-          result  = @submit_tool.captured_result || result
-          verdict = verify_result
-          break if verdict.passed?
+          result = @submit_tool.captured_result || result
+          score  = evaluate
+          gate_ok = score.gate_ok?
+          break if gate_ok
         end
 
-        [result, verdict]
+        [result, score]
       end
 
-      def repair_prompt(verdict)
+      def repair_prompt(score)
+        gate   = @config.verify_command.to_s.strip
+        target = gate.empty? ? "the verification gate" : "`#{gate}`"
         <<~MSG
-          Your changes did NOT pass verification. Running `#{@config.verify_command}` failed:
+          Your changes did NOT pass verification. Running #{target} failed:
 
-          #{verdict.output}
+          #{score.output}
 
-          Fix the code so that command exits 0, then call submit_iteration_result again.
+          Fix the code so it passes, then call submit_iteration_result again.
           Build on the work already in the project — do not start over.
         MSG
       end
@@ -418,6 +458,7 @@ module RobotLab
         @notes.append_failure(result, @run.iteration)
         @run.consecutive_failures += 1
         @run.consecutive_errors = 0
+        @run.iterations_since_improvement += 1
         @logger.log("iteration:failure", iteration: @run.iteration, summary: result.summary)
         progress "iteration #{@run.iteration} failed: #{result.summary}"
       end
@@ -471,7 +512,22 @@ module RobotLab
           on_content: (@config.stream? ? token_tracker : nil)
         )
         Guards.install(robot, run: @run) if @config.local_guards?
+        install_grader_lock(robot)
         robot
+      end
+
+      # Always-on (independent of --local-guards): lock the eval's grader
+      # artifacts so the robot cannot edit the criteria it is scored against.
+      def install_grader_lock(robot)
+        paths = grader_lock_paths
+        robot.on(Guards::GraderLock, context: { paths: paths }) unless paths.empty?
+      end
+
+      def grader_lock_paths
+        (Array(@evaluator&.protected_paths) + Array(@config.protect_paths))
+          .flat_map { |glob| Dir.glob(glob) }
+          .map { |path| File.expand_path(path) }
+          .uniq
       end
 
       # Submit tool is always first (callers read tools.first). The decision tool
@@ -502,7 +558,11 @@ module RobotLab
         thread_error = nil
         result = nil
         @runner_thread = Thread.new do
-          result = robot.run(task)
+          # tools: :inherit is REQUIRED — RobotLab::Robot#run defaults to
+          # tools: :none (its prompt-driven tool selector sends nothing unless
+          # told). Without this the robot receives zero tools and can never call
+          # submit_iteration_result / read / write, so every iteration fails.
+          result = robot.run(task, tools: :inherit)
         rescue Interrupt
           # killed by signal handler — main loop checks @stop_requested
         rescue => e

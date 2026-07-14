@@ -98,6 +98,55 @@ module RobotLab
         end
       end
 
+      def test_omits_score_feedback_for_unscored_run
+        stub_run do |run, _dir|
+          run.iteration = 3
+          refute_includes @builder.build(run, ""), "## Score Feedback"
+        end
+      end
+
+      def test_omits_score_feedback_on_first_iteration
+        builder = PromptBuilder.new(Config.new(eval_measure: "cat score"))
+        stub_run do |run, _dir|
+          run.iteration = 1
+          refute_includes builder.build(run, ""), "## Score Feedback"
+        end
+      end
+
+      def test_score_feedback_shows_best_score_and_target
+        builder = PromptBuilder.new(Config.new(eval_measure: "cat score", eval_target: 90.0))
+        stub_run do |run, _dir|
+          run.iteration = 3
+          run.last_score_value = 84.0
+          prompt = builder.build(run, "")
+          assert_includes prompt, "## Score Feedback"
+          assert_includes prompt, "Best score committed so far: 84.0 (target: 90.0)"
+          assert_includes prompt, "Build on it"
+        end
+      end
+
+      def test_score_feedback_warns_on_plateau
+        builder = PromptBuilder.new(Config.new(eval_measure: "cat score"))
+        stub_run do |run, _dir|
+          run.iteration = 5
+          run.iterations_since_improvement = 2
+          prompt = builder.build(run, "")
+          assert_includes prompt, "The last 2 iteration(s) did not improve"
+          assert_includes prompt, "DIFFERENT approach"
+        end
+      end
+
+      def test_score_feedback_for_prose_has_no_numeric_best
+        builder = PromptBuilder.new(Config.new(eval: "prose"))
+        stub_run do |run, _dir|
+          run.iteration = 4
+          run.iterations_since_improvement = 1
+          prompt = builder.build(run, "")
+          assert_includes prompt, "## Score Feedback"
+          refute_includes prompt, "Best score committed"
+        end
+      end
+
       def resolved_decision(question: "404 or 410?", resolution: "410 Gone")
         Decision.new(id: "d-1", status: "resolved", blocking: true,
                      created_at: "2026-07-01T12:00:00Z", created_iteration: 1,

@@ -17,7 +17,9 @@ bin/console                    # IRB shell
 
 ## Architecture
 
-- **`Orchestrator`** — main loop: setup → iterate → commit/rollback → stop
+- **`Orchestrator`** — main loop: setup → iterate → **eval-gated** commit/rollback → stop
+- **`Evals`** — orchestrator-owned scorers (`Evals.build` factory + `register_eval` registry). `Base` returns a `Score(gate_ok, improved, met_target, value, detail, output)`. `Null` (default, unscored), `Code` (measured: verify floor + `--measure`/`--target`, composes `Verifier`), `Prose` (pairwise LLM judge vs. the parent commit + optional `--floor`). Commit requires `gate_ok && improved`; the run stops on `met_target`. `Base#protected_paths` feeds `GraderLock`.
+- **`Guards::GraderLock`** — always-on hook (independent of `--local-guards`) that refuses write/edit/bash on the eval's grader artifacts (spec + `--protect-path`); wired in `Orchestrator#build_robot`.
 - **`SubmitResultTool`** — `RobotLab::Tool` the robot must call to report its result
 - **`RequestDecisionTool`** — `RobotLab::Tool` the robot calls to escalate a choice (async HITL)
 - **`IterationResult`** — `Data.define` value object (success, summary, key_changes, key_learnings, should_fully_stop)
@@ -25,9 +27,9 @@ bin/console                    # IRB shell
 - **`DecisionManager`** — read/write/query decision files; parallels `NotesManager`
 - **`CommitManager`** — all git ops via `Open3.capture3` (no shell interpolation); `checkout_branch` for resume
 - **`NotesManager`** — cross-iteration memory file (notes.md); orchestrator writes, robot reads
-- **`StopConditions`** — max_iterations, max_tokens, consecutive_failures, stop_when
+- **`StopConditions`** — max_iterations, max_tokens, consecutive_failures, stop_when, **stop_on_plateau** (N iterations without improvement — the primary terminator for prose)
 - **`Backoff`** — exponential (60 × 2^n seconds) + fixed `sleep_seconds` for decision polling; interruptible via `interrupt!`
-- **`PromptBuilder`** — builds per-iteration system prompt with objective, notes, resolved decisions, and conditional sections
+- **`PromptBuilder`** — builds per-iteration system prompt with objective, notes, resolved decisions, a **score-feedback section** (best score / target / plateau warning for scored runs), and conditional sections
 - **`JsonlLogger`** — JSONL event log with 100-event pre-init buffer
 - **`ExitSummary`** — post-run metrics table and next-step commands
 - **`CLI`** — `OptionParser`-based, binary `robot-to`; also `--resume` and the `decisions` subcommand

@@ -22,10 +22,20 @@ module RobotLab
                   :max_consecutive_failures, :max_submit_nudges, :max_verify_repairs,
                   :verify_command, :verify_timeout, :run_dir, :commit_format,
                   :local_guards, :stream, :debug,
-                  :decisions_enabled, :decision_mode, :decision_wait_poll, :decision_timeout
+                  :decisions_enabled, :decision_mode, :decision_wait_poll, :decision_timeout,
+                  :eval, :eval_measure, :eval_target, :require_improvement, :stop_on_plateau
+
+      # Prose/grader settings (Phase 3). attr_accessor keeps these off the reek
+      # method-count budget (Config sits at its TooManyMethods limit); they are
+      # assigned in initialize to avoid InstanceVariableAssumption.
+      attr_accessor :eval_judge_model, :eval_spec, :eval_floor, :protect_paths
 
       def initialize(**overrides)
         super()
+        @eval = @eval_measure = @eval_target = nil
+        @require_improvement = @stop_on_plateau = nil
+        @eval_judge_model = @eval_spec = @eval_floor = nil
+        @protect_paths = []
         overrides.each { |k, v| public_send(:"#{k}=", v) if respond_to?(:"#{k}=") }
       end
 
@@ -54,6 +64,20 @@ module RobotLab
       def max_tokens               = @max_tokens
       def stop_when                = @stop_when
       def verify_command           = @verify_command
+
+      # Eval strategy selection + tuning (see RobotLab::To::Evals.build). All
+      # CLI-only / nil-default. #eval may hold a strategy name ("code"/"null"), a
+      # registered symbol, an instance responding to #score, or a proc. The
+      # judge/spec/floor readers Prose needs arrive with Phase 3.
+      def eval                     = @eval
+      def eval_measure             = @eval_measure
+      def eval_target              = @eval_target
+      def stop_on_plateau          = @stop_on_plateau
+
+      # CLI/Ruby-only with a hardcoded default (MywayConfig does not generate a
+      # reliable `require_improvement?` predicate). Default true per design: the
+      # loop is strictly monotone unless --no-require-improvement is passed.
+      def require_improvement?     = @require_improvement.nil? || @require_improvement
     end
   end
 end

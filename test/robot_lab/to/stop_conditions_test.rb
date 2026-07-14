@@ -106,6 +106,30 @@ module RobotLab
           assert_raises(AbortError) { sc.after? }
         end
       end
+
+      def test_after_raises_on_plateau
+        stub_run do |run, _dir|
+          run.iterations_since_improvement = 2
+          sc = StopConditions.new(config_with(stop_on_plateau: 2), run)
+          assert_raises(AbortError) { sc.after? }
+        end
+      end
+
+      def test_no_plateau_stop_when_unconfigured
+        stub_run do |run, _dir|
+          run.iterations_since_improvement = 9
+          sc = StopConditions.new(config_with, run) # stop_on_plateau nil
+          assert_nil sc.after?
+        end
+      end
+
+      def test_no_plateau_stop_below_threshold
+        stub_run do |run, _dir|
+          run.iterations_since_improvement = 1
+          sc = StopConditions.new(config_with(stop_on_plateau: 3), run)
+          assert_nil sc.after?
+        end
+      end
     end
   end
 end

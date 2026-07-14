@@ -56,6 +56,20 @@ module RobotLab
         MD
       end
 
+      def append_no_improvement(result, detail, iteration)
+        append(<<~MD)
+
+          ### Iteration #{iteration} [NO IMPROVEMENT]
+
+          **Summary:** #{result.summary}
+
+          **Score:** #{detail}
+
+          The change passed the gate but did not beat the parent commit, so it was
+          rolled back. Try a different approach next iteration.
+        MD
+      end
+
       def append_verify_failure(result, output, iteration)
         append(<<~MD)
 

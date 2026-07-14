@@ -87,6 +87,21 @@ module RobotLab
         out.lines.map(&:chomp).reject(&:empty?)
       end
 
+      # Files differing between a ref and the current working tree (uncommitted
+      # changes). Used by pairwise evals to compare a draft against its parent.
+      def changed_vs_worktree(ref)
+        out, _err, _status = Open3.capture3(GIT_ENV, "git", "diff", "--name-only", ref,
+                                            chdir: @work_dir)
+        out.lines.map(&:chomp).reject(&:empty?)
+      end
+
+      # Contents of a path at a given ref, or "" when it did not exist there.
+      def show(ref, path)
+        out, _err, status = Open3.capture3(GIT_ENV, "git", "show", "#{ref}:#{path}",
+                                           chdir: @work_dir)
+        status.success? ? out : ""
+      end
+
       # All tracked files — the project's committed layout. Excludes the run dir
       # (it's in .git/info/exclude), so it's a clean workspace digest.
       def tracked_files

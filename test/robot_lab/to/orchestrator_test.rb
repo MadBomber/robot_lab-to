@@ -14,7 +14,7 @@ module RobotLab
           @write_file = write_file
         end
 
-        def run(_objective)
+        def run(_objective, **)
           File.write(@write_file, "robot change #{rand}") if @write_file
           @tool.execute(
             success: @success,
@@ -28,7 +28,7 @@ module RobotLab
       # Robot that never calls submit_iteration_result.
       class SilentRobot
         def initialize(_tool, **) = nil
-        def run(_objective) = nil
+        def run(_objective, **) = nil
       end
 
       # Silent on the first run; submits (with a file change) only when nudged.
@@ -39,7 +39,7 @@ module RobotLab
           @calls      = 0
         end
 
-        def run(_task)
+        def run(_task, **)
           @calls += 1
           return nil if @calls < 2
 
@@ -53,7 +53,7 @@ module RobotLab
       class StopRobot
         def initialize(tool, **) = @tool = tool
 
-        def run(_objective)
+        def run(_objective, **)
           @tool.execute(success: true, summary: "objective met",
                         key_changes: [], key_learnings: [], should_fully_stop: true)
         end
@@ -68,7 +68,7 @@ module RobotLab
           @calls = 0
         end
 
-        def run(_task)
+        def run(_task, **)
           @calls += 1
           File.write(@write_file, @calls >= 2 ? "good" : "bad")
           @tool.execute(success: true, summary: "attempt #{@calls}",
@@ -86,12 +86,30 @@ module RobotLab
           @write_file = write_file
         end
 
-        def run(_task)
+        def run(_task, **)
           File.write(@write_file, "work #{rand}")
           @decision.execute(question: "404 or 410?", situation: "public API contract",
                             options: %w[404 410], recommendation: "410 Gone", blocking: @blocking)
           @submit.execute(success: true, summary: "did work",
                           key_changes: [@write_file], key_learnings: [])
+        end
+      end
+
+      # Writes an increasing score each iteration so every iteration improves.
+      class ImprovingRobot
+        def initialize(tool, work:, score:, counter:)
+          @tool    = tool
+          @work    = work
+          @score   = score
+          @counter = counter
+        end
+
+        def run(_task, **)
+          @counter[0] += 1
+          File.write(@work, "change #{@counter[0]}")
+          File.write(@score, (@counter[0] * 10).to_s)
+          @tool.execute(success: true, summary: "iter #{@counter[0]}",
+                        key_changes: [@work], key_learnings: [])
         end
       end
 
@@ -124,6 +142,75 @@ module RobotLab
       def git_log_count
         out, = Open3.capture3("git", "-C", @tmpdir, "log", "--oneline")
         out.lines.count
+      end
+
+      # --- Phase 2: Evals scoring (improvement gate, target, plateau) ---
+
+      def test_improving_score_commits_each_iteration
+        work    = File.join(@tmpdir, "work.txt")
+        score   = File.join(@tmpdir, "score.txt")
+        counter = [0]
+        fake = ->(**kw) { ImprovingRobot.new(kw[:local_tools].first, work: work, score: score, counter: counter) }
+        RobotLab.stub(:build, fake) do
+          run_orch(max_iterations: 3, eval_measure: "cat #{score}")
+        end
+        assert_equal 4, git_log_count, "each improving iteration commits (init + 3)"
+      end
+
+      def test_flat_score_rolls_back_after_first_commit
+        path = File.join(@tmpdir, "work.txt")
+        stub_build(FakeRobot, write_file: path) do
+          run_orch(max_iterations: 2, eval_measure: "echo 50", max_consecutive_failures: 10)
+        end
+        assert_equal 2, git_log_count, "a non-improving iteration is rolled back, not committed"
+      end
+
+      def test_no_require_improvement_commits_flat_scores
+        path = File.join(@tmpdir, "work.txt")
+        stub_build(FakeRobot, write_file: path) do
+          run_orch(max_iterations: 2, eval_measure: "echo 50",
+                   require_improvement: false, max_consecutive_failures: 10)
+        end
+        assert_equal 3, git_log_count, "with the gate off, flat-scoring iterations still commit"
+      end
+
+      def test_target_met_stops_the_run
+        path   = File.join(@tmpdir, "work.txt")
+        builds = [0]
+        fake = lambda do |**kw|
+          builds[0] += 1
+          FakeRobot.new(kw[:local_tools].first, write_file: path)
+        end
+        RobotLab.stub(:build, fake) do
+          run_orch(max_iterations: 5, eval_measure: "echo 95", eval_target: 90)
+        end
+        assert_equal 1, builds[0], "the run stops once the eval target is met"
+      end
+
+      def test_grader_lock_installed_when_paths_protected
+        Dir.mktmpdir do |dir|
+          spec = File.join(dir, "outline.md")
+          File.write(spec, "x")
+          orch = Orchestrator.new("obj", Config.new(protect_paths: [spec]))
+          orch.instance_variable_set(:@evaluator, Evals::Null.new)
+          calls = []
+          robot = Object.new
+          robot.define_singleton_method(:on) { |guard, **kw| calls << [guard, kw] }
+          orch.send(:install_grader_lock, robot)
+          assert_equal 1, calls.size
+          assert_equal Guards::GraderLock, calls.first.first
+          assert_equal [File.expand_path(spec)], calls.first.last[:context][:paths]
+        end
+      end
+
+      def test_grader_lock_skipped_when_no_protected_paths
+        orch = Orchestrator.new("obj", Config.new)
+        orch.instance_variable_set(:@evaluator, Evals::Null.new)
+        called = false
+        robot = Object.new
+        robot.define_singleton_method(:on) { |*, **| called = true }
+        orch.send(:install_grader_lock, robot)
+        refute called
       end
 
       # Build a robot through the orchestrator's real build_robot (no LLM call —
@@ -381,7 +468,7 @@ module RobotLab
           @output     = output
         end
 
-        def run(_objective)
+        def run(_objective, **)
           @on_content.call(MockChunk.new(@input, @output))
           @tool.execute(success: true, summary: "done", key_changes: [], key_learnings: [])
         end

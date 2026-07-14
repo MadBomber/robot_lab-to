@@ -148,6 +148,48 @@ module RobotLab
       def test_decision_timeout_override
         assert_equal 3_600, Config.new(decision_timeout: 3_600).decision_timeout
       end
+
+      def test_require_improvement_defaults_true
+        assert Config.new.require_improvement?
+      end
+
+      def test_require_improvement_override_false
+        refute Config.new(require_improvement: false).require_improvement?
+      end
+
+      def test_stop_on_plateau_default_nil
+        assert_nil Config.new.stop_on_plateau
+      end
+
+      def test_stop_on_plateau_override
+        assert_equal 3, Config.new(stop_on_plateau: 3).stop_on_plateau
+      end
+
+      def test_eval_selection_defaults_nil
+        assert_nil Config.new.eval
+      end
+
+      def test_eval_measure_and_target_overrides
+        config = Config.new(eval_measure: "rake cov", eval_target: 90.0)
+        assert_equal "rake cov", config.eval_measure
+        assert_in_delta 90.0, config.eval_target
+      end
+
+      def test_prose_eval_settings_overrides
+        config = Config.new(eval_spec: "outline.md", eval_floor: "rake lint",
+                            eval_judge_model: "claude-opus-4")
+        assert_equal "outline.md", config.eval_spec
+        assert_equal "rake lint", config.eval_floor
+        assert_equal "claude-opus-4", config.eval_judge_model
+      end
+
+      def test_protect_paths_defaults_empty
+        assert_equal [], Config.new.protect_paths
+      end
+
+      def test_protect_paths_override
+        assert_equal ["a.md", "b.md"], Config.new(protect_paths: ["a.md", "b.md"]).protect_paths
+      end
     end
   end
 end

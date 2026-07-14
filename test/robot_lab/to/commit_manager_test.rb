@@ -26,6 +26,29 @@ module RobotLab
         assert_match(/\A[0-9a-f]{40}\z/, sha)
       end
 
+      def test_changed_vs_worktree_lists_uncommitted_edits
+        commit_file("doc.md", "v1")
+        File.write(File.join(@tmpdir, "doc.md"), "v2 draft")
+        assert_equal ["doc.md"], @cm.changed_vs_worktree("HEAD")
+      end
+
+      def test_show_returns_committed_contents
+        commit_file("doc.md", "committed body")
+        File.write(File.join(@tmpdir, "doc.md"), "working changes")
+        assert_equal "committed body", @cm.show("HEAD", "doc.md").chomp
+      end
+
+      def test_show_returns_empty_for_missing_path
+        commit_file("doc.md", "x")
+        assert_equal "", @cm.show("HEAD", "nope.md")
+      end
+
+      def commit_file(name, body)
+        File.write(File.join(@tmpdir, name), body)
+        system("git", "-C", @tmpdir, "add", "-A", out: File::NULL, err: File::NULL)
+        system("git", "-C", @tmpdir, "commit", "-m", "c", out: File::NULL, err: File::NULL)
+      end
+
       def test_staged_false_when_nothing_staged
         File.write(File.join(@tmpdir, "README.md"), "hello")
         # file is untracked, not staged
