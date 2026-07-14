@@ -67,15 +67,19 @@ module RobotLab
           files = @git.changed_vs_worktree(context.previous_ref)
           return :same if files.empty?
 
-          parse_verdict(ask_judge(context, files))
+          old = files.map { |f| @git.show(context.previous_ref, f) }.join("\n\n")
+          new = files.map { |f| read_working(f) }.join("\n\n")
+          # A brand-new document (no prior version) is an improvement over nothing.
+          # Skip the judge: a pairwise "empty vs content" comparison is degenerate
+          # and models frequently (wrongly) call it "same".
+          return :better if old.strip.empty? && !new.strip.empty?
+
+          parse_verdict(ask_judge(context.objective, old, new))
         end
 
-        def ask_judge(context, files)
-          ref   = context.previous_ref
-          old   = files.map { |f| @git.show(ref, f) }.join("\n\n")
-          fresh = files.map { |f| read_working(f) }.join("\n\n")
+        def ask_judge(objective, old, new)
           judge = RobotLab.build(name: "prose-judge", model: @judge_model, system_prompt: JUDGE_SYSTEM)
-          judge.run(comparison(context.objective, old, fresh)).to_s
+          judge.run(comparison(objective, old, new)).to_s
         end
 
         def comparison(objective, old_text, new_text)

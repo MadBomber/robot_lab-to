@@ -44,6 +44,15 @@ module RobotLab
           refute score.improved?
         end
 
+        def test_new_document_is_improvement_without_calling_judge
+          # A brand-new file (no prior version) beats nothing: commit it without a
+          # degenerate empty-vs-content judge call.
+          File.write(File.join(@tmpdir, "a.md"), "a real first draft")
+          boom = ->(**) { raise "judge must not be called for a brand-new document" }
+          score = RobotLab.stub(:build, boom) { build_prose(changed: ["a.md"]).score(context) }
+          assert score.improved?, "a brand-new document is an improvement over nothing"
+        end
+
         def test_floor_failure_closes_gate_and_skips_judge
           score = build_prose(changed: ["a.md"], floor: "exit 1").score(context)
           refute score.gate_ok?

@@ -32,6 +32,12 @@ module RobotLab
         assert_equal ["doc.md"], @cm.changed_vs_worktree("HEAD")
       end
 
+      def test_changed_vs_worktree_includes_new_untracked_files
+        commit_file("outline.md", "spec")
+        File.write(File.join(@tmpdir, "guide.md"), "brand new draft") # never git-added
+        assert_includes @cm.changed_vs_worktree("HEAD"), "guide.md"
+      end
+
       def test_show_returns_committed_contents
         commit_file("doc.md", "committed body")
         File.write(File.join(@tmpdir, "doc.md"), "working changes")

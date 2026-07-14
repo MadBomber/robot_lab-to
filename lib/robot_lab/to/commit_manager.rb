@@ -88,11 +88,15 @@ module RobotLab
       end
 
       # Files differing between a ref and the current working tree (uncommitted
-      # changes). Used by pairwise evals to compare a draft against its parent.
+      # changes), INCLUDING new untracked files. Used by pairwise evals to compare
+      # a draft against its parent -- and a prose doer typically CREATES the
+      # document, so the untracked case is the common one (`git diff` alone misses
+      # new files).
       def changed_vs_worktree(ref)
-        out, _err, _status = Open3.capture3(GIT_ENV, "git", "diff", "--name-only", ref,
-                                            chdir: @work_dir)
-        out.lines.map(&:chomp).reject(&:empty?)
+        tracked, = Open3.capture3(GIT_ENV, "git", "diff", "--name-only", ref, chdir: @work_dir)
+        untracked, = Open3.capture3(GIT_ENV, "git", "ls-files", "--others", "--exclude-standard",
+                                    chdir: @work_dir)
+        (tracked.lines + untracked.lines).map(&:chomp).reject(&:empty?).uniq
       end
 
       # Contents of a path at a given ref, or "" when it did not exist there.
