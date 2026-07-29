@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -733,6 +733,34 @@
     
   
     Verification Gate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/evals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evals: Scoring Iterations
   
 
     
@@ -1573,6 +1601,46 @@
 <h2 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>Evals: orchestrator-owned scoring.</strong> An <code>Eval</code> scores each iteration's
+  working tree and returns a <code>Score(gate_ok, improved, met_target, value, detail,
+  output)</code> — the deciding authority for commit/rollback and, for measurable
+  objectives, for when the run is done — instead of the robot's self-reported
+  <code>should_fully_stop</code>. See <a href="../../concepts/evals/">Evals</a>.<ul>
+<li><code>Evals::Code</code> — measured/deterministic: the existing <code>--verify-command</code>
+  floor plus an optional <code>--measure CMD</code> (a command printing a number,
+  higher is better) and <code>--target FLOAT</code>. Fully backward compatible: with no
+  <code>--measure</code>, behaves exactly like the original verify-only gate.</li>
+<li><code>Evals::Prose</code> — judged/pairwise: an LLM judge (<code>--judge-model</code>, defaults
+  to <code>--model</code>) compares the working tree against the last committed
+  version and rules it <code>better</code>/<code>worse</code>/<code>same</code>; an optional <code>--floor CMD</code>
+  gates mechanizable checks before the judge is called.</li>
+<li><code>Evals::Null</code> — the default when nothing is configured; preserves the
+  original "commit any reported success" behavior exactly.</li>
+<li><code>--eval NAME</code>, <code>--stop-on-plateau N</code>, <code>--[no-]require-improvement</code>, and
+  Ruby-API extension points (<code>RobotLab::To.register_eval</code>, an instance
+  responding to <code>#score</code>, or a bare proc, all passable as <code>eval:</code>).</li>
+<li><code>require_improvement</code> (default <strong>true</strong>) rolls back a gate-passing
+  iteration that doesn't beat the parent's score, keeping the branch
+  strictly descending.</li>
+<li><code>--stop-on-plateau N</code> — a new stop condition: abort after <code>N</code> iterations
+  with no committed improvement. The primary terminator for <code>Evals::Prose</code>,
+  which never sets a measurable target.</li>
+<li><code>PromptBuilder</code> <strong>Score Feedback</strong> section — for scored runs, tells each
+  iteration's robot the best score committed so far, the target, and
+  whether recent attempts plateaued, so each attempt is a hypothesis
+  against the target instead of a blind guess.</li>
+</ul>
+</li>
+<li><strong><code>GraderLock</code> guard — grader lockdown.</strong> Refuses <code>write</code>/<code>edit</code>/<code>bash</code> against
+  an eval's own grading criteria (<code>Evals::Prose#protected_paths</code>'s <code>--spec</code>, plus
+  any <code>--protect-path GLOB</code>), so the robot cannot "win" by rewriting the
+  criteria it is scored against. Unlike the small-model guardrails, it is always
+  installed when protected paths exist — independent of <code>--local-guards</code>. See
+  <a href="../../concepts/evals/#guarding-the-grader-graderlock">Evals: Guarding the grader</a>.</li>
+<li><strong><code>write_guard</code> config (Ruby-only, default <code>true</code>).</strong> Lets a <code>--local-guards</code>
+  run opt out of <code>Guards::WriteGuard</code> (<code>write_guard: false</code>) so the robot can
+  freely overwrite a file it is iteratively rewriting whole, e.g. a prose draft.
+  See <a href="../../local-models/guardrails/#write-guard">Guardrails</a>.</li>
 <li><strong>Local-model support.</strong> Drive a local Ollama model end-to-end with
   <code>--local-guards</code> and <code>--no-stream</code>. See <a href="../../local-models/">Local Models</a>.</li>
 <li><strong>Built-in workspace tools</strong> (<code>read</code>, <code>write</code>, <code>edit</code>, <code>bash</code>) attached when
@@ -1691,7 +1759,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.path", "navigation.top", "toc.follow", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

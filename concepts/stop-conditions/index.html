@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -33,7 +33,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -766,10 +766,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-four-conditions" class="md-nav__link">
+  <a href="#the-five-conditions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The four conditions
+        The five conditions
       
     </span>
   </a>
@@ -815,6 +815,17 @@
     <span class="md-ellipsis">
       
         Consecutive failures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plateau-no-improvement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plateau (no improvement)
       
     </span>
   </a>
@@ -883,6 +894,34 @@
     
   
     Verification Gate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evals: Scoring Iterations
   
 
     
@@ -1448,10 +1487,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-four-conditions" class="md-nav__link">
+  <a href="#the-five-conditions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The four conditions
+        The five conditions
       
     </span>
   </a>
@@ -1497,6 +1536,17 @@
     <span class="md-ellipsis">
       
         Consecutive failures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plateau-no-improvement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plateau (no improvement)
       
     </span>
   </a>
@@ -1624,8 +1674,8 @@
 
 <h1 id="stop-conditions">Stop Conditions<a class="headerlink" href="#stop-conditions" title="Permanent link">&para;</a></h1>
 <p>Because <code>robot-to</code> is meant to run unattended, it must reliably stop on its own.
-Four independent conditions can end a run; whichever trips first wins.</p>
-<h2 id="the-four-conditions">The four conditions<a class="headerlink" href="#the-four-conditions" title="Permanent link">&para;</a></h2>
+Five independent conditions can end a run; whichever trips first wins.</p>
+<h2 id="the-five-conditions">The five conditions<a class="headerlink" href="#the-five-conditions" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -1655,6 +1705,12 @@ Four independent conditions can end a run; whichever trips first wins.</p>
 <td>Abort after <code>N</code> failures in a row (default <strong>3</strong>).</td>
 </tr>
 <tr>
+<td>Plateau</td>
+<td><code>--stop-on-plateau N</code></td>
+<td>after each iteration</td>
+<td>Abort after <code>N</code> iterations with no committed improvement (eval-gated runs only).</td>
+</tr>
+<tr>
 <td>Stop-when</td>
 <td><code>--stop-when "&lt;text&gt;"</code></td>
 <td>after each <em>successful</em> iteration</td>
@@ -1662,6 +1718,10 @@ Four independent conditions can end a run; whichever trips first wins.</p>
 </tr>
 </tbody>
 </table>
+<p>There is a sixth, orchestrator-owned stop that isn't a <code>StopConditions</code> check at
+all: an <a href="../evals/">eval's</a> <code>met_target</code> — reaching a measured <code>--target</code> aborts
+the run immediately on that iteration's commit, taking priority over
+<code>should_fully_stop</code>. See <a href="../evals/">Evals</a>.</p>
 <p>If you set none of the bounded limits, the loop relies on
 <code>--max-consecutive-failures</code> (default 3) and <code>--stop-when</code> to terminate. For a
 genuinely unattended run, <strong>always set at least <code>--max-iterations</code> or
@@ -1684,14 +1744,30 @@ limit.</p>
 <p>Resets to zero on every successful, committed iteration; increments on every
 failure, verify-failure, or commit-failure. This is the safety net that stops a
 run that is going nowhere. The default is <strong>3</strong>.</p>
+<h3 id="plateau-no-improvement">Plateau (no improvement)<a class="headerlink" href="#plateau-no-improvement" title="Permanent link">&para;</a></h3>
+<p><code>--stop-on-plateau N</code> aborts once <code>N</code> consecutive iterations pass the eval's gate
+but fail to beat the parent commit's score (<code>iterations_since_improvement &gt;= N</code>).
+It resets to zero on every committed improvement.</p>
+<p>This is the <strong>primary terminator for <code>Evals::Prose</code></strong>, which never sets a
+measurable <code>met_target</code> — a pairwise judge has no absolute bar to reach, only
+"better than last time." It's distinct from <code>--max-consecutive-failures</code>:
+plateau counts <em>valid, gate-passing work that just wasn't better</em> (including
+"same" verdicts, which are common and normal for prose), while consecutive
+failures counts the robot being genuinely broken (errors, gate failures, no
+submit). Conflating the two would throttle legitimate exploration.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Write an opinionated guide to VSM&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span>--eval<span class="w"> </span>prose<span class="w"> </span>--spec<span class="w"> </span>outline.md<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span>--stop-on-plateau<span class="w"> </span><span class="m">3</span><span class="w">   </span><span class="c1"># stop after 3 drafts that didn&#39;t improve</span>
+</span></code></pre></div>
+<p>See <a href="../evals/">Evals</a> for the full scoring model.</p>
 <h3 id="stop-when-natural-language">Stop-when (natural language)<a class="headerlink" href="#stop-when-natural-language" title="Permanent link">&para;</a></h3>
 <p><code>--stop-when</code> is a goal the robot evaluates. After a successful iteration, the
 robot decides whether the condition is met and, if so, returns
 <code>should_fully_stop: true</code> in its result. The orchestrator then aborts with
 <code>stop condition met: &lt;text&gt;</code>.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Refactor the auth module for clarity&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span>--max-iterations<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span>--stop-when<span class="w"> </span><span class="s2">&quot;the auth module has no method longer than 15 lines and tests pass&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Refactor the auth module for clarity&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>--max-iterations<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>--stop-when<span class="w"> </span><span class="s2">&quot;the auth module has no method longer than 15 lines and tests pass&quot;</span>
 </span></code></pre></div>
 <p><code>--stop-when</code> only ends the loop on a <strong>successful</strong> iteration — a failing
 iteration never triggers it, even if the robot thinks the goal is met.</p>
@@ -1702,11 +1778,12 @@ exits, and the exit summary still prints. The current iteration's incomplete wor
 is rolled back.</p>
 <h2 id="what-youll-see">What you'll see<a class="headerlink" href="#what-youll-see" title="Permanent link">&para;</a></h2>
 <p>The exit summary header reports the reason:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>robot-to stopped — claude-sonnet-4-6 — 41m 08s
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Reason: max iterations reached (30)
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>robot-to stopped — claude-sonnet-4-6 — 41m 08s
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Reason: max iterations reached (30)
 </span></code></pre></div>
 <p>Possible reasons include <code>max iterations reached (N)</code>, <code>max tokens reached (N)</code>,
-<code>N consecutive failures</code>, <code>stop condition met: &lt;text&gt;</code>, a permanent error, or a
+<code>N consecutive failures</code>, <code>plateau: N iterations without improvement</code>,
+<code>target met: &lt;detail&gt;</code>, <code>stop condition met: &lt;text&gt;</code>, a permanent error, or a
 fatal error.</p>
 <hr />
 <p>Next: <a href="../verification/">Verification Gate</a>.</p>
@@ -1795,7 +1872,7 @@ fatal error.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.path", "navigation.top", "toc.follow", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

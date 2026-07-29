@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -33,7 +33,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -864,6 +864,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../evals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evals: Scoring Iterations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../run-state/" class="md-nav__link">
         
   
@@ -1611,8 +1639,13 @@ directly if it has file tools.</p>
 </tr>
 <tr>
 <td><code>[VERIFY FAILED]</code></td>
-<td>Robot claimed success but <code>--verify-command</code> failed</td>
-<td>summary, verification output</td>
+<td>Robot claimed success but the eval's gate failed (<code>--verify-command</code> / <code>--floor</code>)</td>
+<td>summary, gate output</td>
+</tr>
+<tr>
+<td><code>[NO IMPROVEMENT]</code></td>
+<td>Gate passed but the eval didn't rule it better than the parent commit (rolled back unless <code>--no-require-improvement</code>)</td>
+<td>summary, score detail</td>
 </tr>
 <tr>
 <td><code>[ERROR]</code></td>
@@ -1621,6 +1654,8 @@ directly if it has file tools.</p>
 </tr>
 </tbody>
 </table>
+<p><code>[VERIFY FAILED]</code> and <code>[NO IMPROVEMENT]</code> come from the <a href="../evals/">Evals</a> scoring
+gate, not the robot — see there for how <code>gate_ok</code> and <code>improved</code> are decided.</p>
 <p>Because failures and their learnings are recorded too, the next robot can avoid
 repeating a dead end — the failure log is as valuable as the success log.</p>
 <h2 id="designing-objectives-around-the-notes">Designing objectives around the notes<a class="headerlink" href="#designing-objectives-around-the-notes" title="Permanent link">&para;</a></h2>
@@ -1722,7 +1757,7 @@ repeating a dead end — the failure log is as valuable as the success log.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.path", "navigation.top", "toc.follow", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

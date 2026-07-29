@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -33,7 +33,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -735,6 +735,34 @@
     
   
     Verification Gate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/evals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evals: Scoring Iterations
   
 
     
@@ -1597,7 +1625,61 @@ the objective from standard input — handy for long objectives:</p>
 <td><code>--max-verify-repairs</code></td>
 <td><code>N</code></td>
 <td><code>2</code></td>
-<td>Repair-in-place attempts when <code>--verify-command</code> fails before rolling back.</td>
+<td>Repair-in-place attempts when the eval's gate fails before rolling back.</td>
+</tr>
+<tr>
+<td><code>--eval</code></td>
+<td><code>code</code>|<code>null</code>|<code>prose</code></td>
+<td><em>code if verify/measure/target set, else null</em></td>
+<td>Eval strategy — see <a href="../../concepts/evals/">Evals</a>.</td>
+</tr>
+<tr>
+<td><code>--measure</code></td>
+<td><code>CMD</code></td>
+<td><em>unset</em></td>
+<td>Command printing a numeric score (higher = better); drives <code>Evals::Code</code>.</td>
+</tr>
+<tr>
+<td><code>--target</code></td>
+<td><code>FLOAT</code></td>
+<td><em>unset</em></td>
+<td>Stop once the measured score reaches this.</td>
+</tr>
+<tr>
+<td><code>--spec</code></td>
+<td><code>PATH</code></td>
+<td><em>unset</em></td>
+<td>Spec/outline artifact <code>Evals::Prose</code>'s judge measures against.</td>
+</tr>
+<tr>
+<td><code>--floor</code></td>
+<td><code>CMD</code></td>
+<td><em>unset</em></td>
+<td>Mechanizable floor check for prose (links, outline coverage, AI-tells).</td>
+</tr>
+<tr>
+<td><code>--judge-model</code></td>
+<td><code>MODEL</code></td>
+<td><em><code>--model</code></em></td>
+<td>Model for the pairwise prose judge.</td>
+</tr>
+<tr>
+<td><code>--stop-on-plateau</code></td>
+<td><code>N</code></td>
+<td><em>unset — off</em></td>
+<td>Stop after <code>N</code> iterations with no committed improvement.</td>
+</tr>
+<tr>
+<td><code>--[no-]require-improvement</code></td>
+<td>—</td>
+<td>on</td>
+<td>Roll back gate-passing iterations that don't beat the parent (default on).</td>
+</tr>
+<tr>
+<td><code>--protect-path</code></td>
+<td><code>GLOB</code> (repeatable)</td>
+<td><em>none</em></td>
+<td>Lock a grader file from robot edits (always-on <code>GraderLock</code>).</td>
 </tr>
 <tr>
 <td><code>--commit-format</code></td>
@@ -1661,13 +1743,25 @@ its config-file / environment-variable equivalents.</p>
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span>--stop-when<span class="w"> </span><span class="s2">&quot;every test file is RSpec and the suite passes&quot;</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span>--commit-format<span class="w"> </span>conventional
 </span></code></pre></div>
+<p>A scored run that descends toward a measured target (see <a href="../../concepts/evals/">Evals</a>):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Raise parser coverage to 90%&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--verify<span class="w">  </span><span class="s2">&quot;bundle exec rake test&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--measure<span class="w"> </span><span class="s2">&quot;bundle exec rake coverage&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--target<span class="w">  </span><span class="m">90</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>--protect-path<span class="w"> </span>test/coverage_helper.rb
+</span></code></pre></div>
+<p>A judged prose run that ends on plateau instead of a target:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Write an opinionated guide to the Viable Systems Model&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--eval<span class="w"> </span>prose<span class="w"> </span>--spec<span class="w"> </span>outline.md<span class="w"> </span>--floor<span class="w"> </span><span class="s2">&quot;rake docs:lint&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>--stop-on-plateau<span class="w"> </span><span class="m">3</span>
+</span></code></pre></div>
 <p>A fully local run on Ollama (see <a href="../../local-models/">Local Models</a>):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Add a greet(name) method in greeter.rb&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--provider<span class="w"> </span>openai<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--model<span class="w"> </span>gpt-oss:20b<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--local-guards<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>--no-stream<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span>--max-iterations<span class="w"> </span><span class="m">5</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Add a greet(name) method in greeter.rb&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--provider<span class="w"> </span>openai<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--model<span class="w"> </span>gpt-oss:20b<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span>--local-guards<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span>--no-stream<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span>--max-iterations<span class="w"> </span><span class="m">5</span>
 </span></code></pre></div>
 <h2 id="exit-behavior">Exit behavior<a class="headerlink" href="#exit-behavior" title="Permanent link">&para;</a></h2>
 <p><code>robot-to</code> runs to completion or until a stop condition trips, then prints an
@@ -1759,7 +1853,7 @@ exits, and the summary still prints.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.path", "navigation.top", "toc.follow", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

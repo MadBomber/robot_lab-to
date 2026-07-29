@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -33,7 +33,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -755,6 +755,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../concepts/evals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evals: Scoring Iterations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../concepts/run-state/" class="md-nav__link">
         
   
@@ -1131,6 +1159,122 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#evals-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evals (scoring)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Evals (scoring)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#eval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eval
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eval_measure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eval_measure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eval_target" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eval_target
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eval_spec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eval_spec
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eval_floor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eval_floor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eval_judge_model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eval_judge_model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stop_on_plateau" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        stop_on_plateau
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#require_improvement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        require_improvement
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#protect_paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        protect_paths
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#local-models" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1147,6 +1291,17 @@
     <span class="md-ellipsis">
       
         local_guards
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write_guard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        write_guard
       
     </span>
   </a>
@@ -1820,6 +1975,122 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#evals-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evals (scoring)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Evals (scoring)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#eval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eval
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eval_measure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eval_measure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eval_target" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eval_target
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eval_spec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eval_spec
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eval_floor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eval_floor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eval_judge_model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eval_judge_model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stop_on_plateau" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        stop_on_plateau
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#require_improvement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        require_improvement
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#protect_paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        protect_paths
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#local-models" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1836,6 +2107,17 @@
     <span class="md-ellipsis">
       
         local_guards
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write_guard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        write_guard
       
     </span>
   </a>
@@ -2083,6 +2365,82 @@ CLI-only. See <a href="../../concepts/verification/">Verification Gate</a>.</p>
 </ul>
 <p>Maximum time <code>verify_command</code> may run before it is killed (whole process group)
 and the gate fails.</p>
+<h2 id="evals-scoring">Evals (scoring)<a class="headerlink" href="#evals-scoring" title="Permanent link">&para;</a></h2>
+<p>CLI-only (no YAML default) unless noted. See <a href="../../concepts/evals/">Evals</a> for
+the full behavioral model.</p>
+<h3 id="eval"><code>eval</code><a class="headerlink" href="#eval" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Default:</strong> <em>(unset — <code>Evals::Code</code> if <code>verify_command</code>/<code>eval_measure</code>/
+  <code>eval_target</code> is set, else the unscored <code>Evals::Null</code>)</em></li>
+<li><strong>CLI:</strong> <code>--eval code|null|prose</code></li>
+</ul>
+<p>Selects the scoring strategy. Via the Ruby API, <code>eval:</code> also accepts an instance
+responding to <code>#score</code>, a proc, or a <code>Symbol</code> registered with
+<code>RobotLab::To.register_eval</code> — the CLI flag itself only resolves the three named
+strings.</p>
+<h3 id="eval_measure"><code>eval_measure</code><a class="headerlink" href="#eval_measure" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Default:</strong> <em>(unset)</em></li>
+<li><strong>CLI:</strong> <code>--measure CMD</code></li>
+</ul>
+<p>A command that prints a number to stdout (higher = better) — the descent signal
+for <code>Evals::Code</code>. Setting this alone (without <code>verify_command</code>) still selects
+<code>Evals::Code</code>, not <code>Evals::Null</code>.</p>
+<h3 id="eval_target"><code>eval_target</code><a class="headerlink" href="#eval_target" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Default:</strong> <em>(unset)</em></li>
+<li><strong>CLI:</strong> <code>--target FLOAT</code></li>
+</ul>
+<p>Stop the run once <code>eval_measure</code>'s value reaches this (<code>Evals::Code</code>).</p>
+<h3 id="eval_spec"><code>eval_spec</code><a class="headerlink" href="#eval_spec" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Default:</strong> <em>(unset)</em></li>
+<li><strong>CLI:</strong> <code>--spec PATH</code></li>
+</ul>
+<p>The spec/outline artifact <code>Evals::Prose</code>'s judge measures the draft against.
+Automatically added to <code>Evals::Prose#protected_paths</code> — locked from robot edits
+by <code>GraderLock</code>.</p>
+<h3 id="eval_floor"><code>eval_floor</code><a class="headerlink" href="#eval_floor" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Default:</strong> <em>(unset)</em></li>
+<li><strong>CLI:</strong> <code>--floor CMD</code></li>
+</ul>
+<p>An optional mechanizable check (e.g. link validation, outline coverage) that
+must pass before <code>Evals::Prose</code> calls the judge at all. A failing floor is
+scored <code>:worse</code> without spending a judge call.</p>
+<h3 id="eval_judge_model"><code>eval_judge_model</code><a class="headerlink" href="#eval_judge_model" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Default:</strong> <em>(unset — falls back to <code>model</code>)</em></li>
+<li><strong>CLI:</strong> <code>--judge-model MODEL</code></li>
+</ul>
+<p>The model used for <code>Evals::Prose</code>'s pairwise judge. Defaults to the doer's own
+<code>model</code>; set this to use a different (often cheaper, or deliberately more
+skeptical) model for the judge role.</p>
+<h3 id="stop_on_plateau"><code>stop_on_plateau</code><a class="headerlink" href="#stop_on_plateau" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Default:</strong> <em>(unset — off)</em></li>
+<li><strong>CLI:</strong> <code>--stop-on-plateau N</code></li>
+</ul>
+<p>Stop after <code>N</code> consecutive iterations with no committed improvement. The
+primary terminator for <code>Evals::Prose</code>, which never sets a measurable target. See
+<a href="../../concepts/stop-conditions/#plateau-no-improvement">Stop Conditions</a>.</p>
+<h3 id="require_improvement"><code>require_improvement</code><a class="headerlink" href="#require_improvement" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Default:</strong> <code>true</code> (CLI/Ruby-only hardcoded default; not in <code>defaults.yml</code>)</li>
+<li><strong>CLI:</strong> <code>--[no-]require-improvement</code></li>
+</ul>
+<p>When true, a gate-passing iteration that doesn't beat the parent commit's score
+is rolled back rather than committed. <code>--no-require-improvement</code> restores
+"commit any gate-passing success."</p>
+<h3 id="protect_paths"><code>protect_paths</code><a class="headerlink" href="#protect_paths" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Default:</strong> <code>[]</code></li>
+<li><strong>CLI:</strong> <code>--protect-path GLOB</code> (repeatable)</li>
+</ul>
+<p>Extra grader files (globs) locked from robot writes/edits/bash, on top of
+whatever the configured eval's <code>#protected_paths</code> already locks. Always
+enforced via <code>Guards::GraderLock</code> when the resolved set is non-empty —
+independent of <code>local_guards</code>.</p>
 <h2 id="local-models">Local models<a class="headerlink" href="#local-models" title="Permanent link">&para;</a></h2>
 <h3 id="local_guards"><code>local_guards</code><a class="headerlink" href="#local_guards" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2092,6 +2450,17 @@ and the gate fails.</p>
 <p>Attach the built-in file tools (<code>read</code>, <code>write</code>, <code>edit</code>, <code>bash</code>) and the
 small-model guardrail hooks. Designed for local models that need a more
 constrained, forgiving tool surface. See <a href="../../local-models/">Local Models</a>.</p>
+<h3 id="write_guard"><code>write_guard</code><a class="headerlink" href="#write_guard" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Default:</strong> <code>true</code> (Ruby-only — no CLI flag)</li>
+<li><strong>Ruby:</strong> <code>RobotLab::To.run(..., write_guard: false)</code></li>
+</ul>
+<p>When <code>local_guards</code> is on, <code>write_guard: false</code> drops <code>Guards::WriteGuard</code> from
+the installed set (<code>Guards.install(..., except: [Guards::WriteGuard])</code>), letting
+the robot freely overwrite a file it is iteratively refining — WriteGuard
+otherwise refuses <code>write</code> on a file that already exists and redirects to <code>edit</code>,
+which is unhelpful for a robot rewriting a whole prose draft each pass. See
+<a href="../../local-models/guardrails/">Guardrails</a>.</p>
 <h2 id="git-output">Git &amp; output<a class="headerlink" href="#git-output" title="Permanent link">&para;</a></h2>
 <h3 id="commit_format"><code>commit_format</code><a class="headerlink" href="#commit_format" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2211,7 +2580,7 @@ written regardless.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.path", "navigation.top", "toc.follow", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

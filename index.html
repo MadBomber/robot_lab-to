@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
@@ -846,6 +846,34 @@
   
   
     <li class="md-nav__item">
+      <a href="concepts/evals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evals: Scoring Iterations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="concepts/run-state/" class="md-nav__link">
         
   
@@ -1520,6 +1548,10 @@ work.</p>
   so the robot doesn't repeat itself. See <a href="concepts/notes/">Cross-Iteration Memory</a>.</li>
 <li><strong>Independent verification.</strong> The robot can't self-certify success — a real
   command you choose is the deciding authority. See <a href="concepts/verification/">Verification Gate</a>.</li>
+<li><strong>Scored, descending iterations.</strong> An <strong>eval</strong> replaces the robot's self-report
+  with an orchestrator-owned measurable judgement — a deterministic <code>--measure</code>/
+  <code>--target</code> for code, or a pairwise LLM judge for prose — so the branch only
+  ever moves forward. See <a href="concepts/evals/">Evals</a>.</li>
 <li><strong>It stops on its own.</strong> Hard limits plus a natural-language stop condition mean
   you can leave it unattended. See <a href="concepts/stop-conditions/">Stop Conditions</a>.</li>
 <li><strong>It asks before overstepping.</strong> For irreversible or ambiguous choices the robot
@@ -1638,7 +1670,7 @@ work.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.path", "navigation.top", "toc.follow", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

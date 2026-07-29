@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -33,7 +33,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -870,6 +870,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../concepts/evals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evals: Scoring Iterations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../concepts/run-state/" class="md-nav__link">
         
   
@@ -1607,19 +1635,25 @@ to <code>.git/info/exclude</code> automatically):</p>
   created only when <code>--local-guards</code> is active. See <a href="../../local-models/guardrails/">Guardrails</a>.</li>
 </ul>
 <h2 id="one-iteration-step-by-step">One iteration, step by step<a class="headerlink" href="#one-iteration-step-by-step" title="Permanent link">&para;</a></h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>iteration:start          → fresh robot built with prompt + notes
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>agent:run:start          → robot.run() begins
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>iteration:start           → fresh robot built with prompt + notes
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>agent:run:start           → robot.run() begins
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>  (robot uses tools, calls submit_iteration_result)
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>agent:run:end
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>agent:nudge?             → if no result submitted, re-ask (max_submit_nudges)
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>verify:start / verify:*  → run --verify-command (if set)
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>commit:success           → git add -A &amp;&amp; commit       (success path)
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>agent:nudge?              → if no result submitted, re-ask (max_submit_nudges)
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>eval                      → the configured eval scores the working tree (if reported success)
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>commit:success            → git add -A &amp;&amp; commit                 (gate ok + improved)
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>  — or —
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>iteration:failure        → git reset --hard            (failure path)
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>iteration:verify_failure → git reset --hard            (verify failed)
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>iteration:no_improvement  → git reset --hard                     (gate ok, not improved)
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>iteration:gate_failure    → git reset --hard (after eval:repair)  (gate failed)
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>iteration:failure         → git reset --hard                     (robot reported failure / no submit)
 </span></code></pre></div>
-<p>A successful iteration resets the consecutive-failure counter; a failure
-increments it (and may trip <code>--max-consecutive-failures</code>).</p>
+<p>A committed iteration resets the consecutive-failure counter and the plateau
+counter; a failure or gate failure increments consecutive-failures, and any
+non-committing outcome increments the plateau counter (may trip
+<code>--max-consecutive-failures</code> or <code>--stop-on-plateau</code>). See
+<a href="../../concepts/evals/">Evals</a> for the full scoring model — by default (no
+<code>--verify-command</code>/<code>--eval</code>), every reported success commits, matching this
+page's simpler mental model.</p>
 <h2 id="the-exit-summary">The exit summary<a class="headerlink" href="#the-exit-summary" title="Permanent link">&para;</a></h2>
 <p>When the loop ends — whether it completed, hit a stop condition, or aborted —
 <code>robot-to</code> prints a summary to stdout:</p>
@@ -1724,7 +1758,7 @@ reached (8)</code>, <code>4 consecutive failures</code>, or <code>stop condition
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.path", "navigation.top", "toc.follow", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

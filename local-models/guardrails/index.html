@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -33,7 +33,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -735,6 +735,34 @@
     
   
     Verification Gate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/evals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evals: Scoring Iterations
   
 
     
@@ -1640,6 +1668,14 @@ heavy lifting.</p>
 small-model mistake) to the working directory.</p>
 <p>Implemented as <code>around_tool_call</code> (to block) + <code>before_tool_call</code> (to normalize
 the path).</p>
+<p><strong>Opting out:</strong> <code>write-guard</code> is the one guard in the set that can get in the way
+of <em>legitimate</em> work — a robot iteratively rewriting a whole prose draft each
+pass wants plain <code>write</code>, not a forced <code>edit</code>. Set <code>write_guard: false</code> (Ruby-only,
+default <code>true</code>; no CLI flag) to drop it from the installed set while keeping
+<code>read-before-edit</code>, <code>checkpoint</code>, and <code>quality-monitor</code>:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">To</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">objective</span><span class="p">,</span><span class="w"> </span><span class="ss">local_guards</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">,</span><span class="w"> </span><span class="ss">write_guard</span><span class="p">:</span><span class="w"> </span><span class="kp">false</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Internally this calls <code>Guards.install(robot, run:, except: [Guards::WriteGuard])</code>.</p>
 <h3 id="read-before-edit">read-before-edit<a class="headerlink" href="#read-before-edit" title="Permanent link">&para;</a></h3>
 <p><strong>Problem:</strong> models fire <code>edit</code> with an <code>old_text</code> they never actually saw —
 guessing the file's contents — which either fails the exact-match (a wasted turn)
@@ -1670,11 +1706,21 @@ legitimate tool-using turns. Empty / no-progress is handled instead by the
 orchestrator's existing nudge → "did not submit" path, which recovers
 gracefully rather than hard-erroring.</p>
 </div>
+<div class="admonition info">
+<p class="admonition-title">A fifth guard, <code>GraderLock</code>, is not part of this set</p>
+<p><code>Guards::GraderLock</code> (<code>guards/grader_lock.rb</code>) lives alongside these four but
+is <strong>not</strong> gated by <code>--local-guards</code> — it locks an <a href="../../concepts/evals/">eval's</a>
+grading criteria (a spec, a floor script, <code>--protect-path</code> globs) from robot
+edits, and is installed whenever such paths exist, regardless of model size.
+A frontier model can reward-hack its own grading criteria just as easily as a
+small model can mangle a file. See
+<a href="../../concepts/evals/#guarding-the-grader-graderlock">Evals: Guarding the grader</a>.</p>
+</div>
 <h2 id="how-theyre-registered">How they're registered<a class="headerlink" href="#how-theyre-registered" title="Permanent link">&para;</a></h2>
 <p><code>Guards.install(robot, run:)</code> registers all four on the per-iteration robot. The
 orchestrator calls it from <code>build_robot</code> only when <code>local_guards</code> is enabled:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="o">...</span><span class="p">,</span><span class="w"> </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="n">iteration_tools</span><span class="p">(</span><span class="n">submit_tool</span><span class="p">))</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">To</span><span class="o">::</span><span class="no">Guards</span><span class="o">.</span><span class="n">install</span><span class="p">(</span><span class="n">robot</span><span class="p">,</span><span class="w"> </span><span class="ss">run</span><span class="p">:</span><span class="w"> </span><span class="vi">@run</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="vi">@config</span><span class="o">.</span><span class="n">local_guards?</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">robot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">RobotLab</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="o">...</span><span class="p">,</span><span class="w"> </span><span class="ss">local_tools</span><span class="p">:</span><span class="w"> </span><span class="n">iteration_tools</span><span class="p">(</span><span class="n">submit_tool</span><span class="p">))</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">To</span><span class="o">::</span><span class="no">Guards</span><span class="o">.</span><span class="n">install</span><span class="p">(</span><span class="n">robot</span><span class="p">,</span><span class="w"> </span><span class="ss">run</span><span class="p">:</span><span class="w"> </span><span class="vi">@run</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="vi">@config</span><span class="o">.</span><span class="n">local_guards?</span>
 </span></code></pre></div>
 <h2 id="per-run-state">Per-run state<a class="headerlink" href="#per-run-state" title="Permanent link">&para;</a></h2>
 <p>RobotLab builds a fresh hook context per tool call with no shared metadata across
@@ -1794,7 +1840,7 @@ granularities:</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.path", "navigation.top", "toc.follow", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

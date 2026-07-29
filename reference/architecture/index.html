@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -33,7 +33,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -755,6 +755,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../concepts/evals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evals: Scoring Iterations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../concepts/run-state/" class="md-nav__link">
         
   
@@ -1234,6 +1262,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#evals-orchestrator-owned-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evals — orchestrator-owned scoring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#local-model-layer" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1272,6 +1311,28 @@
     <span class="md-ellipsis">
       
         The orchestrator owns git, the robot owns work
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-eval-not-the-robot-decides-better-and-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The eval, not the robot, decides "better" and "done"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#grader-lockdown-is-separate-from-the-local-model-guards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Grader lockdown is separate from the local-model guards
       
     </span>
   </a>
@@ -1470,6 +1531,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#evals-orchestrator-owned-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evals — orchestrator-owned scoring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#local-model-layer" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1508,6 +1580,28 @@
     <span class="md-ellipsis">
       
         The orchestrator owns git, the robot owns work
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-eval-not-the-robot-decides-better-and-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The eval, not the robot, decides "better" and "done"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#grader-lockdown-is-separate-from-the-local-model-guards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Grader lockdown is separate from the local-model guards
       
     </span>
   </a>
@@ -1672,17 +1766,17 @@ single-purpose collaborator it drives.</p>
 <tr>
 <td><code>Orchestrator</code></td>
 <td><code>orchestrator.rb</code></td>
-<td>The main loop: setup → iterate → commit/rollback → stop → finalize.</td>
+<td>The main loop: setup → iterate → eval-gated commit/rollback → stop → finalize.</td>
 </tr>
 <tr>
 <td><code>PromptBuilder</code></td>
 <td><code>prompt_builder.rb</code></td>
-<td>Builds each iteration's system prompt (objective, notes, task, submit, repair, stop-when).</td>
+<td>Builds each iteration's system prompt (objective, notes, task, submit, repair, score feedback, stop-when).</td>
 </tr>
 <tr>
 <td><code>Run</code></td>
 <td><code>run.rb</code></td>
-<td>Mutable run-state value object (iteration, counters, tokens, timing, paths).</td>
+<td>Mutable run-state value object (iteration, counters, tokens, timing, paths, <code>last_score_value</code>, <code>iterations_since_improvement</code>).</td>
 </tr>
 <tr>
 <td><code>SubmitResult</code></td>
@@ -1697,7 +1791,7 @@ single-purpose collaborator it drives.</p>
 <tr>
 <td><code>CommitManager</code></td>
 <td><code>commit_manager.rb</code></td>
-<td>All git operations via <code>Open3</code> (no shell interpolation).</td>
+<td>All git operations via <code>Open3</code> (no shell interpolation); also diffs the working tree vs. a ref for <code>Evals::Prose</code>.</td>
 </tr>
 <tr>
 <td><code>NotesManager</code></td>
@@ -1707,12 +1801,12 @@ single-purpose collaborator it drives.</p>
 <tr>
 <td><code>StopConditions</code></td>
 <td><code>stop_conditions.rb</code></td>
-<td>Evaluates iterations / tokens / failures / stop-when.</td>
+<td>Evaluates iterations / tokens / failures / plateau / stop-when.</td>
 </tr>
 <tr>
 <td><code>Verifier</code></td>
 <td><code>verifier.rb</code></td>
-<td>Runs the independent <code>--verify-command</code> gate.</td>
+<td>Low-level command runner (timeout, process-group kill); composed by <code>Evals::Code</code>.</td>
 </tr>
 <tr>
 <td><code>Backoff</code></td>
@@ -1733,6 +1827,66 @@ single-purpose collaborator it drives.</p>
 <td><code>AtomicFile</code></td>
 <td><code>atomic_file.rb</code></td>
 <td>Atomic writes/appends for <code>notes.md</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="evals-orchestrator-owned-scoring">Evals — orchestrator-owned scoring<a class="headerlink" href="#evals-orchestrator-owned-scoring" title="Permanent link">&para;</a></h2>
+<p>The eval subsystem generalizes the verify-command gate into a pluggable, scalar
+scoring loop. See <a href="../../concepts/evals/">Evals</a> for the full behavioral model —
+this table is the file map.</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>File</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Evals::Score</code></td>
+<td><code>evals/score.rb</code></td>
+<td><code>Data.define(gate_ok, improved, met_target, value, detail, output)</code> — the verdict for one iteration.</td>
+</tr>
+<tr>
+<td><code>Evals::Context</code></td>
+<td><code>evals/context.rb</code></td>
+<td><code>Data.define(work_dir, previous_ref, previous_value, objective, iteration)</code> handed to every eval.</td>
+</tr>
+<tr>
+<td><code>Evals::Base</code></td>
+<td><code>evals/base.rb</code></td>
+<td>Abstract eval; <code>#score(ctx)</code> and <code>#protected_paths</code> (default <code>[]</code>).</td>
+</tr>
+<tr>
+<td><code>Evals::Null</code></td>
+<td><code>evals/null.rb</code></td>
+<td>Default when nothing is configured: always <code>gate_ok: true, improved: true, met_target: false</code>.</td>
+</tr>
+<tr>
+<td><code>Evals::Code</code></td>
+<td><code>evals/code.rb</code></td>
+<td>Measured/deterministic: <code>--verify-command</code> floor + optional <code>--measure</code>/<code>--target</code>. Composes <code>Verifier</code>.</td>
+</tr>
+<tr>
+<td><code>Evals::Prose</code></td>
+<td><code>evals/prose.rb</code></td>
+<td>Judged/pairwise: an LLM judge compares the working tree vs. the parent commit; optional <code>--floor</code>. <code>met_target</code> always <code>false</code>.</td>
+</tr>
+<tr>
+<td><code>Evals::ProcEval</code></td>
+<td><code>evals/factory.rb</code></td>
+<td>Wraps a bare proc passed as <code>eval:</code> so it responds to <code>#score</code>.</td>
+</tr>
+<tr>
+<td><code>Evals.build</code> / <code>Evals.from_name</code></td>
+<td><code>evals/factory.rb</code></td>
+<td>Resolves <code>config.eval</code> (instance / proc / registered Symbol / <code>"code"</code> / <code>"null"</code> / <code>"prose"</code> / <code>nil</code>) into an eval.</td>
+</tr>
+<tr>
+<td><code>Guards::GraderLock</code></td>
+<td><code>guards/grader_lock.rb</code></td>
+<td>Always-on <code>RobotLab::Hook</code> (independent of <code>--local-guards</code>) refusing write/edit/bash on an eval's <code>protected_paths</code> + <code>--protect-path</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -1760,12 +1914,12 @@ single-purpose collaborator it drives.</p>
 <tr>
 <td><code>Guards</code></td>
 <td><code>guards.rb</code></td>
-<td>Registers all guards on a robot via <code>install</code>.</td>
+<td>Registers all guards on a robot via <code>install(robot, run:, except:)</code>.</td>
 </tr>
 <tr>
 <td><code>Guards::WriteGuard</code></td>
 <td><code>guards/write_guard.rb</code></td>
-<td>Refuse <code>write</code> on existing files; normalize paths.</td>
+<td>Refuse <code>write</code> on existing files; normalize paths. Excludable per-run via <code>Config#write_guard = false</code> (Ruby-only, default <code>true</code>) — useful when the robot is iteratively rewriting a whole file, e.g. a prose draft.</td>
 </tr>
 <tr>
 <td><code>Guards::ReadBeforeEdit</code></td>
@@ -1803,8 +1957,21 @@ continuity is carried entirely by <code>notes.md</code>. This keeps every iterat
 independent attempt and bounds context growth.</p>
 <h3 id="the-orchestrator-owns-git-the-robot-owns-work">The orchestrator owns git, the robot owns work<a class="headerlink" href="#the-orchestrator-owns-git-the-robot-owns-work" title="Permanent link">&para;</a></h3>
 <p>The robot never commits. It makes changes and reports a result; the orchestrator
-decides whether to commit (gated by the verifier) or roll back. This separation is
-what makes the git history trustworthy.</p>
+decides whether to commit (gated by the configured eval) or roll back. This
+separation is what makes the git history trustworthy.</p>
+<h3 id="the-eval-not-the-robot-decides-better-and-done">The eval, not the robot, decides "better" and "done"<a class="headerlink" href="#the-eval-not-the-robot-decides-better-and-done" title="Permanent link">&para;</a></h3>
+<p><code>should_fully_stop</code> and a claimed <code>success: true</code> are the robot grading its own
+homework. <code>Evals::Base#score</code> is the orchestrator-owned authority instead:
+<code>gate_ok</code>/<code>improved</code> decide commit vs. rollback, and <code>met_target</code> — not the
+robot's self-report — decides when a measurable objective is done. <code>--stop-when</code>
+remains as a fallback for objectives an eval can't measure. See
+<a href="../../concepts/evals/">Evals</a>.</p>
+<h3 id="grader-lockdown-is-separate-from-the-local-model-guards">Grader lockdown is separate from the local-model guards<a class="headerlink" href="#grader-lockdown-is-separate-from-the-local-model-guards" title="Permanent link">&para;</a></h3>
+<p><code>Guards::GraderLock</code> protects the eval's own criteria (a spec, a floor script,
+<code>--protect-path</code> globs) from robot edits. It is wired in unconditionally when
+protected paths exist, unlike the small-model guardrail set
+(<code>Guards.install</code>, gated by <code>--local-guards</code>) — a frontier model can reward-hack
+its grading criteria just as easily as a small one can mangle a file.</p>
 <h3 id="tools-attach-via-local_tools">Tools attach via <code>local_tools:</code><a class="headerlink" href="#tools-attach-via-local_tools" title="Permanent link">&para;</a></h3>
 <p>Tool <em>instances</em> are passed to <code>RobotLab.build</code> as <code>local_tools:</code>. (RobotLab's
 <code>tools:</code> parameter is a name <em>allowlist filter</em>, not an instance list — passing
@@ -1822,17 +1989,19 @@ exit summary still printed.</p>
 <h2 id="run-lifecycle-control-flow">Run lifecycle (control flow)<a class="headerlink" href="#run-lifecycle-control-flow" title="Permanent link">&para;</a></h2>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>To.run(objective, **opts)
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>└─ Orchestrator#run
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>   ├─ setup_run            branch, notes, run dir, collaborators
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>   ├─ setup_run            branch, notes, run dir, collaborators (incl. Evals.build)
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>   ├─ main_loop
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>   │  └─ per iteration:
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>   │     ├─ build fresh robot (PromptBuilder + tools [+ guards])
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>   │     ├─ build fresh robot (PromptBuilder + tools [+ guards] [+ GraderLock])
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>   │     ├─ robot.run  → SubmitResult captured
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>   │     ├─ nudge if not submitted
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>   │     ├─ verify (if configured)
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>   │     ├─ commit (success) / reset --hard (failure)
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>   │     ├─ NotesManager append
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>   │     └─ StopConditions check
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>   └─ finalize_run         JSONL close, ExitSummary
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>   │     ├─ evaluate (Eval#score) if success reported
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>   │     │  ├─ gate fails  → repair_until_gate (R2), else reset --hard
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>   │     │  ├─ gate ok, not improved → reset --hard ([NO IMPROVEMENT])
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>   │     │  └─ gate ok, improved → commit; check met_target?
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>   │     ├─ NotesManager append
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>   │     └─ StopConditions check (incl. plateau)
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>   └─ finalize_run         JSONL close, ExitSummary
 </span></code></pre></div>
 <hr />
 <p>Next: <a href="../../about/changelog/">Changelog</a>.</p>
@@ -1921,7 +2090,7 @@ exit summary still printed.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.path", "navigation.top", "toc.follow", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
