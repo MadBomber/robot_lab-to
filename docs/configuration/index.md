@@ -81,8 +81,11 @@ RobotLab::To.run("...", model: "claude-sonnet-4-6", max_iterations: 20)
 ```
 
 Some options are **CLI-only** (no YAML default) because they are run-specific:
-`--max-iterations`, `--max-tokens`, `--stop-when`, and `--verify-command`. When
-unset they mean "no limit / not configured".
+`--max-iterations`, `--max-tokens`, `--stop-when`, `--verify-command`, and the
+whole [Evals](../concepts/evals.md) family (`--eval`, `--measure`, `--target`,
+`--spec`, `--floor`, `--judge-model`, `--stop-on-plateau`,
+`--[no-]require-improvement`, `--protect-path`). When unset they mean "no limit
+/ not configured".
 
 ---
 

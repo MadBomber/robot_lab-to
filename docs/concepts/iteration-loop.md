@@ -15,7 +15,9 @@ Before the loop begins, `setup_run`:
 - Creates the run directory and seeds `notes.md` with the objective header.
 - Adds the run directory to `.git/info/exclude`.
 - Builds the per-run collaborators: `PromptBuilder`, `Backoff`, `StopConditions`,
-  and the `Verifier` (if `--verify-command` is set).
+  and the **eval** (`Evals.build(config, git:)` — `Evals::Code` when
+  `--verify-command`/`--measure`/`--target` is set, `Evals::Prose` for
+  `--eval prose`, otherwise the unscored `Evals::Null`; see [Evals](evals.md)).
 
 ## One iteration
 
@@ -34,7 +36,10 @@ injected into the system prompt. The prompt (built by `PromptBuilder`) contains:
 
 The robot is given the `submit_iteration_result` tool. With `--local-guards`, it
 also receives built-in file tools (`read`, `write`, `edit`, `bash`) and the
-guardrail hooks. See [Built-in Tools](../local-models/tools.md).
+guardrail hooks. See [Built-in Tools](../local-models/tools.md). If the
+configured eval (or `--protect-path`) has protected paths, `Guards::GraderLock`
+is attached too — independent of `--local-guards` — refusing edits to the
+grader's own criteria. See [Evals](evals.md#guarding-the-grader-graderlock).
 
 ### 2. The robot works
 
@@ -60,34 +65,44 @@ doesn't submit, the iteration is treated as a failure.
 ### 4. Decide: commit or roll back
 
 ```
-result.success?  ──► verify_command set?  ──► verify passes? ──► COMMIT
-       │                                            │
-       │ no                                         │ no
-       ▼                                            ▼
-    ROLLBACK                                    ROLLBACK
+result.success?  ──► Eval#score  ──► gate_ok? ──► improved (or --no-require-improvement)? ──► COMMIT
+       │                                │                         │
+       │ no                            │ no                       │ no
+       ▼                                ▼ (after R2 repair budget) ▼
+    ROLLBACK                        ROLLBACK                   ROLLBACK
 ```
 
-- **Success + verification passes** → `git add -A` and commit (if anything is
-  staged). The consecutive-failure and -error counters reset.
-- **Success but verification fails** → `git reset --hard`; recorded as a verify
-  failure.
-- **Failure (or no submit)** → `git reset --hard`; consecutive-failure counter
-  increments.
+- **Robot reported failure (or no submit)** → `git reset --hard`;
+  consecutive-failure counter increments. The eval is never called.
+- **Robot reported success** → the configured **eval** scores the working tree
+  (`Evals::Null` by default — see [Evals](evals.md)):
+    - **Gate fails** (`gate_ok: false`) — handed back to the *same* robot for up
+      to `--max-verify-repairs` repair attempts, re-scoring each time; if the
+      gate is still failing when the budget runs out, `git reset --hard` and
+      recorded as `[VERIFY FAILED]`.
+    - **Gate passes, didn't improve** (`improved: false`, and
+      `require_improvement?` is true — the default) → `git reset --hard`;
+      recorded as `[NO IMPROVEMENT]`. Not counted as a failure.
+    - **Gate passes and improved** → `git add -A` and commit (if anything is
+      staged). The consecutive-failure/-error counters reset, and the eval's
+      `met_target?` is checked — if true, the run stops immediately.
 
-See [Verification Gate](verification.md) for why a separate command decides.
+See [Evals](evals.md) for the full scoring model (this generalizes what used to
+be a verify-command-only gate — see [Verification Gate](verification.md)).
 
 ### 5. Update the notes
 
 Either way, the orchestrator appends an entry to `notes.md` — success, failure,
-verify-failure, or error — so the next iteration's robot sees what happened. See
-[Cross-Iteration Memory](notes.md).
+no-improvement, verify/gate-failure, or error — so the next iteration's robot
+sees what happened. See [Cross-Iteration Memory](notes.md).
 
 ### 6. Check stop conditions
 
 Stop conditions are evaluated **before** and **after** each iteration. The loop
-ends if iterations, tokens, or consecutive failures hit their limits, or if the
-robot set `should_fully_stop` for a `--stop-when` condition. See
-[Stop Conditions](stop-conditions.md).
+ends if iterations, tokens, consecutive failures, or the eval's plateau counter
+hit their limits; if the eval reports `met_target`; or if the robot set
+`should_fully_stop` for a `--stop-when` condition. See
+[Stop Conditions](stop-conditions.md) and [Evals](evals.md).
 
 ## Errors, retries, and backoff
 

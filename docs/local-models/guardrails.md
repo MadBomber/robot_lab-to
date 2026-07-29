@@ -24,6 +24,18 @@ small-model mistake) to the working directory.
 Implemented as `around_tool_call` (to block) + `before_tool_call` (to normalize
 the path).
 
+**Opting out:** `write-guard` is the one guard in the set that can get in the way
+of *legitimate* work — a robot iteratively rewriting a whole prose draft each
+pass wants plain `write`, not a forced `edit`. Set `write_guard: false` (Ruby-only,
+default `true`; no CLI flag) to drop it from the installed set while keeping
+`read-before-edit`, `checkpoint`, and `quality-monitor`:
+
+```ruby
+RobotLab::To.run(objective, local_guards: true, write_guard: false)
+```
+
+Internally this calls `Guards.install(robot, run:, except: [Guards::WriteGuard])`.
+
 ### read-before-edit
 
 **Problem:** models fire `edit` with an `old_text` they never actually saw —
@@ -61,6 +73,15 @@ move on. This is the load-bearing guard for long unattended runs.
     legitimate tool-using turns. Empty / no-progress is handled instead by the
     orchestrator's existing nudge → "did not submit" path, which recovers
     gracefully rather than hard-erroring.
+
+!!! info "A fifth guard, `GraderLock`, is not part of this set"
+    `Guards::GraderLock` (`guards/grader_lock.rb`) lives alongside these four but
+    is **not** gated by `--local-guards` — it locks an [eval's](../concepts/evals.md)
+    grading criteria (a spec, a floor script, `--protect-path` globs) from robot
+    edits, and is installed whenever such paths exist, regardless of model size.
+    A frontier model can reward-hack its own grading criteria just as easily as a
+    small model can mangle a file. See
+    [Evals: Guarding the grader](../concepts/evals.md#guarding-the-grader-graderlock).
 
 ## How they're registered
 

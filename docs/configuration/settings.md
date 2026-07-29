@@ -121,6 +121,93 @@ CLI-only. See [Verification Gate](../concepts/verification.md).
 Maximum time `verify_command` may run before it is killed (whole process group)
 and the gate fails.
 
+## Evals (scoring)
+
+CLI-only (no YAML default) unless noted. See [Evals](../concepts/evals.md) for
+the full behavioral model.
+
+### `eval`
+
+- **Default:** *(unset — `Evals::Code` if `verify_command`/`eval_measure`/
+  `eval_target` is set, else the unscored `Evals::Null`)*
+- **CLI:** `--eval code|null|prose`
+
+Selects the scoring strategy. Via the Ruby API, `eval:` also accepts an instance
+responding to `#score`, a proc, or a `Symbol` registered with
+`RobotLab::To.register_eval` — the CLI flag itself only resolves the three named
+strings.
+
+### `eval_measure`
+
+- **Default:** *(unset)*
+- **CLI:** `--measure CMD`
+
+A command that prints a number to stdout (higher = better) — the descent signal
+for `Evals::Code`. Setting this alone (without `verify_command`) still selects
+`Evals::Code`, not `Evals::Null`.
+
+### `eval_target`
+
+- **Default:** *(unset)*
+- **CLI:** `--target FLOAT`
+
+Stop the run once `eval_measure`'s value reaches this (`Evals::Code`).
+
+### `eval_spec`
+
+- **Default:** *(unset)*
+- **CLI:** `--spec PATH`
+
+The spec/outline artifact `Evals::Prose`'s judge measures the draft against.
+Automatically added to `Evals::Prose#protected_paths` — locked from robot edits
+by `GraderLock`.
+
+### `eval_floor`
+
+- **Default:** *(unset)*
+- **CLI:** `--floor CMD`
+
+An optional mechanizable check (e.g. link validation, outline coverage) that
+must pass before `Evals::Prose` calls the judge at all. A failing floor is
+scored `:worse` without spending a judge call.
+
+### `eval_judge_model`
+
+- **Default:** *(unset — falls back to `model`)*
+- **CLI:** `--judge-model MODEL`
+
+The model used for `Evals::Prose`'s pairwise judge. Defaults to the doer's own
+`model`; set this to use a different (often cheaper, or deliberately more
+skeptical) model for the judge role.
+
+### `stop_on_plateau`
+
+- **Default:** *(unset — off)*
+- **CLI:** `--stop-on-plateau N`
+
+Stop after `N` consecutive iterations with no committed improvement. The
+primary terminator for `Evals::Prose`, which never sets a measurable target. See
+[Stop Conditions](../concepts/stop-conditions.md#plateau-no-improvement).
+
+### `require_improvement`
+
+- **Default:** `true` (CLI/Ruby-only hardcoded default; not in `defaults.yml`)
+- **CLI:** `--[no-]require-improvement`
+
+When true, a gate-passing iteration that doesn't beat the parent commit's score
+is rolled back rather than committed. `--no-require-improvement` restores
+"commit any gate-passing success."
+
+### `protect_paths`
+
+- **Default:** `[]`
+- **CLI:** `--protect-path GLOB` (repeatable)
+
+Extra grader files (globs) locked from robot writes/edits/bash, on top of
+whatever the configured eval's `#protected_paths` already locks. Always
+enforced via `Guards::GraderLock` when the resolved set is non-empty —
+independent of `local_guards`.
+
 ## Local models
 
 ### `local_guards`
@@ -131,6 +218,18 @@ and the gate fails.
 Attach the built-in file tools (`read`, `write`, `edit`, `bash`) and the
 small-model guardrail hooks. Designed for local models that need a more
 constrained, forgiving tool surface. See [Local Models](../local-models/index.md).
+
+### `write_guard`
+
+- **Default:** `true` (Ruby-only — no CLI flag)
+- **Ruby:** `RobotLab::To.run(..., write_guard: false)`
+
+When `local_guards` is on, `write_guard: false` drops `Guards::WriteGuard` from
+the installed set (`Guards.install(..., except: [Guards::WriteGuard])`), letting
+the robot freely overwrite a file it is iteratively refining — WriteGuard
+otherwise refuses `write` on a file that already exists and redirects to `edit`,
+which is unhelpful for a robot rewriting a whole prose draft each pass. See
+[Guardrails](../local-models/guardrails.md).
 
 ## Git & output
 

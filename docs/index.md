@@ -54,6 +54,10 @@ See [The Iteration Loop](concepts/iteration-loop.md) for the full lifecycle.
   so the robot doesn't repeat itself. See [Cross-Iteration Memory](concepts/notes.md).
 - **Independent verification.** The robot can't self-certify success — a real
   command you choose is the deciding authority. See [Verification Gate](concepts/verification.md).
+- **Scored, descending iterations.** An **eval** replaces the robot's self-report
+  with an orchestrator-owned measurable judgement — a deterministic `--measure`/
+  `--target` for code, or a pairwise LLM judge for prose — so the branch only
+  ever moves forward. See [Evals](concepts/evals.md).
 - **It stops on its own.** Hard limits plus a natural-language stop condition mean
   you can leave it unattended. See [Stop Conditions](concepts/stop-conditions.md).
 - **It asks before overstepping.** For irreversible or ambiguous choices the robot

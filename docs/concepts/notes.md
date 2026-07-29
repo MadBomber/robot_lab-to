@@ -60,8 +60,12 @@ Objective: Migrate the codebase from Minitest to RSpec
 |--------|------|----------|
 | *(none)* | Successful, committed iteration | summary, changes, learnings |
 | `[FAIL]` | Robot reported failure or didn't submit | summary, learnings |
-| `[VERIFY FAILED]` | Robot claimed success but `--verify-command` failed | summary, verification output |
+| `[VERIFY FAILED]` | Robot claimed success but the eval's gate failed (`--verify-command` / `--floor`) | summary, gate output |
+| `[NO IMPROVEMENT]` | Gate passed but the eval didn't rule it better than the parent commit (rolled back unless `--no-require-improvement`) | summary, score detail |
 | `[ERROR]` | An exception was raised during the iteration | error class and message |
+
+`[VERIFY FAILED]` and `[NO IMPROVEMENT]` come from the [Evals](evals.md) scoring
+gate, not the robot — see there for how `gate_ok` and `improved` are decided.
 
 Because failures and their learnings are recorded too, the next robot can avoid
 repeating a dead end — the failure log is as valuable as the success log.

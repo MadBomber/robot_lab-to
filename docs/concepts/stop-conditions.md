@@ -1,16 +1,22 @@
 # Stop Conditions
 
 Because `robot-to` is meant to run unattended, it must reliably stop on its own.
-Four independent conditions can end a run; whichever trips first wins.
+Five independent conditions can end a run; whichever trips first wins.
 
-## The four conditions
+## The five conditions
 
 | Condition | Flag | Checked | Effect |
 |-----------|------|---------|--------|
 | Max iterations | `--max-iterations N` | before & after each iteration | Stop after `N` iterations. |
 | Max tokens | `--max-tokens N` | before & after each iteration (and mid-stream when streaming) | Stop once cumulative tokens reach `N`. |
 | Consecutive failures | `--max-consecutive-failures N` | after each iteration | Abort after `N` failures in a row (default **3**). |
+| Plateau | `--stop-on-plateau N` | after each iteration | Abort after `N` iterations with no committed improvement (eval-gated runs only). |
 | Stop-when | `--stop-when "<text>"` | after each *successful* iteration | The robot judges the condition; sets `should_fully_stop`. |
+
+There is a sixth, orchestrator-owned stop that isn't a `StopConditions` check at
+all: an [eval's](evals.md) `met_target` — reaching a measured `--target` aborts
+the run immediately on that iteration's commit, taking priority over
+`should_fully_stop`. See [Evals](evals.md).
 
 If you set none of the bounded limits, the loop relies on
 `--max-consecutive-failures` (default 3) and `--stop-when` to terminate. For a
@@ -40,6 +46,28 @@ limit.
 Resets to zero on every successful, committed iteration; increments on every
 failure, verify-failure, or commit-failure. This is the safety net that stops a
 run that is going nowhere. The default is **3**.
+
+### Plateau (no improvement)
+
+`--stop-on-plateau N` aborts once `N` consecutive iterations pass the eval's gate
+but fail to beat the parent commit's score (`iterations_since_improvement >= N`).
+It resets to zero on every committed improvement.
+
+This is the **primary terminator for `Evals::Prose`**, which never sets a
+measurable `met_target` — a pairwise judge has no absolute bar to reach, only
+"better than last time." It's distinct from `--max-consecutive-failures`:
+plateau counts *valid, gate-passing work that just wasn't better* (including
+"same" verdicts, which are common and normal for prose), while consecutive
+failures counts the robot being genuinely broken (errors, gate failures, no
+submit). Conflating the two would throttle legitimate exploration.
+
+```bash
+robot-to "Write an opinionated guide to VSM" \
+  --eval prose --spec outline.md \
+  --stop-on-plateau 3   # stop after 3 drafts that didn't improve
+```
+
+See [Evals](evals.md) for the full scoring model.
 
 ### Stop-when (natural language)
 
@@ -74,7 +102,8 @@ Reason: max iterations reached (30)
 ```
 
 Possible reasons include `max iterations reached (N)`, `max tokens reached (N)`,
-`N consecutive failures`, `stop condition met: <text>`, a permanent error, or a
+`N consecutive failures`, `plateau: N iterations without improvement`,
+`target met: <detail>`, `stop condition met: <text>`, a permanent error, or a
 fatal error.
 
 ---

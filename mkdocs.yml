@@ -128,6 +128,7 @@ nav:
       - Cross-Iteration Memory: concepts/notes.md
       - Stop Conditions: concepts/stop-conditions.md
       - Verification Gate: concepts/verification.md
+      - "Evals: Scoring Iterations": concepts/evals.md
       - Run State & Event Log: concepts/run-state.md
   - Configuration:
       - Overview: configuration/index.md

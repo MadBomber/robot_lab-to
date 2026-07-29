@@ -30,7 +30,16 @@ echo "Add request logging middleware and tests" | robot-to
 | `--max-consecutive-failures` | `N` | `3` | Abort after `N` consecutive failures. |
 | `--verify-command` | `CMD` | *unset* | Command that must pass before a success is committed. |
 | `--verify-timeout` | `SECONDS` | `600` | Timeout for `--verify-command`. |
-| `--max-verify-repairs` | `N` | `2` | Repair-in-place attempts when `--verify-command` fails before rolling back. |
+| `--max-verify-repairs` | `N` | `2` | Repair-in-place attempts when the eval's gate fails before rolling back. |
+| `--eval` | `code`\|`null`\|`prose` | *code if verify/measure/target set, else null* | Eval strategy — see [Evals](../concepts/evals.md). |
+| `--measure` | `CMD` | *unset* | Command printing a numeric score (higher = better); drives `Evals::Code`. |
+| `--target` | `FLOAT` | *unset* | Stop once the measured score reaches this. |
+| `--spec` | `PATH` | *unset* | Spec/outline artifact `Evals::Prose`'s judge measures against. |
+| `--floor` | `CMD` | *unset* | Mechanizable floor check for prose (links, outline coverage, AI-tells). |
+| `--judge-model` | `MODEL` | *`--model`* | Model for the pairwise prose judge. |
+| `--stop-on-plateau` | `N` | *unset — off* | Stop after `N` iterations with no committed improvement. |
+| `--[no-]require-improvement` | — | on | Roll back gate-passing iterations that don't beat the parent (default on). |
+| `--protect-path` | `GLOB` (repeatable) | *none* | Lock a grader file from robot edits (always-on `GraderLock`). |
 | `--commit-format` | `default`\|`conventional` | `default` | Commit message format. |
 | `--run-dir` | `PATH` | `.robot_lab_to` | Directory for run state. |
 | `--local-guards` | — | off | Add built-in file tools + small-model guardrails. |
@@ -63,6 +72,24 @@ robot-to "Migrate from Minitest to RSpec" \
   --verify-command "bundle exec rake" \
   --stop-when "every test file is RSpec and the suite passes" \
   --commit-format conventional
+```
+
+A scored run that descends toward a measured target (see [Evals](../concepts/evals.md)):
+
+```bash
+robot-to "Raise parser coverage to 90%" \
+  --verify  "bundle exec rake test" \
+  --measure "bundle exec rake coverage" \
+  --target  90 \
+  --protect-path test/coverage_helper.rb
+```
+
+A judged prose run that ends on plateau instead of a target:
+
+```bash
+robot-to "Write an opinionated guide to the Viable Systems Model" \
+  --eval prose --spec outline.md --floor "rake docs:lint" \
+  --stop-on-plateau 3
 ```
 
 A fully local run on Ollama (see [Local Models](../local-models/index.md)):

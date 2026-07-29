@@ -63,20 +63,26 @@ to `.git/info/exclude` automatically):
 ## One iteration, step by step
 
 ```
-iteration:start          → fresh robot built with prompt + notes
-agent:run:start          → robot.run() begins
+iteration:start           → fresh robot built with prompt + notes
+agent:run:start           → robot.run() begins
   (robot uses tools, calls submit_iteration_result)
 agent:run:end
-agent:nudge?             → if no result submitted, re-ask (max_submit_nudges)
-verify:start / verify:*  → run --verify-command (if set)
-commit:success           → git add -A && commit       (success path)
+agent:nudge?              → if no result submitted, re-ask (max_submit_nudges)
+eval                      → the configured eval scores the working tree (if reported success)
+commit:success            → git add -A && commit                 (gate ok + improved)
   — or —
-iteration:failure        → git reset --hard            (failure path)
-iteration:verify_failure → git reset --hard            (verify failed)
+iteration:no_improvement  → git reset --hard                     (gate ok, not improved)
+iteration:gate_failure    → git reset --hard (after eval:repair)  (gate failed)
+iteration:failure         → git reset --hard                     (robot reported failure / no submit)
 ```
 
-A successful iteration resets the consecutive-failure counter; a failure
-increments it (and may trip `--max-consecutive-failures`).
+A committed iteration resets the consecutive-failure counter and the plateau
+counter; a failure or gate failure increments consecutive-failures, and any
+non-committing outcome increments the plateau counter (may trip
+`--max-consecutive-failures` or `--stop-on-plateau`). See
+[Evals](../concepts/evals.md) for the full scoring model — by default (no
+`--verify-command`/`--eval`), every reported success commits, matching this
+page's simpler mental model.
 
 ## The exit summary
 
