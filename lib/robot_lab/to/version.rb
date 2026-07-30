@@ -2,6 +2,6 @@
 
 module RobotLab
   module To
-    VERSION = "0.1.0"
+    VERSION = "0.2.6"
   end
 end
