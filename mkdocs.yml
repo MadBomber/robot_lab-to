@@ -1,0 +1,145 @@
+# MkDocs configuration for robot_lab-to documentation
+site_name: robot_lab-to
+site_description: Autonomous overnight agent loop for RobotLab — run a robot while you sleep.
+site_author: Dewayne VanHoozer
+site_url: https://madbomber.github.io/robot_lab-to
+copyright: Copyright &copy; 2026 Dewayne VanHoozer
+
+# Repository information
+repo_name: MadBomber/robot_lab-to
+repo_url: https://github.com/MadBomber/robot_lab-to
+edit_uri: edit/main/docs/
+
+# Theme
+theme:
+  name: material
+
+  # Color scheme — default to dark (slate); toggle to light
+  palette:
+    # Dark mode (default)
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+    # Light mode
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+  font:
+    text: Roboto
+    code: Roboto Mono
+
+  features:
+    # Navigation
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.path
+    - navigation.top
+    # Table of contents
+    - toc.follow
+    # Search
+    - search.suggest
+    - search.highlight
+    - search.share
+    # Content
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - content.tooltips
+    - content.action.edit
+    - content.action.view
+
+# Plugins
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+
+# Markdown extensions
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      title: On this page
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: MadBomber
+      repo: robot_lab-to
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Extra configuration
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/MadBomber/robot_lab-to
+      name: robot_lab-to on GitHub
+    - icon: fontawesome/solid/gem
+      link: https://rubygems.org/gems/robot_lab-to
+      name: robot_lab-to on RubyGems
+
+# Navigation
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quick-start.md
+      - Anatomy of a Run: getting-started/anatomy-of-a-run.md
+  - Core Concepts:
+      - The Iteration Loop: concepts/iteration-loop.md
+      - Cross-Iteration Memory: concepts/notes.md
+      - Stop Conditions: concepts/stop-conditions.md
+      - Verification Gate: concepts/verification.md
+      - "Evals: Scoring Iterations": concepts/evals.md
+      - Run State & Event Log: concepts/run-state.md
+  - Configuration:
+      - Overview: configuration/index.md
+      - Settings Reference: configuration/settings.md
+      - CLI Reference: configuration/cli.md
+  - Local Models:
+      - Overview: local-models/index.md
+      - Ollama Setup: local-models/ollama.md
+      - Built-in Tools: local-models/tools.md
+      - Guardrails: local-models/guardrails.md
+  - Reference:
+      - Architecture: reference/architecture.md
+  - About:
+      - Changelog: about/changelog.md

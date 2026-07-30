@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "open3"
-require "pathname"
 
 module RobotLab
   module To
@@ -26,6 +25,11 @@ module RobotLab
 
       def create_branch(name)
         git("checkout", "-b", name)
+      end
+
+      # Switch to an existing branch (used when resuming a prior run).
+      def checkout_branch(name)
+        git("checkout", name)
       end
 
       def staged?
@@ -80,6 +84,34 @@ module RobotLab
       def changed_files_since(base_sha)
         out, _err, _status = Open3.capture3(GIT_ENV, "git", "diff", "--name-only",
                                             "#{base_sha}..HEAD", chdir: @work_dir)
+        out.lines.map(&:chomp).reject(&:empty?)
+      end
+
+      # Files differing between a ref and the current working tree (uncommitted
+      # changes), INCLUDING new untracked files. Used by pairwise evals to compare
+      # a draft against its parent -- and a prose doer typically CREATES the
+      # document, so the untracked case is the common one (`git diff` alone misses
+      # new files).
+      def changed_vs_worktree(ref)
+        tracked, = Open3.capture3(GIT_ENV, "git", "diff", "--name-only", ref, chdir: @work_dir)
+        untracked, = Open3.capture3(GIT_ENV, "git", "ls-files", "--others", "--exclude-standard",
+                                    chdir: @work_dir)
+        (tracked.lines + untracked.lines).map(&:chomp).reject(&:empty?).uniq
+      end
+
+      # Contents of a path at a given ref, or "" when it did not exist there.
+      def show(ref, path)
+        out, _err, status = Open3.capture3(GIT_ENV, "git", "show", "#{ref}:#{path}",
+                                           chdir: @work_dir)
+        status.success? ? out : ""
+      end
+
+      # All tracked files — the project's committed layout. Excludes the run dir
+      # (it's in .git/info/exclude), so it's a clean workspace digest.
+      def tracked_files
+        out, _err, status = Open3.capture3(GIT_ENV, "git", "ls-files", chdir: @work_dir)
+        return [] unless status.success?
+
         out.lines.map(&:chomp).reject(&:empty?)
       end
 

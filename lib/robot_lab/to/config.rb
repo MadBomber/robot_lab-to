@@ -18,27 +18,69 @@ module RobotLab
       auto_configure!
 
       # Runtime CLI overrides — applied after load.
-      attr_writer :model, :max_iterations, :max_tokens, :stop_when,
-                  :max_consecutive_failures, :run_dir, :commit_format, :debug
+      attr_writer :provider, :model, :max_iterations, :max_tokens, :stop_when,
+                  :max_consecutive_failures, :max_submit_nudges, :max_verify_repairs,
+                  :verify_command, :verify_timeout, :run_dir, :commit_format,
+                  :local_guards, :stream, :debug,
+                  :decisions_enabled, :decision_mode, :decision_wait_poll, :decision_timeout,
+                  :eval, :eval_measure, :eval_target, :require_improvement, :stop_on_plateau
+
+      # Prose/grader settings (Phase 3). attr_accessor keeps these off the reek
+      # method-count budget (Config sits at its TooManyMethods limit); they are
+      # assigned in initialize to avoid InstanceVariableAssumption. write_guard
+      # (default true) lets local_guards runs opt out of WriteGuard so a robot can
+      # freely overwrite files it is iteratively refining (e.g. prose drafts).
+      attr_accessor :eval_judge_model, :eval_spec, :eval_floor, :protect_paths, :write_guard
 
       def initialize(**overrides)
         super()
+        @eval = @eval_measure = @eval_target = nil
+        @require_improvement = @stop_on_plateau = nil
+        @eval_judge_model = @eval_spec = @eval_floor = nil
+        @protect_paths = []
+        @write_guard = true
         overrides.each { |k, v| public_send(:"#{k}=", v) if respond_to?(:"#{k}=") }
       end
 
       # Keys defined in defaults.yml — super is safe
-      def model                    = @model            || super
+      def provider                 = @provider || super
+      def model                    = @model || super
       def max_consecutive_failures = @max_consecutive_failures || super
-      def max_tool_rounds          = super
-      def max_retries              = super
+      def max_submit_nudges        = @max_submit_nudges        || super
+      def max_verify_repairs       = @max_verify_repairs       || super
+      def verify_timeout           = @verify_timeout           || super
+
       def run_dir                  = @run_dir          || super
       def commit_format            = @commit_format    || super
+      def local_guards?            = @local_guards.nil? ? super : @local_guards
+      def stream?                  = @stream.nil? ? super : @stream
       def debug?                   = @debug.nil? ? super : @debug
+
+      def decisions_enabled?       = @decisions_enabled.nil? ? super : @decisions_enabled
+      def decision_mode            = @decision_mode      || super
+      def decision_wait_poll       = @decision_wait_poll || super
+      # nil = wait indefinitely
+      def decision_timeout         = @decision_timeout   || super
 
       # CLI-only options with no YAML default (nil means "no limit / not set")
       def max_iterations           = @max_iterations
       def max_tokens               = @max_tokens
       def stop_when                = @stop_when
+      def verify_command           = @verify_command
+
+      # Eval strategy selection + tuning (see RobotLab::To::Evals.build). All
+      # CLI-only / nil-default. #eval may hold a strategy name ("code"/"null"), a
+      # registered symbol, an instance responding to #score, or a proc. The
+      # judge/spec/floor readers Prose needs arrive with Phase 3.
+      def eval                     = @eval
+      def eval_measure             = @eval_measure
+      def eval_target              = @eval_target
+      def stop_on_plateau          = @stop_on_plateau
+
+      # CLI/Ruby-only with a hardcoded default (MywayConfig does not generate a
+      # reliable `require_improvement?` predicate). Default true per design: the
+      # loop is strictly monotone unless --no-require-improvement is passed.
+      def require_improvement?     = @require_improvement.nil? || @require_improvement
     end
   end
 end

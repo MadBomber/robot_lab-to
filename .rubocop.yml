@@ -1,0 +1,7 @@
+inherit_from: ../.rubocop-base.yml
+
+Style/FormatStringToken:
+  Enabled: false
+
+Style/StderrPuts:
+  Enabled: false

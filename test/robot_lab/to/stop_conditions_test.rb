@@ -76,6 +76,60 @@ module RobotLab
           refute sc.stop_when_met?(result)
         end
       end
+
+      def test_before_passes_when_under_token_limit
+        stub_run do |run, _dir|
+          run.input_tokens  = 400
+          run.output_tokens = 100
+          config = config_with(max_tokens: 1_000)
+          sc = StopConditions.new(config, run)
+          assert_nil sc.before?  # 500 < 1000, no abort
+        end
+      end
+
+      def test_before_raises_when_token_limit_exceeded
+        stub_run do |run, _dir|
+          run.input_tokens  = 800
+          run.output_tokens = 300
+          config = config_with(max_tokens: 1_000)
+          sc = StopConditions.new(config, run)
+          assert_raises(AbortError) { sc.before? }  # 1100 >= 1000
+        end
+      end
+
+      def test_after_raises_when_token_limit_exceeded
+        stub_run do |run, _dir|
+          run.input_tokens  = 1_500
+          run.output_tokens = 0
+          config = config_with(max_tokens: 1_000)
+          sc = StopConditions.new(config, run)
+          assert_raises(AbortError) { sc.after? }
+        end
+      end
+
+      def test_after_raises_on_plateau
+        stub_run do |run, _dir|
+          run.iterations_since_improvement = 2
+          sc = StopConditions.new(config_with(stop_on_plateau: 2), run)
+          assert_raises(AbortError) { sc.after? }
+        end
+      end
+
+      def test_no_plateau_stop_when_unconfigured
+        stub_run do |run, _dir|
+          run.iterations_since_improvement = 9
+          sc = StopConditions.new(config_with, run) # stop_on_plateau nil
+          assert_nil sc.after?
+        end
+      end
+
+      def test_no_plateau_stop_below_threshold
+        stub_run do |run, _dir|
+          run.iterations_since_improvement = 1
+          sc = StopConditions.new(config_with(stop_on_plateau: 3), run)
+          assert_nil sc.after?
+        end
+      end
     end
   end
 end

@@ -1,3 +1,5 @@
+site/
+*_output.txt
 *.gem
 pkg/
 coverage/

@@ -16,7 +16,7 @@ module RobotLab
 
       # Checked after an iteration completes.
       def after?
-        check_max_iterations || check_max_tokens || check_consecutive_failures
+        check_max_iterations || check_max_tokens || check_consecutive_failures || check_plateau
       end
 
       # Checked after a successful iteration with a stop_when condition.
@@ -30,7 +30,7 @@ module RobotLab
       # Called by the orchestrator's token-tracking callback mid-iteration.
       # Returns the abort reason string if exceeded, nil otherwise.
       def token_limit_exceeded?
-        return nil unless @config.max_tokens
+        return false unless @config.max_tokens
 
         @run.total_tokens >= @config.max_tokens
       end
@@ -55,6 +55,16 @@ module RobotLab
         return unless @run.consecutive_failures >= @config.max_consecutive_failures
 
         raise AbortError, "#{@run.consecutive_failures} consecutive failures"
+      end
+
+      # Diminishing returns: stop after N iterations with no committed improvement.
+      # The primary terminator for pairwise/judged evals, which never set a target.
+      def check_plateau
+        limit = @config.stop_on_plateau
+        return unless limit
+        return unless @run.iterations_since_improvement >= limit
+
+        raise AbortError, "plateau: #{limit} iterations without improvement"
       end
     end
   end

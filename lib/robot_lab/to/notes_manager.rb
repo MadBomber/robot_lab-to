@@ -14,8 +14,7 @@ module RobotLab
       end
 
       def setup(run)
-        @path.parent.mkpath
-        @path.write(<<~HEADER)
+        AtomicFile.write(@path, <<~HEADER)
           # robot-to run: #{run.run_id}
 
           Objective: #{run.objective}
@@ -29,7 +28,7 @@ module RobotLab
       end
 
       def append_success(result, iteration)
-        changes_md  = bullet_list(result.key_changes)
+        changes_md = bullet_list(result.key_changes)
         learnings_md = bullet_list(result.key_learnings)
         append(<<~MD)
 
@@ -57,6 +56,34 @@ module RobotLab
         MD
       end
 
+      def append_no_improvement(result, detail, iteration)
+        append(<<~MD)
+
+          ### Iteration #{iteration} [NO IMPROVEMENT]
+
+          **Summary:** #{result.summary}
+
+          **Score:** #{detail}
+
+          The change passed the gate but did not beat the parent commit, so it was
+          rolled back. Try a different approach next iteration.
+        MD
+      end
+
+      def append_verify_failure(result, output, iteration)
+        append(<<~MD)
+
+          ### Iteration #{iteration} [VERIFY FAILED]
+
+          **Summary:** #{result.summary}
+
+          **Verification output:**
+          ```
+          #{output}
+          ```
+        MD
+      end
+
       def append_error(error, iteration)
         append(<<~MD)
 
@@ -66,10 +93,22 @@ module RobotLab
         MD
       end
 
+      def append_decision(decision, iteration)
+        append(<<~MD)
+
+          ### Iteration #{iteration} [DECISION]
+
+          **Raised:** #{decision.question}
+          **Blocking:** #{decision.blocking? ? "yes" : "no"}
+          **Recommendation:** #{decision.recommendation}
+          **File:** #{decision.path}
+        MD
+      end
+
       private
 
       def append(text)
-        File.open(@path, "a") { |f| f.write(text) }
+        AtomicFile.append(@path, text)
       end
 
       def bullet_list(items)

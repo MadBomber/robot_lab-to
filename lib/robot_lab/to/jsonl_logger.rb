@@ -28,7 +28,7 @@ module RobotLab
         entry = { event: event, ts: Time.now.iso8601(3) }.merge(payload).compact
         line  = JSON.generate(entry)
         if @file
-          @file.puts(line)
+          @file.write("#{line}\n") # single write keeps the line intact on crash
         else
           @buffer.shift if @buffer.size >= MAX_BUFFER
           @buffer << line
@@ -36,14 +36,22 @@ module RobotLab
       end
 
       def close
-        @file&.close
+        if @file
+          @file.flush
+          begin
+            @file.fsync
+          rescue SystemCallError
+            nil
+          end
+          @file.close
+        end
         @file = nil
       end
 
       private
 
       def flush_buffer
-        @buffer.each { |line| @file.puts(line) }
+        @buffer.each { |line| @file.write("#{line}\n") }
         @buffer.clear
       end
     end

@@ -46,6 +46,19 @@ module RobotLab
         end
       end
 
+      def test_append_verify_failure_records_output
+        stub_run do |run, dir|
+          nm = NotesManager.new(dir.join("notes.md"))
+          nm.setup(run)
+          result = IterationResult.new(success: true, summary: "added feature",
+                                       key_changes: [], key_learnings: [], should_fully_stop: nil)
+          nm.append_verify_failure(result, "3 runs, 1 failure", 4)
+          content = nm.read
+          assert_includes content, "### Iteration 4 [VERIFY FAILED]"
+          assert_includes content, "3 runs, 1 failure"
+        end
+      end
+
       def test_append_error_marks_error
         stub_run do |run, dir|
           nm = NotesManager.new(dir.join("notes.md"))
@@ -60,6 +73,25 @@ module RobotLab
         with_tmp_dir do |dir|
           nm = NotesManager.new(dir.join("missing.md"))
           assert_equal "", nm.read
+        end
+      end
+
+      def test_append_decision_records_question_and_recommendation
+        stub_run do |run, dir|
+          nm = NotesManager.new(dir.join("notes.md"))
+          nm.setup(run)
+          decision = Decision.new(id: "d-1", status: "pending", blocking: true,
+                                  created_at: "2026-07-01T12:00:00Z", created_iteration: 2,
+                                  resolved_at: nil, resolution: nil, question: "404 or 410?",
+                                  situation: "", options: [], recommendation: "410 Gone",
+                                  body: "", path: "/tmp/d-1.md")
+          nm.append_decision(decision, 2)
+          content = nm.read
+          assert_includes content, "### Iteration 2 [DECISION]"
+          assert_includes content, "404 or 410?"
+          assert_includes content, "**Blocking:** yes"
+          assert_includes content, "410 Gone"
+          assert_includes content, "/tmp/d-1.md"
         end
       end
     end

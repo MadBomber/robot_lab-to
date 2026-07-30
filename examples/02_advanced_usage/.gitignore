@@ -1,0 +1,8 @@
+# Artifacts produced when the example runs — never commit them into the
+# robot_lab-to repository. (gitignore has no inline comments.)
+
+# the throwaway git repo the agents work in (recreated each run)
+/project/
+
+# the implementation run's event log and cross-iteration notes.md
+/.robot_lab_to/

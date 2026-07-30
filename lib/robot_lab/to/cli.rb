@@ -6,11 +6,53 @@ module RobotLab
   module To
     # OptionParser-based CLI for robot-to.
     class CLI
+      # Value options: [flag, type-or-choices, description, opts-key]. Each sets
+      # opts[key] = parsed value. Kept as data so build_parser stays simple.
+      VALUE_OPTIONS = [
+        ["--provider NAME", String, "LLM provider to use (default: openai)", :provider],
+        ["--model MODEL", String, "LLM model to use (default: gpt-5.5)", :model],
+        ["--max-iterations N", Integer, "Stop after N iterations (default: unlimited)", :max_iterations],
+        ["--max-tokens N", Integer, "Stop after N total tokens (default: unlimited)", :max_tokens],
+        ["--stop-when CONDITION", String,
+         "Natural-language condition; robot sets should_fully_stop when met", :stop_when],
+        ["--max-consecutive-failures N", Integer,
+         "Abort after N consecutive failures (default: 3)", :max_consecutive_failures],
+        ["--max-verify-repairs N", Integer,
+         "Repair-in-place attempts when --verify-command fails (default: 2)", :max_verify_repairs],
+        ["--verify-command CMD", String,
+         "Command that must pass before a successful iteration is committed", :verify_command],
+        ["--verify-timeout SECONDS", Integer, "Timeout for --verify-command (default: 600)", :verify_timeout],
+        ["--eval NAME", String, "Eval strategy: code | null (default: code when --verify-command set)", :eval],
+        ["--measure CMD", String,
+         "Command printing a numeric score; higher is better (Evals::Code)", :eval_measure],
+        ["--target FLOAT", Float, "Stop once the measured score reaches TARGET", :eval_target],
+        ["--spec PATH", String, "Spec/outline artifact the eval measures against (Evals::Prose)", :eval_spec],
+        ["--floor CMD", String,
+         "Mechanizable floor-check command for prose (links, coverage, AI-tells)", :eval_floor],
+        ["--judge-model MODEL", String,
+         "Model for the pairwise prose judge (default: --model)", :eval_judge_model],
+        ["--stop-on-plateau N", Integer,
+         "Stop after N iterations with no committed improvement", :stop_on_plateau],
+        ["--run-dir PATH", String, "Directory for run state (default: .robot_lab_to)", :run_dir],
+        ["--commit-format FORMAT", %w[default conventional],
+         "Commit message format: default or conventional", :commit_format],
+        ["--resume RUN_ID", String,
+         "Resume a paused run (loads objective + state from its run.json)", :resume],
+        ["--decision-mode MODE", %w[wait exit],
+         "On a blocking decision: wait (poll) or exit (stop for --resume). Default: wait", :decision_mode],
+        ["--decision-timeout SECONDS", Integer,
+         "Max seconds to wait on a blocking decision (default: no limit)", :decision_timeout],
+        ["--decision-poll SECONDS", Integer,
+         "Seconds between polls while waiting on a decision (default: 30)", :decision_wait_poll]
+      ].freeze
+
       def self.run(argv = ARGV)
         new.run(argv)
       end
 
       def run(argv)
+        return run_decisions(argv[1..] || []) if argv.first == "decisions"
+
         opts   = {}
         parser = build_parser(opts)
         args   = parser.parse!(argv.dup)
@@ -20,73 +62,107 @@ module RobotLab
           return
         end
 
+        if opts[:resume]
+          return RobotLab::To.resume(opts[:resume], **opts.except(:version, :resume))
+        end
+
         objective = args.first || read_stdin_objective
         if objective.nil? || objective.strip.empty?
+          # $stderr.puts, not warn: warn is silenced when $VERBOSE is nil.
           $stderr.puts "Error: objective required (pass as argument or via stdin)"
-          $stderr.puts parser.help_line
+          $stderr.puts parser
           exit 1
         end
 
-        RobotLab::To.run(objective.strip, **opts.except(:version))
+        RobotLab::To.run(objective.strip, **opts.except(:version, :resume))
       end
 
       private
 
+      # `robot-to decisions [run_id]` — list pending decisions and their file
+      # paths so a human knows what needs resolving before resuming.
+      def run_decisions(args)
+        run_dir = Config.new.run_dir
+        run_id  = args.first || latest_run_id(run_dir)
+        if run_id.nil?
+          $stderr.puts "No runs found under #{run_dir}/runs"
+          exit 1
+        end
+
+        manager = DecisionManager.new(Pathname.new(run_dir).join("runs", run_id, "decisions"))
+        print_decisions(run_id, manager)
+      end
+
+      def print_decisions(run_id, manager)
+        pending  = manager.pending
+        resolved = manager.resolved_open
+        puts "Run #{run_id}"
+        puts ""
+        if pending.empty? && resolved.empty?
+          puts "No open decisions."
+          return
+        end
+        list_group("Pending (awaiting your answer)", pending)
+        list_group("Resolved (not yet consumed)", resolved)
+        puts ""
+        puts "Resolve a pending decision by editing its file: set `status: resolved`"
+        puts "and fill `resolution:`, then run `robot-to --resume #{run_id}`."
+      end
+
+      def list_group(title, decisions)
+        return if decisions.empty?
+
+        puts "#{title}:"
+        decisions.each do |d|
+          flag = d.blocking? ? " [BLOCKING]" : ""
+          puts "  - #{d.question}#{flag}"
+          puts "    #{d.path}"
+        end
+        puts ""
+      end
+
+      def latest_run_id(run_dir)
+        Dir.glob(Pathname.new(run_dir).join("runs", "*")).select { |p| File.directory?(p) }
+                                                         .sort.map { |p| File.basename(p) }.last
+      end
+
       def build_parser(opts)
         OptionParser.new do |p|
-          p.banner = "Usage: robot-to [objective] [options]"
+          p.banner = "Usage: robot-to [objective] [options]\n       " \
+                     "robot-to --resume RUN_ID [options]\n       " \
+                     "robot-to decisions [RUN_ID]"
           p.separator ""
           p.separator "Runs a robot_lab Robot in an autonomous loop toward the given objective."
           p.separator ""
           p.separator "Options:"
 
-          p.on("--model MODEL", String,
-               "LLM model to use (default: claude-sonnet-4)") do |v|
-            opts[:model] = v
+          VALUE_OPTIONS.each do |flag, type, desc, key|
+            p.on(flag, type, desc) { |v| opts[key] = v }
           end
 
-          p.on("--max-iterations N", Integer,
-               "Stop after N iterations (default: unlimited)") do |v|
-            opts[:max_iterations] = v
-          end
+          add_flag_options(p, opts)
+        end
+      end
 
-          p.on("--max-tokens N", Integer,
-               "Stop after N total tokens (default: unlimited)") do |v|
-            opts[:max_tokens] = v
-          end
-
-          p.on("--stop-when CONDITION", String,
-               "Natural-language condition; robot sets should_fully_stop when met") do |v|
-            opts[:stop_when] = v
-          end
-
-          p.on("--max-consecutive-failures N", Integer,
-               "Abort after N consecutive failures (default: 3)") do |v|
-            opts[:max_consecutive_failures] = v
-          end
-
-          p.on("--run-dir PATH", String,
-               "Directory for run state (default: .robot_lab_to)") do |v|
-            opts[:run_dir] = v
-          end
-
-          p.on("--commit-format FORMAT", %w[default conventional],
-               "Commit message format: default or conventional") do |v|
-            opts[:commit_format] = v
-          end
-
-          p.on("--debug", "Enable verbose JSONL logging to stderr") do
-            opts[:debug] = true
-          end
-
-          p.on("--version", "Print version and exit") do
-            opts[:version] = true
-          end
-
-          p.on("-h", "--help", "Show this help") do
-            puts p
-            exit
-          end
+      # Boolean and terminal flags (each has bespoke behavior).
+      def add_flag_options(parser, opts)
+        parser.on("--[no-]require-improvement",
+                  "Roll back gate-passing iterations that don't improve (default: on)") do |v|
+          opts[:require_improvement] = v
+        end
+        parser.on("--protect-path GLOB", "Lock a grader file from robot edits (repeatable)") do |v|
+          (opts[:protect_paths] ||= []) << v
+        end
+        parser.on("--no-decisions", "Disable the request_decision tool for this run") { opts[:decisions_enabled] = false }
+        parser.on("--local-guards", "Add built-in file tools + small-model guardrails (for local models)") do
+          opts[:local_guards] = true
+        end
+        parser.on("--no-stream", "Disable response streaming (required for local Ollama tool calls)") { opts[:stream] = false }
+        parser.on("--debug", "Enable verbose JSONL logging to stderr") { opts[:debug] = true }
+        parser.on("--version", "Print version and exit") { opts[:version] = true }
+        parser.on("-h", "--help", "Show this help") do
+          puts parser
+          exit
         end
       end
 

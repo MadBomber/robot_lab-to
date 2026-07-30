@@ -1,11 +1,21 @@
 defaults:
-  model: claude-sonnet-4
+  provider: openai
+  model: gpt-5.5
   max_tool_rounds: 100
   max_consecutive_failures: 3
   max_retries: 2
+  max_submit_nudges: 1
+  max_verify_repairs: 2
+  verify_timeout: 600
   commit_format: default
   run_dir: .robot_lab_to
+  local_guards: false
+  stream: true
   debug: false
+  decisions_enabled: true
+  decision_mode: wait          # wait = poll until resolved; exit = stop and require --resume
+  decision_wait_poll: 30       # seconds between polls while waiting on a blocking decision
+  decision_timeout: null       # max seconds to wait (null = wait indefinitely)
 
 development:
   debug: false
