@@ -123,7 +123,7 @@ module RobotLab
 
       def latest_run_id(run_dir)
         Dir.glob(Pathname.new(run_dir).join("runs", "*")).select { |p| File.directory?(p) }
-                                                         .sort.map { |p| File.basename(p) }.last
+           .sort.map { |p| File.basename(p) }.last
       end
 
       def build_parser(opts)
