@@ -11,14 +11,9 @@ module RobotLab
       end
 
       def print
-        stat       = @run.base_commit ? diff_stat : { insertions: 0, deletions: 0, files: 0 }
-        aborted    = !@abort_reason.nil?
-        good_iters = @run.commits
-        fail_iters = @run.iteration - good_iters
-
         puts ""
-        print_header(aborted)
-        print_counters(good_iters, fail_iters, stat)
+        @abort_reason ? print_aborted_header : print_completed_header
+        print_counters
         print_paths
         print_next_steps
         puts ""
@@ -26,17 +21,21 @@ module RobotLab
 
       private
 
-      def print_header(aborted)
-        if aborted
-          puts "robot-to stopped — #{@config.model} — #{@run.elapsed_human}"
-          puts "Reason: #{@abort_reason}"
-        else
-          puts "robot-to complete — #{@config.model} — #{@run.elapsed_human}"
-          puts "Branch: #{@run.branch}"
-        end
+      def print_aborted_header
+        puts "robot-to stopped — #{@config.model} — #{@run.elapsed_human}"
+        puts "Reason: #{@abort_reason}"
       end
 
-      def print_counters(good_iters, fail_iters, stat)
+      def print_completed_header
+        puts "robot-to complete — #{@config.model} — #{@run.elapsed_human}"
+        puts "Branch: #{@run.branch}"
+      end
+
+      def print_counters
+        good_iters = @run.commits
+        fail_iters = @run.iteration - good_iters
+        stat       = diff_stat
+
         puts ""
         puts "Iterations:      #{@run.iteration} total  (#{good_iters} good / #{fail_iters} failed)"
         puts "Tokens:          #{comma(@run.total_tokens)}  (#{comma(@run.input_tokens)} in / #{comma(@run.output_tokens)} out)"
@@ -61,6 +60,8 @@ module RobotLab
       end
 
       def diff_stat
+        return { insertions: 0, deletions: 0, files: 0 } unless @run.base_commit
+
         git = CommitManager.new
         git.diff_stat(@run.base_commit)
       rescue StandardError

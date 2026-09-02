@@ -8,6 +8,9 @@ module RobotLab
     #
     # All subprocess calls use explicit argv arrays (no shell interpolation).
     # GIT_TERMINAL_PROMPT=0 prevents credential prompts from hanging the loop.
+    # :reek:RepeatedConditional -- each `status.success?` belongs to a distinct
+    # Open3.capture3 call with its own failure handling; there is no shared
+    # condition to extract.
     class CommitManager
       GIT_ENV = { "GIT_TERMINAL_PROMPT" => "0" }.freeze
 
@@ -72,6 +75,7 @@ module RobotLab
         parse_diff_stat(out)
       end
 
+      # :reek:FeatureEnvy -- inherent to building/reading/appending a Pathname.
       def add_to_local_exclude(entry)
         exclude = Pathname.new(@work_dir).join(".git", "info", "exclude")
         exclude.parent.mkpath

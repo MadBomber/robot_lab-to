@@ -8,6 +8,8 @@ module RobotLab
         @config = config
       end
 
+      # :reek:TooManyStatements -- each line is one optional prompt section, in
+      # the exact order they appear; a data-table would hide that ordering.
       def build(run, notes_content, workspace: nil, pending_commit_failure: nil, resolved_decisions: [])
         sections = [role_section(run), notes_section(run, notes_content)]
         sections << workspace_section(workspace) if workspace && !workspace.empty?

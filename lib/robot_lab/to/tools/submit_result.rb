@@ -34,6 +34,7 @@ module RobotLab
 
         attr_reader :captured_result
 
+        # :reek:LongParameterList -- one field per tool param declared above.
         def execute(success:, summary:, key_changes: [], key_learnings: [], should_fully_stop: nil, **)
           @captured_result = IterationResult.new(
             success: success,

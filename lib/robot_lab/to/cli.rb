@@ -46,6 +46,17 @@ module RobotLab
          "Seconds between polls while waiting on a decision (default: 30)", :decision_wait_poll]
       ].freeze
 
+      # Boolean flags with a fixed value when passed (no argument). Flags
+      # needing bespoke behavior (protect-path, require-improvement, help)
+      # stay in #add_flag_options.
+      BOOLEAN_FLAGS = [
+        ["--no-decisions", "Disable the request_decision tool for this run", :decisions_enabled, false],
+        ["--local-guards", "Add built-in file tools + small-model guardrails (for local models)", :local_guards, true],
+        ["--no-stream", "Disable response streaming (required for local Ollama tool calls)", :stream, false],
+        ["--debug", "Enable verbose JSONL logging to stderr", :debug, true],
+        ["--version", "Print version and exit", :version, true]
+      ].freeze
+
       def self.run(argv = ARGV)
         new.run(argv)
       end
@@ -53,31 +64,32 @@ module RobotLab
       def run(argv)
         return run_decisions(argv[1..] || []) if argv.first == "decisions"
 
-        opts   = {}
-        parser = build_parser(opts)
-        args   = parser.parse!(argv.dup)
+        opts, parser, args = parse_options(argv)
 
-        if opts[:version]
-          puts "robot-to #{VERSION}"
-          return
-        end
-
-        if opts[:resume]
-          return RobotLab::To.resume(opts[:resume], **opts.except(:version, :resume))
-        end
+        return puts("robot-to #{VERSION}") if opts[:version]
+        return RobotLab::To.resume(opts[:resume], **opts.except(:version, :resume)) if opts[:resume]
 
         objective = args.first || read_stdin_objective
-        if objective.nil? || objective.strip.empty?
-          # $stderr.puts, not warn: warn is silenced when $VERBOSE is nil.
-          $stderr.puts "Error: objective required (pass as argument or via stdin)"
-          $stderr.puts parser
-          exit 1
-        end
+        abort_missing_objective!(parser) if objective.nil? || objective.strip.empty?
 
         RobotLab::To.run(objective.strip, **opts.except(:version, :resume))
       end
 
       private
+
+      def parse_options(argv)
+        opts   = {}
+        parser = build_parser(opts)
+        args   = parser.parse!(argv.dup)
+        [opts, parser, args]
+      end
+
+      def abort_missing_objective!(parser)
+        # $stderr.puts, not warn: warn is silenced when $VERBOSE is nil.
+        $stderr.puts "Error: objective required (pass as argument or via stdin)"
+        $stderr.puts parser
+        exit 1
+      end
 
       # `robot-to decisions [run_id]` — list pending decisions and their file
       # paths so a human knows what needs resolving before resuming.
@@ -96,17 +108,19 @@ module RobotLab
       def print_decisions(run_id, manager)
         pending  = manager.pending
         resolved = manager.resolved_open
-        puts "Run #{run_id}"
-        puts ""
+
         if pending.empty? && resolved.empty?
-          puts "No open decisions."
+          puts "Run #{run_id}\n\nNo open decisions."
           return
         end
+
+        puts "Run #{run_id}\n\n"
         list_group("Pending (awaiting your answer)", pending)
         list_group("Resolved (not yet consumed)", resolved)
-        puts ""
-        puts "Resolve a pending decision by editing its file: set `status: resolved`"
-        puts "and fill `resolution:`, then run `robot-to --resume #{run_id}`."
+        puts <<~MSG
+          Resolve a pending decision by editing its file: set `status: resolved`
+          and fill `resolution:`, then run `robot-to --resume #{run_id}`.
+        MSG
       end
 
       def list_group(title, decisions)
@@ -126,6 +140,7 @@ module RobotLab
            .sort.map { |p| File.basename(p) }.last
       end
 
+      # :reek:FeatureEnvy -- configuring the OptionParser instance being built.
       def build_parser(opts)
         OptionParser.new do |p|
           p.banner = "Usage: robot-to [objective] [options]\n       " \
@@ -136,30 +151,42 @@ module RobotLab
           p.separator ""
           p.separator "Options:"
 
-          VALUE_OPTIONS.each do |flag, type, desc, key|
-            p.on(flag, type, desc) { |v| opts[key] = v }
-          end
-
+          add_value_options(p, opts)
           add_flag_options(p, opts)
         end
       end
 
+      # :reek:NestedIterators -- one .on registration per option, each with its
+      # own value-assignment callback; that's the OptionParser API shape.
+      def add_value_options(parser, opts)
+        VALUE_OPTIONS.each do |flag, type, desc, key|
+          parser.on(flag, type, desc) { |v| opts[key] = v }
+        end
+      end
+
+      # :reek:FeatureEnvy -- registering flags on the OptionParser being built.
       # Boolean and terminal flags (each has bespoke behavior).
       def add_flag_options(parser, opts)
+        add_require_improvement_option(parser, opts)
+        add_protect_path_option(parser, opts)
+        BOOLEAN_FLAGS.each { |flag, desc, key, value| parser.on(flag, desc) { opts[key] = value } }
+        add_help_option(parser)
+      end
+
+      def add_require_improvement_option(parser, opts)
         parser.on("--[no-]require-improvement",
                   "Roll back gate-passing iterations that don't improve (default: on)") do |v|
           opts[:require_improvement] = v
         end
+      end
+
+      def add_protect_path_option(parser, opts)
         parser.on("--protect-path GLOB", "Lock a grader file from robot edits (repeatable)") do |v|
           (opts[:protect_paths] ||= []) << v
         end
-        parser.on("--no-decisions", "Disable the request_decision tool for this run") { opts[:decisions_enabled] = false }
-        parser.on("--local-guards", "Add built-in file tools + small-model guardrails (for local models)") do
-          opts[:local_guards] = true
-        end
-        parser.on("--no-stream", "Disable response streaming (required for local Ollama tool calls)") { opts[:stream] = false }
-        parser.on("--debug", "Enable verbose JSONL logging to stderr") { opts[:debug] = true }
-        parser.on("--version", "Print version and exit") { opts[:version] = true }
+      end
+
+      def add_help_option(parser)
         parser.on("-h", "--help", "Show this help") do
           puts parser
           exit

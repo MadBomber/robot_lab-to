@@ -19,6 +19,11 @@ module RobotLab
         param :new_text, type: "string", desc: "Replacement text"
         param :replace_all, type: "boolean", desc: "Replace every occurrence", required: false
 
+        # :reek:BooleanParameter -- replace_all is a tool param the LLM sets;
+        # the `param` declarations above fix this signature.
+        # :reek:FeatureEnvy -- inspecting #apply's own return value.
+        # :reek:TooManyStatements -- validate, transform, write, report; each
+        # step is one statement in a tool #execute contract method.
         def execute(path:, old_text:, new_text:, replace_all: false, **)
           resolved = File.expand_path(path, Dir.pwd)
           return "Error: file not found: #{path}" unless File.file?(resolved)

@@ -13,6 +13,7 @@ module RobotLab
         @path = Pathname.new(path)
       end
 
+      # :reek:FeatureEnvy -- interpolating the run's own fields into the header.
       def setup(run)
         AtomicFile.write(@path, <<~HEADER)
           # robot-to run: #{run.run_id}
@@ -84,6 +85,7 @@ module RobotLab
         MD
       end
 
+      # :reek:FeatureEnvy -- interpolating the error's own class/message.
       def append_error(error, iteration)
         append(<<~MD)
 
@@ -93,6 +95,7 @@ module RobotLab
         MD
       end
 
+      # :reek:FeatureEnvy -- interpolating the decision's own fields.
       def append_decision(decision, iteration)
         append(<<~MD)
 

@@ -18,28 +18,29 @@
 #       suite* into the project (test/). It does not implement anything. Its
 #       reply is a one-paragraph implementation objective.
 #
-#   Phase 3  IMPLEMENT (robot_lab-to, local Ollama qwen3.6:latest)
+#   Phase 3  IMPLEMENT (robot_lab-to, local LM Studio qwen/qwen3.8-27b)
 #       robot_lab-to runs an autonomous loop that writes lib/ code until the
 #       Planner's acceptance suite passes AND a quality gate is clean. The
 #       verify command (quality_gate.rb) runs tests + rubocop + flog + flay, so
 #       the robot must earn each commit on correctness AND quality.
 #
 # Models (per your request): reasoning on OpenAI gpt-5.5, building on local
-# Ollama qwen3.6. Because both use RubyLLM's :openai provider but different
-# endpoints (api.openai.com vs Ollama's /v1), and openai_api_base is global, we
-# toggle it between the (sequential) phases.
+# LM Studio qwen/qwen3.8-27b. Because both use RubyLLM's :openai provider but different
+# endpoints (api.openai.com vs LM Studio's /v1), and openai_api_base is global,
+# we toggle it between the (sequential) phases.
 #
 # Everything stays under examples/02_advanced_usage/ (project/, .robot_lab_to/),
 # both git-ignored and recreated on each run.
 #
-# Run it (from the gem root, with OPENAI_API_KEY set and Ollama serving qwen3.6):
+# Run it (from the gem root, with OPENAI_API_KEY set; common.rb starts the LM
+# Studio server and loads the build model for you if they aren't already
+# running/loaded):
 #   bundle exec ruby examples/02_advanced_usage/advanced_usage.rb
 # ===========================================================================
 
 require "fileutils"
 require "logger"
 require "open3"
-require "net/http"
 
 # Make the example runnable straight from the repo, with or without bundler.
 [
@@ -47,17 +48,19 @@ require "net/http"
   File.expand_path("../../../robot_lab/lib", __dir__) # sibling robot_lab/lib
 ].each { |p| $LOAD_PATH.unshift(p) if Dir.exist?(p) }
 
-require "ruby_llm"
 require "robot_lab"
 require "robot_lab/to"
+require_relative "../common"
 
 # --- configuration ---------------------------------------------------------
 
 REASON_PROVIDER = ENV.fetch("RLTO_REASON_PROVIDER", "openai").to_sym
-REASON_MODEL    = ENV.fetch("RLTO_REASON_MODEL", "gpt-5.5")        # real OpenAI
-BUILD_PROVIDER  = ENV.fetch("RLTO_BUILD_PROVIDER", "openai").to_sym
-BUILD_MODEL     = ENV.fetch("RLTO_BUILD_MODEL", "qwen3.6:latest")  # local Ollama
-OLLAMA_BASE     = ENV.fetch("OLLAMA_BASE", "http://localhost:11434/v1")
+REASON_MODEL    = ENV.fetch("RLTO_REASON_MODEL", "gpt-5.5")     # real OpenAI
+# Falls back to the shared RLTO_PROVIDER / RLTO_MODEL (examples/.envrc sets these)
+# so the build phase picks up the same local model as the other examples unless
+# RLTO_BUILD_PROVIDER / RLTO_BUILD_MODEL override it specifically.
+BUILD_PROVIDER  = ENV.fetch("RLTO_BUILD_PROVIDER", ENV.fetch("RLTO_PROVIDER", "lms")).to_sym
+BUILD_MODEL     = ENV.fetch("RLTO_BUILD_MODEL", ENV.fetch("RLTO_MODEL", "qwen/qwen3.8-27b")) # local LM Studio
 
 SANDBOX_DIR = File.expand_path("project", __dir__)
 RUN_DIR     = File.expand_path(".robot_lab_to", __dir__)
@@ -95,28 +98,17 @@ def use_real_openai!
   RubyLLM.logger.level = Logger::ERROR # keep raw API traffic out of the feed
 end
 
-# Implementation phase routes the :openai provider at the local Ollama endpoint.
-def use_ollama!
-  RubyLLM.configure do |c|
-    c.openai_api_base = OLLAMA_BASE
-    c.openai_api_key  = "ollama" # ignored by Ollama
-    c.request_timeout = 600
-  end
-  RubyLLM.logger.level = Logger::ERROR
-  RubyLLM.models.refresh! # register local models so tool attachment works
-rescue StandardError => e
-  warn "warning: could not refresh Ollama models (#{e.class}: #{e.message})"
+# Implementation phase routes the :openai provider at the local LM Studio endpoint
+# (or whatever BUILD_PROVIDER resolves to). common.rb's setup starts the LM Studio
+# server and loads BUILD_MODEL as needed; the "lms" label resolves to :openai.
+def use_build_provider!
+  setup(provider: BUILD_PROVIDER, model: BUILD_MODEL)
 end
 
 # --- preflight -------------------------------------------------------------
 
 def preflight!
   abort "Set OPENAI_API_KEY (the ideation/planning phases use #{REASON_MODEL})." unless ENV["OPENAI_API_KEY"]
-
-  uri = URI.join(OLLAMA_BASE, "models")
-  Net::HTTP.start(uri.host, uri.port, open_timeout: 2, read_timeout: 2) { |h| h.get(uri.request_uri) }
-rescue StandardError
-  abort "Cannot reach Ollama at #{OLLAMA_BASE}. Start it and `ollama pull #{BUILD_MODEL}`."
 end
 
 # --- sandbox ---------------------------------------------------------------
@@ -243,7 +235,7 @@ RobotLab::Narrator.enable! # live narration for every robot, across all phases
 
 puts "Project dir:  #{sandbox}"
 puts "Reasoning:    #{REASON_PROVIDER}/#{REASON_MODEL} (cloud)   →  ideate + plan"
-puts "Building:     #{BUILD_PROVIDER}/#{BUILD_MODEL} (local Ollama)  →  implement"
+puts "Building:     #{BUILD_PROVIDER}/#{BUILD_MODEL} (local LM Studio)  →  implement"
 puts
 
 # -- Phases 1 & 2: ideate -> plan, as a robot_lab network --------------------
@@ -289,15 +281,15 @@ puts "Objective derived from the spec.\n\n"
 
 # -- Phase 3: autonomous implementation with robot_lab-to --------------------
 puts "── Phase 3: implementation (robot_lab-to, quality-gated) ──"
-use_ollama!
+build_llm_provider = use_build_provider!
 
 Dir.chdir(sandbox) do
   RobotLab::To.run(
     objective,
-    provider:       BUILD_PROVIDER,
+    provider:       build_llm_provider,
     model:          BUILD_MODEL,
     local_guards:   true,   # built-in file tools + small-model guardrails
-    stream:         false,  # Ollama tool calls require non-streaming
+    stream:         false,  # local LM Studio tool calls run non-streaming
     max_iterations: 8,
     run_dir:        RUN_DIR,
     verify_command: "ruby quality_gate.rb", # tests + rubocop + flog + flay

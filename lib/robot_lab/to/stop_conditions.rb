@@ -3,6 +3,8 @@
 module RobotLab
   module To
     # Evaluates all stop conditions against the current run state.
+    # :reek:RepeatedConditional -- each `limit` is an unrelated config value
+    # (max_iterations/max_tokens/stop_on_plateau) nil-guarded in its own check.
     class StopConditions
       def initialize(config, run)
         @config = config
@@ -38,17 +40,19 @@ module RobotLab
       private
 
       def check_max_iterations
-        return unless @config.max_iterations
-        return unless @run.iteration >= @config.max_iterations
+        limit = @config.max_iterations
+        return unless limit
+        return unless @run.iteration >= limit
 
-        raise AbortError, "max iterations reached (#{@config.max_iterations})"
+        raise AbortError, "max iterations reached (#{limit})"
       end
 
       def check_max_tokens
-        return unless @config.max_tokens
-        return unless @run.total_tokens >= @config.max_tokens
+        limit = @config.max_tokens
+        return unless limit
+        return unless @run.total_tokens >= limit
 
-        raise AbortError, "max tokens reached (#{@config.max_tokens})"
+        raise AbortError, "max tokens reached (#{limit})"
       end
 
       def check_consecutive_failures

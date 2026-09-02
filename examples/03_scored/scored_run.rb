@@ -26,8 +26,8 @@
 # ---------------------------------------------------------------------------
 # Run it
 # ---------------------------------------------------------------------------
-#   # Local Ollama (default — no API key; requires `ollama serve`):
-#   ollama pull gpt-oss:20b
+#   # Local LM Studio (default — no API key; common.rb starts the server and
+#   # loads the model for you if they aren't already running/loaded):
 #   bundle exec ruby examples/03_scored/scored_run.rb
 #
 #   # A cloud model instead:
@@ -35,17 +35,15 @@
 #     ANTHROPIC_API_KEY=sk-... \
 #     bundle exec ruby examples/03_scored/scored_run.rb
 #
-# Configuration (all optional, via environment):
-#   RLTO_LOCAL     true|false   use a local Ollama model (default true)
-#   RLTO_PROVIDER  name         LLM provider (default: openai for local)
-#   RLTO_MODEL     id           model id (default: qwen3.6:latest for local)
-#   OLLAMA_BASE    url          Ollama OpenAI endpoint (default localhost:11434/v1)
+# Configuration (all optional, via environment; examples/.envrc sets these for you):
+#   RLTO_LOCAL     true|false   use a local LM Studio model (default true)
+#   RLTO_PROVIDER  name         LLM provider label (default: lms for local)
+#   RLTO_MODEL     id           model id (default: qwen/qwen3.8-27b for local)
+#   LMS_BASE_URL   url          LM Studio OpenAI-compatible endpoint (default localhost:1234/v1)
 # ===========================================================================
 
 require "fileutils"
-require "logger"
 require "open3"
-require "net/http"
 
 # Make the example runnable straight from the repo during development, with or
 # without `bundle exec`. (When the gem is installed normally these paths don't
@@ -55,49 +53,24 @@ require "net/http"
   File.expand_path("../../../robot_lab/lib", __dir__) # sibling robot_lab/lib
 ].each { |p| $LOAD_PATH.unshift(p) if Dir.exist?(p) }
 
-require "ruby_llm"
 require "robot_lab"
 require "robot_lab/to"
+require_relative "../common"
 
 # --- configuration ---------------------------------------------------------
 
 LOCAL    = ENV.fetch("RLTO_LOCAL", "true") == "true"
-PROVIDER = ENV.fetch("RLTO_PROVIDER", LOCAL ? "openai" : "anthropic").to_sym
-MODEL    = ENV.fetch("RLTO_MODEL", LOCAL ? "qwen3.6:latest" : "claude-sonnet-4-6")
-OLLAMA   = ENV.fetch("OLLAMA_BASE", "http://localhost:11434/v1")
+PROVIDER = ENV.fetch("RLTO_PROVIDER", LOCAL ? "lms" : "anthropic").to_sym
+MODEL    = ENV.fetch("RLTO_MODEL", LOCAL ? "qwen/qwen3.8-27b" : "claude-sonnet-4-6")
+
+# ruby_llm has no native "lms" adapter. "lms" is this example's friendly label for
+# "a local LM Studio model"; setup (common.rb) resolves it to RubyLLM's :openai
+# adapter pointed at LM Studio, starting the server and loading MODEL as needed.
+# Everything passed to RobotLab uses the resolved provider; PROVIDER itself is
+# kept only for display.
+LLM_PROVIDER = setup(provider: PROVIDER, model: MODEL)
 
 TOTAL_TESTS = 9 # the seeded suite has 9 test methods — the target
-
-# Route RubyLLM's :openai provider at Ollama's OpenAI-compatible endpoint for a
-# local run (non-streaming, since Ollama suppresses tool calls when streaming).
-def configure_local!
-  RubyLLM.configure do |c|
-    c.openai_api_base = OLLAMA
-    c.openai_api_key  = "ollama"
-    c.request_timeout = 600
-  end
-  RubyLLM.logger.level = Logger::ERROR
-  RubyLLM.models.refresh!
-rescue StandardError => e
-  warn "warning: could not refresh Ollama models (#{e.class}: #{e.message})"
-end
-
-def preflight_local!
-  uri = URI.join(OLLAMA, "models")
-  Net::HTTP.start(uri.host, uri.port, open_timeout: 2, read_timeout: 2) { |h| h.get(uri.request_uri) }
-rescue StandardError
-  abort <<~MSG
-    Cannot reach an Ollama server at #{OLLAMA}.
-    Start it and pull a tool-capable model first:
-
-      ollama serve &
-      ollama pull #{MODEL}
-
-    Or run against a cloud model:
-      RLTO_LOCAL=false RLTO_PROVIDER=anthropic RLTO_MODEL=claude-sonnet-4-6 \\
-        ANTHROPIC_API_KEY=sk-... ruby #{File.basename(__FILE__)}
-  MSG
-end
 
 # --- sandbox repository ----------------------------------------------------
 
@@ -290,15 +263,10 @@ OBJECTIVE = <<~OBJ.strip
   Call submit_result each iteration describing what you improved.
 OBJ
 
-if LOCAL
-  preflight_local!
-  configure_local!
-end
-
 clean_slate!
 sandbox = make_sandbox
 puts "Project dir:     #{sandbox}"
-puts "Provider/model:  #{PROVIDER}/#{MODEL} (#{LOCAL ? 'local Ollama' : 'cloud'})"
+puts "Provider/model:  #{PROVIDER}/#{MODEL} (#{LOCAL ? 'local LM Studio' : 'cloud'})"
 puts "Eval:            measured descent — score = passing tests, target #{TOTAL_TESTS}"
 puts "Locked grader:   score.rb, test/roman_numeral_test.rb"
 puts
@@ -308,7 +276,7 @@ RobotLab.on(FeedbackHook)
 Dir.chdir(sandbox) do
   RobotLab::To.run(
     OBJECTIVE,
-    provider:       PROVIDER,
+    provider:       LLM_PROVIDER,
     model:          MODEL,
     local_guards:   LOCAL,
     stream:         !LOCAL,

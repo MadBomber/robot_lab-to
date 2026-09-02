@@ -14,6 +14,17 @@ module RobotLab
     # not make alone, it is written to a decision file (see DecisionManager). A
     # blocking decision either pauses the loop (decision_mode: wait) or stops the
     # run for a later `--resume` (decision_mode: exit).
+    #
+    # :reek:TooManyMethods :reek:TooManyInstanceVariables -- this is the
+    # single object that owns the whole iteration lifecycle (setup, agent
+    # turn, eval gate, commit/rollback, decisions, tokens, signals). Splitting
+    # it apart would scatter state (@run, @git, @pending_commit_failure,
+    # @stop_requested, ...) across collaborators that would just pass it back
+    # and forth -- see the "Architecture" section of CLAUDE.md.
+    # :reek:RepeatedConditional -- @stop_requested, @pending_commit_failure,
+    # and decisions_enabled? are real orchestrator-wide state, legitimately
+    # checked at each point that must react to it; that is what a run loop's
+    # flags are for, not a sign the checks belong on another object.
     class Orchestrator
       SIGNAL_STOP = "graceful_stop"
 
@@ -43,10 +54,17 @@ module RobotLab
         @decisions              = nil
         @decision_tool          = nil
         @injected_decisions     = []
+        @backoff                = nil
+        @builder                = nil
+        @notes                  = nil
+        @stop_conditions        = nil
         @accounted_in           = 0
         @accounted_out          = 0
       end
 
+      # :reek:TooManyStatements -- top-level run/rescue/ensure sequence for the
+      # whole process; the rescue branches are already split into their own
+      # error-shaped clauses.
       def run
         @resume_run_id ? setup_resume : setup_run
         install_signal_handlers
@@ -64,15 +82,18 @@ module RobotLab
         @git&.reset_hard unless @pending_commit_failure
         @logger.log("orchestrator:abort", reason: @abort_reason, permanent: true)
       rescue => e
-        @abort_reason = "fatal: #{e.message}"
+        message = e.message
+        @abort_reason = "fatal: #{message}"
         @git&.reset_hard unless @pending_commit_failure
-        @logger.log("orchestrator:fatal", error: e.class.to_s, message: e.message)
+        @logger.log("orchestrator:fatal", error: e.class.to_s, message: message)
       ensure
         finalize_run
       end
 
       private
 
+      # :reek:TooManyStatements -- the loop body is the iteration lifecycle in
+      # its literal execution order; splitting it further would hide that order.
       def main_loop
         loop do
           break if @stop_requested
@@ -83,8 +104,9 @@ module RobotLab
           @stop_conditions.before?
 
           @run.iteration += 1
-          @logger.log("iteration:start", iteration: @run.iteration)
-          progress "iteration #{@run.iteration} (#{@config.model})..."
+          iteration = @run.iteration
+          @logger.log("iteration:start", iteration: iteration)
+          progress "iteration #{iteration} (#{@config.model})..."
 
           result = execute_iteration
 
@@ -114,6 +136,8 @@ module RobotLab
         end
       end
 
+      # :reek:TooManyStatements -- one-time run bootstrap, each step required
+      # in this order (branch, run dir, Run record, logger, notes, collaborators).
       def setup_run
         @git = CommitManager.new
         ensure_head!
@@ -143,6 +167,8 @@ module RobotLab
 
       # Resume a prior run from its run.json — enables external scheduling (cron):
       # each tick re-enters the loop on the same branch and advances or re-pauses.
+      # :reek:TooManyStatements -- mirrors #setup_run's bootstrap order for the
+      # resume path.
       def setup_resume
         @git = CommitManager.new
         ensure_head!
@@ -152,7 +178,8 @@ module RobotLab
 
         @run       = Run.load(state_path)
         @objective = @run.objective
-        @git.checkout_branch(@run.branch)
+        branch     = @run.branch
+        @git.checkout_branch(branch)
 
         @logger.open(@run.log_path)
         @notes = NotesManager.new(@run.notes_path)  # append — do NOT re-setup (would clobber history)
@@ -160,8 +187,8 @@ module RobotLab
         build_collaborators
 
         @logger.log("orchestrator:resume", run_id: @run.run_id, iteration: @run.iteration,
-                                           branch: @run.branch, model: @config.model)
-        progress "resumed run #{@run.run_id} at iteration #{@run.iteration} → branch #{@run.branch}"
+                                           branch: branch, model: @config.model)
+        progress "resumed run #{@run.run_id} at iteration #{@run.iteration} → branch #{branch}"
       end
 
       # Shared setup used by both a fresh run and a resume.
@@ -202,11 +229,14 @@ module RobotLab
 
       # Poll the decision files until every blocking decision is resolved, the run
       # is signaled to stop, or decision_timeout elapses.
+      # :reek:TooManyStatements -- the three exit conditions (stopped, resolved,
+      # timed out) must all be checked inside one poll loop.
       def wait_for_decisions(pending)
         progress "awaiting human decision on #{pending.size} item(s):"
         pending.each { |d| progress "  #{d.path}" }
         @logger.log("decision:wait:start", count: pending.size)
-        deadline = @config.decision_timeout ? monotonic + @config.decision_timeout.to_i : nil
+        timeout  = @config.decision_timeout
+        deadline = timeout ? monotonic + timeout.to_i : nil
 
         loop do
           return if @stop_requested
@@ -216,7 +246,7 @@ module RobotLab
           break unless @decisions.blocking_pending?
 
           if deadline && monotonic >= deadline
-            raise AbortError, "awaiting human decision (timed out after #{@config.decision_timeout}s)"
+            raise AbortError, "awaiting human decision (timed out after #{timeout}s)"
           end
         end
 
@@ -238,6 +268,8 @@ module RobotLab
 
       # The happy path: build a fresh robot, run it, and return its submitted
       # result (or a not-submitted marker).
+      # :reek:TooManyStatements -- one call per lifecycle step (reset counters,
+      # build prompt/robot, run, nudge, persist decisions, return result).
       def run_agent_iteration
         @accounted_in = @accounted_out = 0
         @submit_tool   = Tools::SubmitResult.new
@@ -265,12 +297,13 @@ module RobotLab
       def persist_raised_decisions
         return unless @decision_tool
 
+        iteration = @run.iteration
         @decision_tool.captured_requests.each do |req|
-          decision = @decisions.record(**req, iteration: @run.iteration)
-          @notes.append_decision(decision, @run.iteration)
+          decision = @decisions.record(**req, iteration: iteration)
+          @notes.append_decision(decision, iteration)
           @logger.log("decision:raised", id: decision.id, blocking: decision.blocking,
                                           question: decision.question)
-          progress "iteration #{@run.iteration} raised decision: #{decision.question}"
+          progress "iteration #{iteration} raised decision: #{decision.question}"
         end
       end
 
@@ -298,10 +331,11 @@ module RobotLab
       # True when the iteration should be retried — within the retry budget and
       # not stopping. Sleeps out the backoff as a side effect before returning.
       def retry_after_backoff?
-        return false unless @run.consecutive_errors <= @config.max_retries && !@stop_requested
+        errors = @run.consecutive_errors
+        return false unless errors <= @config.max_retries && !@stop_requested
 
-        @logger.log("backoff:start", consecutive_errors: @run.consecutive_errors)
-        @backoff.sleep_for(@run.consecutive_errors)
+        @logger.log("backoff:start", consecutive_errors: errors)
+        @backoff.sleep_for(errors)
         @logger.log("backoff:end")
         true
       end
@@ -367,8 +401,9 @@ module RobotLab
 
       def handle_no_improvement(result, score)
         iteration = @run.iteration
+        detail    = score.detail
         @git.reset_hard unless @pending_commit_failure
-        @notes.append_no_improvement(result, score.detail, iteration)
+        @notes.append_no_improvement(result, detail, iteration)
         # A non-improving iteration is valid work that just wasn't better -- NOT a
         # failure. It counts toward the plateau (diminishing-returns) stop only, so
         # it must NOT trip max_consecutive_failures, which is for the robot being
@@ -377,8 +412,8 @@ module RobotLab
         # verdicts are common and normal.
         @run.iterations_since_improvement += 1
         @run.consecutive_errors = 0
-        @logger.log("iteration:no_improvement", iteration: iteration, detail: score.detail)
-        progress "iteration #{iteration} no improvement (#{score.detail}) — rolled back"
+        @logger.log("iteration:no_improvement", iteration: iteration, detail: detail)
+        progress "iteration #{iteration} no improvement (#{detail}) — rolled back"
       end
 
       # A resolved decision that was injected into this successful iteration has
@@ -405,14 +440,16 @@ module RobotLab
         score
       end
 
+      # :reek:TooManyStatements -- rollback + record + report, one statement each.
       def handle_gate_failure(result, score)
+        iteration = @run.iteration
         @git.reset_hard unless @pending_commit_failure
-        @notes.append_verify_failure(result, score.output.to_s, @run.iteration)
+        @notes.append_verify_failure(result, score.output.to_s, iteration)
         @run.consecutive_failures += 1
         @run.consecutive_errors    = 0
         @run.iterations_since_improvement += 1
-        @logger.log("iteration:gate_failure", iteration: @run.iteration)
-        progress "iteration #{@run.iteration} verification failed — rolled back"
+        @logger.log("iteration:gate_failure", iteration: iteration)
+        progress "iteration #{iteration} verification failed — rolled back"
         nil
       end
 
@@ -421,19 +458,22 @@ module RobotLab
       # the code, re-verifying after each attempt. Only fall back to a full
       # rollback once the repair budget is spent — a near-miss no longer discards
       # all the work, and nothing commits until the gate is green.
+      # :reek:TooManyStatements -- repair/re-verify loop with its own rescue;
+      # each statement is a distinct step of one repair attempt.
       def repair_until_gate(result, score)
-        budget = @config.max_verify_repairs.to_i
+        budget    = @config.max_verify_repairs.to_i
+        iteration = @run.iteration
         return [result, score] if budget.zero? || @robot.nil?
 
         budget.times do |i|
           break if @stop_requested
 
-          @logger.log("eval:repair", iteration: @run.iteration, attempt: i + 1)
-          progress "iteration #{@run.iteration}: verification failed — repairing (#{i + 1}/#{budget})"
+          @logger.log("eval:repair", iteration: iteration, attempt: i + 1)
+          progress "iteration #{iteration}: verification failed — repairing (#{i + 1}/#{budget})"
           begin
             run_robot_with_interrupt(@robot, repair_prompt(score))
           rescue StandardError => e
-            @logger.log("eval:repair_error", iteration: @run.iteration, message: e.message)
+            @logger.log("eval:repair_error", iteration: iteration, message: e.message)
             break
           end
           result = @submit_tool.captured_result || result
@@ -459,16 +499,20 @@ module RobotLab
       end
 
       def handle_failure(result)
+        iteration = @run.iteration
         @git.reset_hard unless @pending_commit_failure
-        @notes.append_failure(result, @run.iteration)
+        @notes.append_failure(result, iteration)
         @run.consecutive_failures += 1
         @run.consecutive_errors = 0
         @run.iterations_since_improvement += 1
-        @logger.log("iteration:failure", iteration: @run.iteration, summary: result.summary)
-        progress "iteration #{@run.iteration} failed: #{result.summary}"
+        @logger.log("iteration:failure", iteration: iteration, summary: result.summary)
+        progress "iteration #{iteration} failed: #{result.summary}"
       end
 
+      # :reek:TooManyStatements -- commit path plus its own CommitFailedError
+      # rescue; the two branches (success, queue-for-repair) are each tight.
       def attempt_commit(result)
+        iteration = @run.iteration
         @git.add_all
         return unless @git.staged?
 
@@ -476,16 +520,17 @@ module RobotLab
         @git.commit(message)
         @run.commits += 1
         @pending_commit_failure = nil
-        @logger.log("commit:success", iteration: @run.iteration, message: message)
-        progress "iteration #{@run.iteration} committed: #{message}"
+        @logger.log("commit:success", iteration: iteration, message: message)
+        progress "iteration #{iteration} committed: #{message}"
       rescue CommitFailedError => e
         @pending_commit_failure = e
         @run.consecutive_failures += 1
         @run.consecutive_errors = 0
-        @logger.log("commit:failed", iteration: @run.iteration, output: e.output)
-        progress "iteration #{@run.iteration} commit failed — queued for repair"
+        @logger.log("commit:failed", iteration: iteration, output: e.output)
+        progress "iteration #{iteration} commit failed — queued for repair"
       end
 
+      # :reek:FeatureEnvy -- formatting the commit message from result's own fields.
       def commit_message(result)
         if @config.commit_format == "conventional"
           type  = result.respond_to?(:type)  ? (result.type || "chore") : "chore"
@@ -565,6 +610,8 @@ module RobotLab
         end
       end
 
+      # :reek:TooManyStatements -- runs the robot on its own Thread so a signal
+      # can interrupt it; each statement manages that thread's lifecycle.
       def run_robot_with_interrupt(robot, task = @objective)
         thread_error = nil
         result = nil

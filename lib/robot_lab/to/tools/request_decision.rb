@@ -44,6 +44,10 @@ module RobotLab
           @captured_requests ||= []
         end
 
+        # :reek:BooleanParameter :reek:ControlParameter -- blocking is both
+        # stored data and legitimately changes the guidance message returned
+        # to the robot; the `param` declarations above fix this signature.
+        # :reek:LongParameterList -- one field per tool param declared above.
         def execute(question:, situation: "", options: [], recommendation: "", blocking: false, **)
           (@captured_requests ||= []) << {
             question: question,

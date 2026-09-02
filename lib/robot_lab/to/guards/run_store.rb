@@ -22,8 +22,10 @@ module RobotLab
 
         # Fetch the value for `key`, initializing to `default` when unset.
         def fetch(key, default = nil)
-          Thread.current[key] = default if Thread.current[key].nil? && !default.nil?
-          Thread.current[key]
+          value = Thread.current[key]
+          return value unless value.nil?
+
+          Thread.current[key] = default
         end
       end
     end

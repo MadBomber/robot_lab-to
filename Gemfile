@@ -4,6 +4,8 @@ source "https://rubygems.org"
 
 gemspec
 
+gem "bundler-audit", require: false
+gem "fasterer", require: false
 gem "flay"
 gem "flog"
 gem "irb"

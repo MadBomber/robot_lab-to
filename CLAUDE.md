@@ -11,7 +11,8 @@ autonomous loop toward a stated objective, committing one focused change per ite
 bundle install
 bundle exec rake test          # all tests
 bundle exec rake test_verbose  # verbose
-bundle exec rake quality       # tests + rubocop + flog
+asgard quality                 # all *_check gates in parallel (tests + coverage,
+                               #   rubocop, flog, flay, reek, fasterer, typos, ...)
 bin/console                    # IRB shell
 ```
 
@@ -71,4 +72,4 @@ All run state lives in `.robot_lab_to/runs/<run_id>/` (added to `.git/info/exclu
 ## Testing
 
 Minitest. Git-dependent tests use `Dir.mktmpdir` with real `git init`.
-Coverage gate: 95% line / 75% branch (`rake quality` also runs rubocop + flog + flay).
+Coverage gate: 95% line / 75% branch (`asgard quality` also runs rubocop + flog + flay + reek + more).

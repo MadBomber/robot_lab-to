@@ -7,10 +7,13 @@ gemspec
 gem "robot_lab", path: "../robot_lab"
 
 group :development, :test do
+  gem "bundler-audit", require: false
+  gem "fasterer", require: false
   gem "flay"
   gem "flog"
   gem "irb"
   gem "rake", "~> 13.0"
+  gem "reek"
   gem "rubocop"
 end
 

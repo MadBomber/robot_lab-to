@@ -16,9 +16,10 @@
 #             section. The run ends when every outline section has a READY file.
 #   Finally the approved sections are assembled into guide.md.
 #
-# Two models, two roles:
-#   DOER     (default qwen3.6:latest) — writes the outline and the sections
-#   VERIFIER (default gpt-oss:latest) — the judge; grades each artifact absolutely
+# Two models, two roles (the same local model by default, but independently
+# configurable — pass --judge-model / RLTO_JUDGE_MODEL for a stronger judge):
+#   DOER     (default qwen/qwen3.8-27b) — writes the outline and the sections
+#   VERIFIER (default qwen/qwen3.8-27b) — the judge; grades each artifact absolutely
 #
 # The judge writes its feedback to REVIEW.md (git-ignored in the sandbox); the
 # doer is told to read REVIEW.md each iteration. write_guard is disabled for the
@@ -27,18 +28,17 @@
 # ---------------------------------------------------------------------------
 # Run it
 # ---------------------------------------------------------------------------
-#   ollama pull qwen3.6:latest      # doer
-#   ollama pull gpt-oss:latest      # verifier / judge
 #   bundle exec ruby examples/04_prose/prose_run.rb
 #
+# common.rb starts the LM Studio server and loads the doer + judge models for
+# you if they aren't already running/loaded.
+#
 # Env: RLTO_MODEL (doer), RLTO_JUDGE_MODEL (verifier), RLTO_TOPIC, RLTO_LOCAL,
-#      RLTO_PROVIDER, OLLAMA_BASE.
+#      RLTO_PROVIDER, LMS_BASE_URL. (examples/.envrc sets these for you)
 # ===========================================================================
 
 require "fileutils"
-require "logger"
 require "open3"
-require "net/http"
 
 [
   File.expand_path("../../lib", __dir__),
@@ -51,38 +51,27 @@ require "net/http"
 PROMPTS_DIR = File.expand_path("prompts_dir", __dir__)
 ENV["ROBOT_LAB_TEMPLATE_PATH"] = PROMPTS_DIR
 
-require "ruby_llm"
 require "robot_lab"
 require "robot_lab/to"
+require_relative "../common"
 RobotLab.reload_config! if RobotLab.respond_to?(:reload_config!)
 
 # --- configuration ---------------------------------------------------------
 
 LOCAL       = ENV.fetch("RLTO_LOCAL", "true") == "true"
-PROVIDER    = ENV.fetch("RLTO_PROVIDER", LOCAL ? "openai" : "anthropic").to_sym
-DOER_MODEL  = ENV.fetch("RLTO_MODEL", LOCAL ? "qwen3.6:latest" : "claude-sonnet-4-6")
-JUDGE_MODEL = ENV.fetch("RLTO_JUDGE_MODEL", LOCAL ? "gpt-oss:latest" : "claude-sonnet-4-6")
-OLLAMA      = ENV.fetch("OLLAMA_BASE", "http://localhost:11434/v1")
+PROVIDER    = ENV.fetch("RLTO_PROVIDER", LOCAL ? "lms" : "anthropic").to_sym
+DOER_MODEL  = ENV.fetch("RLTO_MODEL", LOCAL ? "qwen/qwen3.8-27b" : "claude-sonnet-4-6")
+JUDGE_MODEL = ENV.fetch("RLTO_JUDGE_MODEL", LOCAL ? "qwen/qwen3.8-27b" : "claude-sonnet-4-6")
 TOPIC       = ENV.fetch("RLTO_TOPIC", "writing good Git commit messages")
 
-def configure_local!
-  RubyLLM.configure do |c|
-    c.openai_api_base = OLLAMA
-    c.openai_api_key  = "ollama"
-    c.request_timeout = 600
-  end
-  RubyLLM.logger.level = Logger::ERROR
-  RubyLLM.models.refresh!
-rescue StandardError => e
-  warn "warning: could not refresh Ollama models (#{e.class}: #{e.message})"
-end
-
-def preflight_local!
-  uri = URI.join(OLLAMA, "models")
-  Net::HTTP.start(uri.host, uri.port, open_timeout: 2, read_timeout: 2) { |h| h.get(uri.request_uri) }
-rescue StandardError
-  abort "Cannot reach Ollama at #{OLLAMA}. Start it and pull #{DOER_MODEL} + #{JUDGE_MODEL}."
-end
+# ruby_llm has no native "lms" adapter. "lms" is this example's friendly label for
+# "a local LM Studio model"; setup (common.rb) resolves it to RubyLLM's :openai
+# adapter pointed at LM Studio, starting the server and loading each model as
+# needed -- once for the doer, again for the judge (a no-op if they're the same
+# model, or if it's already loaded). Everything passed to RobotLab uses the
+# resolved provider; PROVIDER itself is kept only for display.
+LLM_PROVIDER = setup(provider: PROVIDER, model: DOER_MODEL)
+setup(provider: PROVIDER, model: JUDGE_MODEL)
 
 # --- the judge (absolute grader) -------------------------------------------
 
@@ -90,7 +79,7 @@ end
 # prompt is a robot_lab template (prompts_dir/judge.md).
 # @return [Array(Boolean, String)] [ready?, feedback]
 def grade(criteria, text)
-  judge = RobotLab.build(name: "judge", model: JUDGE_MODEL, provider: PROVIDER, template: :judge)
+  judge = RobotLab.build(name: "judge", model: JUDGE_MODEL, provider: LLM_PROVIDER, template: :judge)
   message = RobotLab.render_template(:grade_message, criteria: criteria, artifact: text)
   reply = judge.run(message).last_text_content.to_s
   ready = reply.match?(/\bREADY\b/i) && !reply.match?(/NEEDS_WORK/i)
@@ -255,11 +244,6 @@ end
 
 # --- main ------------------------------------------------------------------
 
-if LOCAL
-  preflight_local!
-  configure_local!
-end
-
 clean_slate!
 sandbox = make_sandbox
 puts "Project dir:     #{sandbox}"
@@ -271,7 +255,7 @@ puts
 RobotLab.on(FeedbackHook)
 
 common = {
-  provider: PROVIDER, model: DOER_MODEL, local_guards: LOCAL, stream: !LOCAL,
+  provider: LLM_PROVIDER, model: DOER_MODEL, local_guards: LOCAL, stream: !LOCAL,
   run_dir: RUN_DIR, write_guard: false, require_improvement: false
 }
 
