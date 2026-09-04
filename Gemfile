@@ -4,6 +4,7 @@ source "https://rubygems.org"
 
 gemspec
 
+gem "archspec"
 gem "bundler-audit", require: false
 gem "fasterer", require: false
 gem "flay"

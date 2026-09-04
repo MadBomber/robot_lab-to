@@ -7,6 +7,7 @@ gemspec
 gem "robot_lab", path: "../robot_lab"
 
 group :development, :test do
+  gem "archspec"
   gem "bundler-audit", require: false
   gem "fasterer", require: false
   gem "flay"
