@@ -43,7 +43,7 @@ echo "Add request logging middleware and tests" | robot-to
 | `--commit-format` | `default`\|`conventional` | `default` | Commit message format. |
 | `--run-dir` | `PATH` | `.robot_lab_to` | Directory for run state. |
 | `--local-guards` | — | off | Add built-in file tools + small-model guardrails. |
-| `--no-stream` | — | streaming on | Disable streaming (required for local Ollama tool calls). |
+| `--no-stream` | — | streaming on | Disable streaming (tokens are then accounted per iteration instead of per chunk). |
 | `--debug` | — | off | Keep verbose provider logging enabled. |
 | `--version` | — | — | Print version and exit. |
 | `-h`, `--help` | — | — | Show help and exit. |
@@ -92,14 +92,13 @@ robot-to "Write an opinionated guide to the Viable Systems Model" \
   --stop-on-plateau 3
 ```
 
-A fully local run on Ollama (see [Local Models](../local-models/index.md)):
+A fully local run on LM Studio (see [Local Models](../local-models/index.md)):
 
 ```bash
 robot-to "Add a greet(name) method in greeter.rb" \
-  --provider openai \
-  --model gpt-oss:20b \
+  --provider lms \
+  --model qwen/qwen3.8-27b \
   --local-guards \
-  --no-stream \
   --max-iterations 5
 ```
 

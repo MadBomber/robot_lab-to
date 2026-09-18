@@ -13,23 +13,23 @@ module RobotLab
           FINAL action before finishing. Do not call it until your work is complete.
         DESC
 
-        param :success, type: "boolean",
-                        desc: "true if you made meaningful progress toward the objective; " \
-                              "false if you made no meaningful changes AND have no new learnings"
+        parameter :success, type: "boolean",
+                        description: "true if you made meaningful progress toward the objective; " \
+                                     "false if you made no meaningful changes AND have no new learnings"
 
-        param :summary, type: "string",
-                        desc: "Brief one-sentence description of what you accomplished or why you stopped"
+        parameter :summary, type: "string",
+                        description: "Brief one-sentence description of what you accomplished or why you stopped"
 
-        param :key_changes, type: "array",
-                            desc: "List of files or changes made this iteration (empty if none)",
+        parameter :key_changes, type: "array",
+                            description: "List of files or changes made this iteration (empty if none)",
                             required: false
 
-        param :key_learnings, type: "array",
-                              desc: "Insights worth remembering for future iterations (empty if none)",
+        parameter :key_learnings, type: "array",
+                              description: "Insights worth remembering for future iterations (empty if none)",
                               required: false
 
-        param :should_fully_stop, type: "boolean",
-                                  desc: "Set to true only when instructed by a stop condition",
+        parameter :should_fully_stop, type: "boolean",
+                                  description: "Set to true only when instructed by a stop condition",
                                   required: false
 
         attr_reader :captured_result

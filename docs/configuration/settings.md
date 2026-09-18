@@ -13,8 +13,9 @@ CLI flag, or a `RobotLab::To.run` keyword argument (see
 - **CLI:** `--provider NAME`
 
 The LLM provider, passed through to RobotLab / RubyLLM. Use `anthropic`,
-`openai`, etc. For **local Ollama models**, set this to `openai` and point
-RubyLLM at Ollama's OpenAI-compatible endpoint — see [Ollama Setup](../local-models/ollama.md).
+`openai`, etc. For **local LM Studio models**, require the
+ruby_llm-providers-lms gem and set this to `lms` — see
+[LM Studio Setup](../local-models/lm-studio.md).
 
 ### `model`
 
@@ -22,7 +23,7 @@ RubyLLM at Ollama's OpenAI-compatible endpoint — see [Ollama Setup](../local-m
 - **CLI:** `--model MODEL`
 
 The model identifier for the chosen provider (e.g. `claude-sonnet-4-6`,
-`gpt-5.5`, `gpt-oss:20b`).
+`gpt-5.5`, `qwen/qwen3.8-27b`).
 
 ### `stream`
 
@@ -30,10 +31,9 @@ The model identifier for the chosen provider (e.g. `claude-sonnet-4-6`,
 - **CLI:** `--no-stream` to disable
 
 Whether to stream the model response. Streaming enables per-chunk token
-accounting and mid-iteration token-budget enforcement. **Local Ollama models must
-run with `--no-stream`** — Ollama suppresses tool calls when streaming. With
-streaming off, tokens are accounted from each iteration's result instead. See
-[Streaming and tool calls](../local-models/ollama.md#streaming-and-tool-calls).
+accounting and mid-iteration token-budget enforcement. With streaming off,
+tokens are accounted from each iteration's result instead. See
+[LM Studio Setup](../local-models/lm-studio.md).
 
 ## Loop control
 

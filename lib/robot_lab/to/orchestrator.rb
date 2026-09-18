@@ -597,10 +597,14 @@ module RobotLab
         tools + [Tools::Read.new, Tools::Write.new, Tools::Edit.new, Tools::Bash.new]
       end
 
+      # :reek:TooManyStatements -- the streaming callback accumulates usage and enforces the stop in one place.
       def token_tracker
         lambda do |chunk|
-          @run.input_tokens  += chunk.input_tokens.to_i
-          @run.output_tokens += chunk.output_tokens.to_i
+          # ruby_llm 2.0 nests counts under chunk.tokens (usually only on the
+          # final chunk of a stream).
+          tokens = chunk.respond_to?(:tokens) ? chunk.tokens : nil
+          @run.input_tokens  += tokens&.input.to_i
+          @run.output_tokens += tokens&.output.to_i
 
           return unless @stop_conditions.token_limit_exceeded?
 

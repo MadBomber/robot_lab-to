@@ -65,7 +65,7 @@ JUDGE_MODEL = ENV.fetch("RLTO_JUDGE_MODEL", LOCAL ? "qwen/qwen3.8-27b" : "claude
 TOPIC       = ENV.fetch("RLTO_TOPIC", "writing good Git commit messages")
 
 # ruby_llm has no native "lms" adapter. "lms" is this example's friendly label for
-# "a local LM Studio model"; setup (common.rb) resolves it to RubyLLM's :openai
+# "a local LM Studio model"; setup (common.rb) resolves it to the :lms provider
 # adapter pointed at LM Studio, starting the server and loading each model as
 # needed -- once for the doer, again for the judge (a no-op if they're the same
 # model, or if it's already loaded). Everything passed to RobotLab uses the

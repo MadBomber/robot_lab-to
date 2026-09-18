@@ -25,7 +25,7 @@
 #       the robot must earn each commit on correctness AND quality.
 #
 # Models (per your request): reasoning on OpenAI gpt-5.5, building on local
-# LM Studio qwen/qwen3.8-27b. Because both use RubyLLM's :openai provider but different
+# LM Studio qwen/qwen3.8-27b. Because the phases use different providers and different
 # endpoints (api.openai.com vs LM Studio's /v1), and openai_api_base is global,
 # we toggle it between the (sequential) phases.
 #
@@ -98,9 +98,9 @@ def use_real_openai!
   RubyLLM.logger.level = Logger::ERROR # keep raw API traffic out of the feed
 end
 
-# Implementation phase routes the :openai provider at the local LM Studio endpoint
+# Implementation phase uses the :lms provider against the local LM Studio endpoint
 # (or whatever BUILD_PROVIDER resolves to). common.rb's setup starts the LM Studio
-# server and loads BUILD_MODEL as needed; the "lms" label resolves to :openai.
+# server and loads BUILD_MODEL as needed; the "lms" label resolves to the :lms provider.
 def use_build_provider!
   setup(provider: BUILD_PROVIDER, model: BUILD_MODEL)
 end

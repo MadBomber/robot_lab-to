@@ -44,6 +44,7 @@ module RobotLab
       # @return [void]
       def run(objective, **)
         config = Config.new(**)
+        ensure_provider_loaded(config.provider)
         suppress_llm_logging unless config.debug?
         Orchestrator.new(objective, config).run
       end
@@ -52,6 +53,7 @@ module RobotLab
       # objective and prior state are loaded from the run's run.json.
       def resume(run_id, **)
         config = Config.new(**)
+        ensure_provider_loaded(config.provider)
         suppress_llm_logging unless config.debug?
         Orchestrator.new(nil, config, resume_run_id: run_id).run
       end
@@ -65,6 +67,26 @@ module RobotLab
       end
 
       private
+
+      # Provider gems register themselves on require by convention
+      # (ruby_llm-providers-<name> defines ruby_llm/providers/<name>). When the
+      # configured provider isn't registered yet — e.g. `robot-to --provider
+      # lms` from the CLI — try that conventional require so the user doesn't
+      # need a wrapper script. A miss falls through to RubyLLM's own "Unknown
+      # provider" error at request time.
+      def ensure_provider_loaded(provider)
+        return unless provider
+        return unless defined?(RubyLLM::Provider)
+
+        name = provider.to_s
+        return if RubyLLM::Provider.resolve(name)
+
+        begin
+          require "ruby_llm/providers/#{name}"
+        rescue LoadError
+          # Not a provider-gem provider; RubyLLM will report it if truly unknown.
+        end
+      end
 
       def suppress_llm_logging
         require "logger"

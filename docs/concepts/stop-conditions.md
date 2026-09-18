@@ -37,9 +37,9 @@ limit.
 
 - **Streaming runs** (the default) account tokens per chunk and can interrupt an
   in-flight iteration the moment the budget is exhausted.
-- **Non-streaming runs** (`--no-stream`, used for local models) account tokens
-  from each iteration's result and stop at the next iteration boundary. See
-  [Local Models](../local-models/ollama.md#streaming-and-tool-calls).
+- **Non-streaming runs** (`--no-stream`) account tokens from each iteration's
+  result and stop at the next iteration boundary. See
+  [Local Models](../local-models/index.md).
 
 ### Consecutive failures
 
