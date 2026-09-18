@@ -14,10 +14,10 @@ module RobotLab
           replace_all is true. Read the file first to get the exact text.
         DESC
 
-        param :path, type: "string", desc: "Path of the file to edit"
-        param :old_text, type: "string", desc: "Exact text to replace"
-        param :new_text, type: "string", desc: "Replacement text"
-        param :replace_all, type: "boolean", desc: "Replace every occurrence", required: false
+        parameter :path, type: "string", description: "Path of the file to edit"
+        parameter :old_text, type: "string", description: "Exact text to replace"
+        parameter :new_text, type: "string", description: "Replacement text"
+        parameter :replace_all, type: "boolean", description: "Replace every occurrence", required: false
 
         # :reek:BooleanParameter -- replace_all is a tool param the LLM sets;
         # the `param` declarations above fix this signature.

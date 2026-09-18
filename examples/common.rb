@@ -12,12 +12,12 @@
 #   actual_provider = setup(provider: PROVIDER, model: MODEL)
 #   RobotLab::To.run(objective, provider: actual_provider, model: MODEL, ...)
 #
-# ruby_llm has no native "lms" adapter -- "lms" is this example suite's own
-# label for "a local LM Studio model". When `provider` is "lms", setup:
-#   1. points RubyLLM's :openai adapter at LMS_BASE_URL
+# "lms" is the ruby_llm-providers-lms gem's native LM Studio provider.
+# When `provider` is "lms", setup:
+#   1. points the :lms provider at LMS_BASE_URL
 #   2. starts the LM Studio server if it isn't already running
 #   3. loads `model` into LM Studio if it isn't already loaded
-# and returns :openai -- the RubyLLM-recognized provider to pass to RobotLab.
+# and returns :lms -- the RubyLLM-recognized provider to pass to RobotLab.
 # Any other provider (a cloud one) passes straight through untouched; setup
 # does nothing else for it (the example configures its own API key as before).
 #
@@ -32,6 +32,7 @@ require "open3"
 require "uri"
 
 require "ruby_llm"
+require "ruby_llm/providers/lms"
 
 LMS_BASE_URL = ENV.fetch("LMS_BASE_URL", "http://localhost:1234/v1")
 
@@ -44,7 +45,7 @@ def setup(provider: ENV.fetch("RLTO_PROVIDER", "lms"), model: ENV.fetch("RLTO_MO
   configure_lms!
   ensure_lms_server_running!
   ensure_lms_model_loaded!(model)
-  :openai
+  :lms
 end
 
 def teardown
@@ -58,18 +59,14 @@ at_exit { teardown }
 
 # --- internals ---------------------------------------------------------------
 
-# Route RubyLLM's :openai provider at LM Studio's OpenAI-compatible endpoint and
-# refresh the registry so tool attachment works.
+# Point the :lms provider at the LM Studio endpoint. Local models are assumed
+# to exist, so no registry refresh is needed.
 def configure_lms!
   RubyLLM.configure do |c|
-    c.openai_api_base = LMS_BASE_URL
-    c.openai_api_key  = "lm-studio" # ignored by LM Studio, but RubyLLM wants a value
+    c.lms_api_base    = LMS_BASE_URL
     c.request_timeout = 600
   end
   RubyLLM.logger.level = Logger::ERROR
-  RubyLLM.models.refresh!
-rescue StandardError => e
-  warn "warning: could not refresh LM Studio models (#{e.class}: #{e.message})"
 end
 
 def lms_server_running?

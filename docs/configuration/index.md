@@ -43,10 +43,9 @@ Create `~/.config/robot_lab/to.yml` to set your own defaults — for example, to
 always use a local model:
 
 ```yaml
-provider: openai          # routes to Ollama's OpenAI-compatible endpoint
-model: gpt-oss:20b
+provider: lms             # LM Studio via the ruby_llm-providers-lms gem
+model: qwen/qwen3.8-27b
 local_guards: true
-stream: false
 max_consecutive_failures: 4
 ```
 

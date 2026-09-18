@@ -25,20 +25,20 @@ module RobotLab
           for routine engineering choices you are equipped to make yourself.
         DESC
 
-        param :question, type: "string",
-                         desc: "The decision that needs a human answer, phrased as a question"
+        parameter :question, type: "string",
+                         description: "The decision that needs a human answer, phrased as a question"
 
-        param :situation, type: "string",
-                          desc: "Why this needs a human and what is at stake", required: false
+        parameter :situation, type: "string",
+                          description: "Why this needs a human and what is at stake", required: false
 
-        param :options, type: "array",
-                        desc: "The distinct options you see (strings)", required: false
+        parameter :options, type: "array",
+                        description: "The distinct options you see (strings)", required: false
 
-        param :recommendation, type: "string",
-                               desc: "Your recommended option and the reasoning behind it", required: false
+        parameter :recommendation, type: "string",
+                               description: "Your recommended option and the reasoning behind it", required: false
 
-        param :blocking, type: "boolean",
-                         desc: "true if work cannot correctly proceed until this is answered", required: false
+        parameter :blocking, type: "boolean",
+                         description: "true if work cannot correctly proceed until this is answered", required: false
 
         def captured_requests
           @captured_requests ||= []

@@ -38,6 +38,6 @@ Gem::Specification.new do |spec|
   spec.executables = ["robot-to"]
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "robot_lab", ">= 0.1"
+  spec.add_dependency "robot_lab", "~> 0.3.0"
   spec.add_dependency "myway_config"
 end

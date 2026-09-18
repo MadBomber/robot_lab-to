@@ -70,7 +70,7 @@ PROVIDER = ENV.fetch("RLTO_PROVIDER", LOCAL ? "lms" : "anthropic").to_sym
 MODEL    = ENV.fetch("RLTO_MODEL", LOCAL ? "qwen/qwen3.8-27b" : "claude-sonnet-4-6")
 
 # ruby_llm has no native "lms" adapter. "lms" is this example's friendly label for
-# "a local LM Studio model"; setup (common.rb) resolves it to RubyLLM's :openai
+# "a local LM Studio model"; setup (common.rb) resolves it to the :lms provider
 # adapter pointed at LM Studio, starting the server and loading MODEL as needed.
 # Everything passed to RobotLab uses the resolved provider; PROVIDER itself is
 # kept only for display.

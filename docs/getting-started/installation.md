@@ -7,7 +7,7 @@
 | Ruby **>= 3.2** | Set in the gemspec `required_ruby_version`. |
 | Git | A repository with at least one commit. The loop creates a branch and commits there. |
 | `robot_lab` | The core framework `robot_lab-to` builds on. |
-| An LLM provider | A cloud API key, **or** a local [Ollama](https://ollama.com) server (see [Local Models](../local-models/index.md)). |
+| An LLM provider | A cloud API key, **or** a local [LM Studio](https://lmstudio.ai) server (see [Local Models](../local-models/index.md)). |
 
 ## Install the gem
 
@@ -46,11 +46,11 @@ RobotLab / RubyLLM. Provide credentials the usual way for your provider:
     robot-to "..." --provider openai --model gpt-5.5
     ```
 
-=== "Local (Ollama)"
+=== "Local (LM Studio)"
 
-    No API key required. See [Ollama Setup](../local-models/ollama.md) for the
-    full configuration — local models need `--provider openai` against Ollama's
-    OpenAI-compatible endpoint plus `--no-stream` and `--local-guards`.
+    No API key required. See [LM Studio Setup](../local-models/lm-studio.md)
+    for the full configuration — require the ruby_llm-providers-lms gem, then
+    run with `--provider lms` and `--local-guards`.
 
 The default provider/model is `openai` / `gpt-5.5` (see
 [Settings Reference](../configuration/settings.md)).

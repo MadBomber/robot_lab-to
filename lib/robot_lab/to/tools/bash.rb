@@ -17,8 +17,8 @@ module RobotLab
           output and exit status. Use for building, testing, listing, and git.
         DESC
 
-        param :command, type: "string", desc: "The shell command to run"
-        param :timeout, type: "integer", desc: "Seconds before the command is killed", required: false
+        parameter :command, type: "string", description: "The shell command to run"
+        parameter :timeout, type: "integer", description: "Seconds before the command is killed", required: false
 
         def initialize(robot: nil, timeout: DEFAULT_TIMEOUT)
           super(robot: robot)
