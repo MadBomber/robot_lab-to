@@ -1041,14 +1041,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../local-models/ollama/" class="md-nav__link">
+      <a href="../../local-models/lm-studio/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Ollama Setup
+    LM Studio Setup
   
 
     
@@ -1978,10 +1978,10 @@ its grading criteria just as easily as a small one can mangle a file.</p>
 instances there silently attaches nothing.) A regression test asserts the built
 robot actually exposes the submit tool, guarding against that class of mistake.</p>
 <h3 id="streaming-is-optional">Streaming is optional<a class="headerlink" href="#streaming-is-optional" title="Permanent link">&para;</a></h3>
-<p>By default the robot streams, enabling per-chunk token accounting and mid-stream
-budget enforcement. Local Ollama models run non-streaming (<code>stream: false</code>), so
-tokens are accounted from each iteration's result and the budget is enforced at
-iteration boundaries. See <a href="../../local-models/ollama/#streaming-and-tool-calls">Ollama Setup</a>.</p>
+<p>By default the robot streams, enabling per-chunk token accounting and
+mid-stream budget enforcement. Non-streaming runs (<code>stream: false</code>) account
+tokens from each iteration's result and enforce the budget at iteration
+boundaries. See <a href="../../local-models/lm-studio/">LM Studio Setup</a>.</p>
 <h3 id="interruptible-by-design">Interruptible by design<a class="headerlink" href="#interruptible-by-design" title="Permanent link">&para;</a></h3>
 <p>Signal handlers, the backoff sleep, and the per-iteration runner thread all
 cooperate so a <code>SIGINT</code>/<code>SIGTERM</code> stops the run promptly and cleanly, with the

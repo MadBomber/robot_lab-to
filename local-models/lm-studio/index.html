@@ -12,7 +12,7 @@
         <meta name="author" content="Dewayne VanHoozer">
       
       
-        <link rel="canonical" href="https://madbomber.github.io/robot_lab-to/local-models/ollama/">
+        <link rel="canonical" href="https://madbomber.github.io/robot_lab-to/local-models/lm-studio/">
       
       
         <link rel="prev" href="../">
@@ -29,7 +29,7 @@
     
     
       
-        <title>Ollama Setup - robot_lab-to</title>
+        <title>LM Studio Setup - robot_lab-to</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#ollama-setup" class="md-skip">
+        <a href="#lm-studio-setup" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Ollama Setup
+              LM Studio Setup
             
           </span>
         </div>
@@ -1062,7 +1062,7 @@
   <span class="md-ellipsis">
     
   
-    Ollama Setup
+    LM Studio Setup
   
 
     
@@ -1080,7 +1080,7 @@
   <span class="md-ellipsis">
     
   
-    Ollama Setup
+    LM Studio Setup
   
 
     
@@ -1108,10 +1108,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-install-and-start-ollama" class="md-nav__link">
+  <a href="#1-install-and-start-lm-studio" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Install and start Ollama
+        1. Install and start LM Studio
       
     </span>
   </a>
@@ -1119,10 +1119,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-pull-a-tool-capable-model" class="md-nav__link">
+  <a href="#2-download-a-tool-capable-model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Pull a tool-capable model
+        2. Download a tool-capable model
       
     </span>
   </a>
@@ -1130,10 +1130,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-point-rubyllm-at-ollama" class="md-nav__link">
+  <a href="#3-point-rubyllm-at-lm-studio" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Point RubyLLM at Ollama
+        3. Point RubyLLM at LM Studio
       
     </span>
   </a>
@@ -1152,32 +1152,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#streaming-and-tool-calls" class="md-nav__link">
+  <a href="#protocols" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Streaming and tool calls
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#why-not-the-native-ollama-provider" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why not the native :ollama provider?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#registering-models-if-needed" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Registering models (if needed)
+        Protocols
       
     </span>
   </a>
@@ -1470,10 +1448,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-install-and-start-ollama" class="md-nav__link">
+  <a href="#1-install-and-start-lm-studio" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Install and start Ollama
+        1. Install and start LM Studio
       
     </span>
   </a>
@@ -1481,10 +1459,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-pull-a-tool-capable-model" class="md-nav__link">
+  <a href="#2-download-a-tool-capable-model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Pull a tool-capable model
+        2. Download a tool-capable model
       
     </span>
   </a>
@@ -1492,10 +1470,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-point-rubyllm-at-ollama" class="md-nav__link">
+  <a href="#3-point-rubyllm-at-lm-studio" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Point RubyLLM at Ollama
+        3. Point RubyLLM at LM Studio
       
     </span>
   </a>
@@ -1514,32 +1492,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#streaming-and-tool-calls" class="md-nav__link">
+  <a href="#protocols" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Streaming and tool calls
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#why-not-the-native-ollama-provider" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why not the native :ollama provider?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#registering-models-if-needed" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Registering models (if needed)
+        Protocols
       
     </span>
   </a>
@@ -1622,7 +1578,7 @@
 
 
   
-    <a href="https://github.com/MadBomber/robot_lab-to/edit/main/docs/local-models/ollama.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/MadBomber/robot_lab-to/edit/main/docs/local-models/lm-studio.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1631,94 +1587,71 @@
     
       
     
-    <a href="https://github.com/MadBomber/robot_lab-to/raw/main/docs/local-models/ollama.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/MadBomber/robot_lab-to/raw/main/docs/local-models/lm-studio.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-<h1 id="ollama-setup">Ollama Setup<a class="headerlink" href="#ollama-setup" title="Permanent link">&para;</a></h1>
+<h1 id="lm-studio-setup">LM Studio Setup<a class="headerlink" href="#lm-studio-setup" title="Permanent link">&para;</a></h1>
 <p>This page covers running <code>robot_lab-to</code> against a local
-<a href="https://ollama.com">Ollama</a> server end-to-end.</p>
-<h2 id="1-install-and-start-ollama">1. Install and start Ollama<a class="headerlink" href="#1-install-and-start-ollama" title="Permanent link">&para;</a></h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># macOS / Linux</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://ollama.com/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Ollama runs a server on http://localhost:11434</span>
+<a href="https://lmstudio.ai">LM Studio</a> server end-to-end, through the
+<a href="https://github.com/madbomber/ruby_llm-providers-lms">ruby_llm-providers-lms</a>
+gem, which registers the <code>:lms</code> provider with RubyLLM.</p>
+<h2 id="1-install-and-start-lm-studio">1. Install and start LM Studio<a class="headerlink" href="#1-install-and-start-lm-studio" title="Permanent link">&para;</a></h2>
+<p>Install LM Studio, then bootstrap its CLI and start the server:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>lms<span class="w"> </span>bootstrap<span class="w">        </span><span class="c1"># puts the `lms` CLI on your PATH</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>lms<span class="w"> </span>server<span class="w"> </span>start<span class="w">     </span><span class="c1"># serves on http://localhost:1234</span>
 </span></code></pre></div>
-<h2 id="2-pull-a-tool-capable-model">2. Pull a tool-capable model<a class="headerlink" href="#2-pull-a-tool-capable-model" title="Permanent link">&para;</a></h2>
-<p>The model <strong>must</strong> support tool calling. <code>gpt-oss:20b</code> is the recommended choice
-(see <a href="../#choosing-a-model">model selection</a>):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>ollama<span class="w"> </span>pull<span class="w"> </span>gpt-oss:20b
+<h2 id="2-download-a-tool-capable-model">2. Download a tool-capable model<a class="headerlink" href="#2-download-a-tool-capable-model" title="Permanent link">&para;</a></h2>
+<p>The model <strong>must</strong> support tool calling <em>and honor it</em>. <code>qwen/qwen3.8-27b</code> is
+the recommended choice — it obeys <code>tool_choice</code> and returns meaningful
+structured output, where <code>gpt-oss</code> models accept the request shape but ignore
+it (see <a href="../#choosing-a-model">model selection</a>):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>lms<span class="w"> </span>get<span class="w"> </span>qwen/qwen3.8-27b
 </span></code></pre></div>
-<p>You can confirm a model advertises tool support:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>http://localhost:11434/api/tags<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.models[] | {name, caps: .capabilities}&#39;</span>
+<h2 id="3-point-rubyllm-at-lm-studio">3. Point RubyLLM at LM Studio<a class="headerlink" href="#3-point-rubyllm-at-lm-studio" title="Permanent link">&para;</a></h2>
+<p><code>robot_lab-to</code> reaches the model through RobotLab / RubyLLM. Require the
+provider gem and, only if your server is not on the default endpoint,
+configure the base URL:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">require</span><span class="w"> </span><span class="s2">"ruby_llm"</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">require</span><span class="w"> </span><span class="s2">"ruby_llm/providers/lms"</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">require</span><span class="w"> </span><span class="s2">"robot_lab"</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nb">require</span><span class="w"> </span><span class="s2">"robot_lab/to"</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="no">RubyLLM</span><span class="o">.</span><span class="n">configure</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">c</span><span class="o">|</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="n">c</span><span class="o">.</span><span class="n">lms_api_base</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">"http://localhost:1234/v1"</span><span class="w">  </span><span class="c1"># the default; override if needed</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="n">c</span><span class="o">.</span><span class="n">request_timeout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">600</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="k">end</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">To</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="s2">"Add a greet(name) method in greeter.rb"</span><span class="p">,</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">  </span><span class="ss">provider</span><span class="p">:</span><span class="w"> </span><span class="ss">:lms</span><span class="p">,</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">  </span><span class="ss">model</span><span class="p">:</span><span class="w"> </span><span class="s2">"qwen/qwen3.8-27b"</span><span class="p">,</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">  </span><span class="ss">local_guards</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">,</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">  </span><span class="ss">max_iterations</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="p">)</span>
 </span></code></pre></div>
-<h2 id="3-point-rubyllm-at-ollama">3. Point RubyLLM at Ollama<a class="headerlink" href="#3-point-rubyllm-at-ollama" title="Permanent link">&para;</a></h2>
-<p><code>robot_lab-to</code> reaches the model through RobotLab / RubyLLM. The robust path is
-the <strong><code>:openai</code> provider</strong> aimed at Ollama's OpenAI-compatible <code>/v1</code> endpoint.
-Configure RubyLLM once, before launching the run:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">require</span><span class="w"> </span><span class="s2">&quot;ruby_llm&quot;</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">require</span><span class="w"> </span><span class="s2">&quot;robot_lab&quot;</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nb">require</span><span class="w"> </span><span class="s2">&quot;robot_lab/to&quot;</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="no">RubyLLM</span><span class="o">.</span><span class="n">configure</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">c</span><span class="o">|</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="n">c</span><span class="o">.</span><span class="n">openai_api_base</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;http://localhost:11434/v1&quot;</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="n">c</span><span class="o">.</span><span class="n">openai_api_key</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ollama&quot;</span><span class="w">   </span><span class="c1"># ignored by Ollama, but RubyLLM requires a value</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span><span class="n">c</span><span class="o">.</span><span class="n">request_timeout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">600</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="k">end</span>
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">To</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">  </span><span class="s2">&quot;Add a greet(name) method in greeter.rb&quot;</span><span class="p">,</span>
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">  </span><span class="ss">provider</span><span class="p">:</span><span class="w"> </span><span class="ss">:openai</span><span class="p">,</span>
-</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">  </span><span class="ss">model</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;gpt-oss:20b&quot;</span><span class="p">,</span>
-</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">  </span><span class="ss">local_guards</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">,</span>
-</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">  </span><span class="ss">stream</span><span class="p">:</span><span class="w"> </span><span class="kp">false</span><span class="p">,</span>
-</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="w">  </span><span class="ss">max_iterations</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span>
-</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="p">)</span>
-</span></code></pre></div>
-<div class="admonition note">
-<p class="admonition-title">Why a wrapper script</p>
-<p>The Ollama base-URL configuration lives in RubyLLM's global config, so it's
-set in a small Ruby launcher (as above) rather than via a <code>robot-to</code> CLI flag.
-The CLI flags <code>--provider openai --model gpt-oss:20b --local-guards --no-stream</code>
-cover the rest; only the base URL needs the wrapper. You can also set it in
-your application's RubyLLM initializer.</p>
-</div>
+<p>No API key is needed — LM Studio's local server does not require one.</p>
 <h2 id="4-run">4. Run<a class="headerlink" href="#4-run" title="Permanent link">&para;</a></h2>
-<p>From the launcher above, or — once the base URL is configured in your environment
-— from the CLI:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Add a greet(name) method in greeter.rb&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--provider<span class="w"> </span>openai<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--model<span class="w"> </span>gpt-oss:20b<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--local-guards<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>--no-stream<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span>--max-iterations<span class="w"> </span><span class="m">5</span>
+<p>From the launcher above, or from the CLI:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>robot-to<span class="w"> </span><span class="s2">"Add a greet(name) method in greeter.rb"</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--provider<span class="w"> </span>lms<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--model<span class="w"> </span>qwen/qwen3.8-27b<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>--local-guards<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span>--max-iterations<span class="w"> </span><span class="m">5</span>
 </span></code></pre></div>
-<h2 id="streaming-and-tool-calls">Streaming and tool calls<a class="headerlink" href="#streaming-and-tool-calls" title="Permanent link">&para;</a></h2>
-<p><strong>Local Ollama models must run non-streaming</strong> (<code>--no-stream</code> / <code>stream: false</code>).</p>
-<p>Ollama's OpenAI-compatible endpoint suppresses tool calls when the response is
-streamed — the model "thinks" but never emits a tool call, so the robot can't do
-any work. With streaming disabled, tool calls come through normally.</p>
-<p>The trade-off: streaming is what enables per-chunk token accounting and
-mid-iteration token-budget enforcement. With <code>--no-stream</code>, tokens are accounted
-from each iteration's <em>result</em> instead, and <code>--max-tokens</code> is enforced at
-iteration boundaries rather than mid-stream. For overnight local runs this is
-almost always fine.</p>
-<h2 id="why-not-the-native-ollama-provider">Why not the native <code>:ollama</code> provider?<a class="headerlink" href="#why-not-the-native-ollama-provider" title="Permanent link">&para;</a></h2>
-<p>RubyLLM ships a native <code>:ollama</code> provider, but in testing it did <strong>not</strong> reliably
-get tool-capable models (e.g. qwen3) to emit tool calls — the same model tool-calls
-correctly through the <code>:openai</code> provider against Ollama's <code>/v1</code> endpoint. Until
-that changes, prefer <code>provider: :openai</code> + <code>openai_api_base</code> for <code>robot_lab-to</code>.</p>
-<h2 id="registering-models-if-needed">Registering models (if needed)<a class="headerlink" href="#registering-models-if-needed" title="Permanent link">&para;</a></h2>
-<p>RubyLLM validates models against its registry. <code>robot_lab-to</code> sets
-<code>assume_model_exists</code> when a provider is given, which is enough for a bare chat —
-but attaching tools triggers a capability lookup that can raise
-<code>ModelNotFoundError</code> for an unregistered model. If you hit that, refresh the
-registry so your local models are known:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="no">RubyLLM</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">refresh!</span><span class="w">   </span><span class="c1"># discovers locally-served Ollama models</span>
-</span></code></pre></div>
+<p>Because LM Studio is a local provider, RubyLLM assumes any model id you pass
+exists — LM Studio just-in-time loads the model if it isn't loaded yet. No
+registry refresh is needed.</p>
+<h2 id="protocols">Protocols<a class="headerlink" href="#protocols" title="Permanent link">&para;</a></h2>
+<p>LM Studio serves several API protocols on one port; the <code>:lms</code> provider
+defaults to <code>:chat_completions</code>, which is the most capable one here — client
+tools, structured output, streaming, and reasoning control all work. Stay on
+the default for <code>robot_lab-to</code>. See the
+<a href="https://github.com/madbomber/ruby_llm-providers-lms">ruby_llm-providers-lms README</a>
+for the full protocol matrix.</p>
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1730,24 +1663,24 @@ registry so your local models are known:</p>
 </thead>
 <tbody>
 <tr>
-<td>Model thinks but never calls a tool</td>
-<td>Streaming is on</td>
-<td>Add <code>--no-stream</code>.</td>
+<td>Connection error naming <code>lms server start</code></td>
+<td>Server not running</td>
+<td><code>lms server start</code>.</td>
 </tr>
 <tr>
-<td><code>RobotLab::ModelNotFoundError</code> when tools attach</td>
-<td>Model not in RubyLLM registry</td>
-<td><code>RubyLLM.models.refresh!</code>.</td>
+<td>Tool calls accepted but ignored, or <code>{"name":"analysis","age":0}</code>-style junk from schemas</td>
+<td>Model doesn't honor <code>tool_choice</code> / grammar output (e.g. <code>gpt-oss</code>)</td>
+<td>Use <code>qwen/qwen3.8-27b</code>.</td>
 </tr>
 <tr>
 <td>Every iteration "did not submit"</td>
 <td>Model too small to follow the final-report step</td>
-<td>Use a larger model (e.g. <code>gpt-oss:20b</code>).</td>
+<td>Use a larger model (e.g. <code>qwen/qwen3.8-27b</code>).</td>
 </tr>
 <tr>
 <td>No tool calls at all, model only explains</td>
 <td>Model lacks tool support</td>
-<td>Pick a model whose <code>capabilities</code> include <code>tools</code>.</td>
+<td>Pick a tool-capable model.</td>
 </tr>
 </tbody>
 </table>

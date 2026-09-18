@@ -18,7 +18,7 @@
         <link rel="prev" href="../configuration/cli/">
       
       
-        <link rel="next" href="ollama/">
+        <link rel="next" href="lm-studio/">
       
       
         
@@ -1139,14 +1139,14 @@
   
   
     <li class="md-nav__item">
-      <a href="ollama/" class="md-nav__link">
+      <a href="lm-studio/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Ollama Setup
+    LM Studio Setup
   
 
     
@@ -1552,7 +1552,7 @@
 
 <h1 id="local-models">Local Models<a class="headerlink" href="#local-models" title="Permanent link">&para;</a></h1>
 <p><code>robot_lab-to</code> can drive a <strong>local</strong> model — running entirely offline against an
-<a href="https://ollama.com">Ollama</a> server — instead of a cloud API. This is the
+<a href="https://lmstudio.ai">LM Studio</a> server via the <code>:lms</code> provider — instead of a cloud API. This is the
 "local assistant" mode: no API keys, no per-token cost, no data leaving your
 machine.</p>
 <p>Local models are smaller and less forgiving than frontier models, so this mode
@@ -1566,21 +1566,21 @@ adds two things:</p>
 <p>Both are enabled together with <code>--local-guards</code>.</p>
 <h2 id="the-short-version">The short version<a class="headerlink" href="#the-short-version" title="Permanent link">&para;</a></h2>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># 1. Serve a tool-capable model</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>ollama<span class="w"> </span>pull<span class="w"> </span>gpt-oss:20b
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># 2. Run robot-to against it</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>robot-to<span class="w"> </span><span class="s2">&quot;Add a greet(name) method in greeter.rb&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span>--provider<span class="w"> </span>openai<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span>--model<span class="w"> </span>gpt-oss:20b<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span>--local-guards<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span>--no-stream<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>lms<span class="w"> </span>server<span class="w"> </span>start
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>lms<span class="w"> </span>get<span class="w"> </span>qwen/qwen3.8-27b
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># 2. Run robot-to against it</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>robot-to<span class="w"> </span><span class="s2">"Add a greet(name) method in greeter.rb"</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span>--provider<span class="w"> </span>lms<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span>--model<span class="w"> </span>qwen/qwen3.8-27b<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span>--local-guards<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">  </span>--max-iterations<span class="w"> </span><span class="m">5</span>
 </span></code></pre></div>
-<p>The full setup — including the RubyLLM configuration that points <code>:openai</code> at
-Ollama — is on the <a href="ollama/">Ollama Setup</a> page.</p>
+<p>The full setup — including requiring the ruby_llm-providers-lms gem — is on
+the <a href="lm-studio/">LM Studio Setup</a> page.</p>
 <h2 id="why-these-flags">Why these flags<a class="headerlink" href="#why-these-flags" title="Permanent link">&para;</a></h2>
-<p>Driving a local model end-to-end requires three non-obvious settings. Each exists
-because of a concrete limitation discovered in testing:</p>
+<p>Driving a local model end-to-end takes two settings. Each exists because of a
+concrete limitation discovered in testing:</p>
 <table>
 <thead>
 <tr>
@@ -1590,12 +1590,8 @@ because of a concrete limitation discovered in testing:</p>
 </thead>
 <tbody>
 <tr>
-<td><code>--provider openai</code> (+ Ollama base URL)</td>
-<td>RubyLLM's native <code>:ollama</code> provider doesn't reliably get these models to emit tool calls. Routing through the <code>:openai</code> provider against Ollama's OpenAI-compatible <code>/v1</code> endpoint does.</td>
-</tr>
-<tr>
-<td><code>--no-stream</code></td>
-<td>Ollama suppresses tool calls when the response is streamed. With streaming off, tool calls come through.</td>
+<td><code>--provider lms</code></td>
+<td>The ruby_llm-providers-lms gem's LM Studio provider — no API key, and local model ids are assumed to exist. Its default <code>:chat_completions</code> protocol supports client tools, structured output, and streaming.</td>
 </tr>
 <tr>
 <td><code>--local-guards</code></td>
@@ -1603,8 +1599,7 @@ because of a concrete limitation discovered in testing:</p>
 </tr>
 </tbody>
 </table>
-<p>See <a href="ollama/#streaming-and-tool-calls">Ollama Setup → Streaming and tool calls</a>
-for the details.</p>
+<p>See <a href="lm-studio/">LM Studio Setup</a> for the details.</p>
 <h2 id="the-design-philosophy">The design philosophy<a class="headerlink" href="#the-design-philosophy" title="Permanent link">&para;</a></h2>
 <p>This mode is inspired by the research behind
 <a href="https://github.com/itayinbarr/little-coder"><code>little-coder</code></a>: the same small model
@@ -1636,22 +1631,16 @@ frontier model forgives a sloppy tool loop; a 9–35B local model does not.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>gpt-oss:20b</code></td>
-<td>20B</td>
+<td><code>qwen/qwen3.8-27b</code></td>
+<td>27B</td>
 <td>✅ reliable</td>
-<td>Called tools <em>and</em> <code>submit_iteration_result</code>; completed full runs cleanly. <strong>Recommended.</strong></td>
+<td>Honors <code>tool_choice</code> and structured output; the right pick for the autonomous loop. <strong>Recommended.</strong></td>
 </tr>
 <tr>
-<td><code>qwen3</code></td>
-<td>8B</td>
-<td>✅ tools work</td>
-<td>Created files via the write tool, but didn't reliably call <code>submit_iteration_result</code> (the final-report step).</td>
-</tr>
-<tr>
-<td><code>phi4-mini</code></td>
-<td>3.8B</td>
-<td>❌</td>
-<td>Explains instead of calling tools.</td>
+<td><code>openai/gpt-oss-20b</code></td>
+<td>20B</td>
+<td>⚠️ partial</td>
+<td>Accepts tool definitions but ignores <code>tool_choice: required</code>, and its structured output parses without meaning anything. Fine for simple chat, not for the loop.</td>
 </tr>
 </tbody>
 </table>
@@ -1659,7 +1648,7 @@ frontier model forgives a sloppy tool loop; a 9–35B local model does not.</p>
 both use tools <em>and</em> remember to submit its result every iteration.</p>
 <hr />
 <ul>
-<li><a href="ollama/">Ollama Setup</a> — install, serve, and configure.</li>
+<li><a href="lm-studio/">LM Studio Setup</a> — install, serve, and configure.</li>
 <li><a href="tools/">Built-in Tools</a> — what <code>read</code>/<code>write</code>/<code>edit</code>/<code>bash</code> do.</li>
 <li><a href="guardrails/">Guardrails</a> — the small-model safety policies.</li>
 </ul>

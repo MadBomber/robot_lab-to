@@ -1139,14 +1139,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../local-models/ollama/" class="md-nav__link">
+      <a href="../../local-models/lm-studio/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Ollama Setup
+    LM Studio Setup
   
 
     
@@ -1557,10 +1557,10 @@
 </span></code></pre></div>
 <p>The <strong>objective</strong> is a single argument (quote it). If omitted, <code>robot-to</code> reads
 the objective from standard input — handy for long objectives:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Add request logging middleware and tests&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>robot-to<span class="w"> </span><span class="s2">"Add request logging middleware and tests"</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># or via stdin</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Add request logging middleware and tests&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>robot-to
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">"Add request logging middleware and tests"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>robot-to
 </span></code></pre></div>
 <h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
 <table>
@@ -1703,7 +1703,7 @@ the objective from standard input — handy for long objectives:</p>
 <td><code>--no-stream</code></td>
 <td>—</td>
 <td>streaming on</td>
-<td>Disable streaming (required for local Ollama tool calls).</td>
+<td>Disable streaming (tokens are then accounted per iteration instead of per chunk).</td>
 </tr>
 <tr>
 <td><code>--debug</code></td>
@@ -1729,39 +1729,38 @@ the objective from standard input — handy for long objectives:</p>
 its config-file / environment-variable equivalents.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <p>A bounded run with a verification gate:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Fix the failing parser tests&quot;</span><span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>robot-to<span class="w"> </span><span class="s2">"Fix the failing parser tests"</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>--provider<span class="w"> </span>anthropic<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>--model<span class="w"> </span>claude-sonnet-4-6<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span>--max-iterations<span class="w"> </span><span class="m">15</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span>--verify-command<span class="w"> </span><span class="s2">&quot;bundle exec rake test&quot;</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span>--verify-command<span class="w"> </span><span class="s2">"bundle exec rake test"</span>
 </span></code></pre></div>
 <p>An overnight migration with a natural-language stop condition:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Migrate from Minitest to RSpec&quot;</span><span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>robot-to<span class="w"> </span><span class="s2">"Migrate from Minitest to RSpec"</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--max-iterations<span class="w"> </span><span class="m">60</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--max-tokens<span class="w"> </span><span class="m">3000000</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>--verify-command<span class="w"> </span><span class="s2">&quot;bundle exec rake&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span>--stop-when<span class="w"> </span><span class="s2">&quot;every test file is RSpec and the suite passes&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>--verify-command<span class="w"> </span><span class="s2">"bundle exec rake"</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span>--stop-when<span class="w"> </span><span class="s2">"every test file is RSpec and the suite passes"</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span>--commit-format<span class="w"> </span>conventional
 </span></code></pre></div>
 <p>A scored run that descends toward a measured target (see <a href="../../concepts/evals/">Evals</a>):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Raise parser coverage to 90%&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--verify<span class="w">  </span><span class="s2">&quot;bundle exec rake test&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--measure<span class="w"> </span><span class="s2">&quot;bundle exec rake coverage&quot;</span><span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>robot-to<span class="w"> </span><span class="s2">"Raise parser coverage to 90%"</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--verify<span class="w">  </span><span class="s2">"bundle exec rake test"</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--measure<span class="w"> </span><span class="s2">"bundle exec rake coverage"</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--target<span class="w">  </span><span class="m">90</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>--protect-path<span class="w"> </span>test/coverage_helper.rb
 </span></code></pre></div>
 <p>A judged prose run that ends on plateau instead of a target:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Write an opinionated guide to the Viable Systems Model&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--eval<span class="w"> </span>prose<span class="w"> </span>--spec<span class="w"> </span>outline.md<span class="w"> </span>--floor<span class="w"> </span><span class="s2">&quot;rake docs:lint&quot;</span><span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>robot-to<span class="w"> </span><span class="s2">"Write an opinionated guide to the Viable Systems Model"</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--eval<span class="w"> </span>prose<span class="w"> </span>--spec<span class="w"> </span>outline.md<span class="w"> </span>--floor<span class="w"> </span><span class="s2">"rake docs:lint"</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>--stop-on-plateau<span class="w"> </span><span class="m">3</span>
 </span></code></pre></div>
-<p>A fully local run on Ollama (see <a href="../../local-models/">Local Models</a>):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Add a greet(name) method in greeter.rb&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--provider<span class="w"> </span>openai<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--model<span class="w"> </span>gpt-oss:20b<span class="w"> </span><span class="se">\</span>
+<p>A fully local run on LM Studio (see <a href="../../local-models/">Local Models</a>):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>robot-to<span class="w"> </span><span class="s2">"Add a greet(name) method in greeter.rb"</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--provider<span class="w"> </span>lms<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--model<span class="w"> </span>qwen/qwen3.8-27b<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span>--local-guards<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span>--no-stream<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span>--max-iterations<span class="w"> </span><span class="m">5</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span>--max-iterations<span class="w"> </span><span class="m">5</span>
 </span></code></pre></div>
 <h2 id="exit-behavior">Exit behavior<a class="headerlink" href="#exit-behavior" title="Permanent link">&para;</a></h2>
 <p><code>robot-to</code> runs to completion or until a stop condition trips, then prints an

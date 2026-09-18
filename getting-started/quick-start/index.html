@@ -1161,14 +1161,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../local-models/ollama/" class="md-nav__link">
+      <a href="../../local-models/lm-studio/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Ollama Setup
+    LM Studio Setup
   
 
     
@@ -1602,12 +1602,12 @@
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>git<span class="w"> </span>log<span class="w"> </span>--oneline<span class="w">     </span><span class="c1"># must have at least one commit</span>
 </span></code></pre></div>
 <p>If there are no commits yet:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>git<span class="w"> </span>commit<span class="w"> </span>--allow-empty<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;initial&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>git<span class="w"> </span>commit<span class="w"> </span>--allow-empty<span class="w"> </span>-m<span class="w"> </span><span class="s2">"initial"</span>
 </span></code></pre></div>
 <h2 id="2-run-a-bounded-objective">2. Run a bounded objective<a class="headerlink" href="#2-run-a-bounded-objective" title="Permanent link">&para;</a></h2>
 <p>Give <code>robot-to</code> a clear, single-sentence objective and a stop condition. Keep
 the first run small and bounded so you can watch it work:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Add a CHANGELOG.md and document the public API in the README&quot;</span><span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>robot-to<span class="w"> </span><span class="s2">"Add a CHANGELOG.md and document the public API in the README"</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>--max-iterations<span class="w"> </span><span class="m">5</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>--provider<span class="w"> </span>anthropic<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span>--model<span class="w"> </span>claude-sonnet-4-6
@@ -1623,8 +1623,8 @@ the first run small and bounded so you can watch it work:</p>
 <h2 id="3-add-an-independent-verification-gate">3. Add an independent verification gate<a class="headerlink" href="#3-add-an-independent-verification-gate" title="Permanent link">&para;</a></h2>
 <p>The robot's self-reported success only counts if a command <strong>you</strong> choose
 passes. This is the single most important flag for unattended runs:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Fix the failing tests in spec/parser&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--verify-command<span class="w"> </span><span class="s2">&quot;bundle exec rake test&quot;</span><span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>robot-to<span class="w"> </span><span class="s2">"Fix the failing tests in spec/parser"</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--verify-command<span class="w"> </span><span class="s2">"bundle exec rake test"</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--max-iterations<span class="w"> </span><span class="m">15</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>--max-consecutive-failures<span class="w"> </span><span class="m">4</span>
 </span></code></pre></div>
@@ -1633,11 +1633,11 @@ back even though the robot claimed success. See <a href="../../concepts/verifica
 <h2 id="4-let-it-stop-itself">4. Let it stop itself<a class="headerlink" href="#4-let-it-stop-itself" title="Permanent link">&para;</a></h2>
 <p>For a true overnight run, combine a hard ceiling with a natural-language stop
 condition:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Migrate the codebase from Minitest to RSpec&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--verify-command<span class="w"> </span><span class="s2">&quot;bundle exec rake&quot;</span><span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>robot-to<span class="w"> </span><span class="s2">"Migrate the codebase from Minitest to RSpec"</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--verify-command<span class="w"> </span><span class="s2">"bundle exec rake"</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--max-iterations<span class="w"> </span><span class="m">50</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--max-tokens<span class="w"> </span><span class="m">2000000</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>--stop-when<span class="w"> </span><span class="s2">&quot;all test files are RSpec and the suite passes&quot;</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>--stop-when<span class="w"> </span><span class="s2">"all test files are RSpec and the suite passes"</span>
 </span></code></pre></div>
 <p>The robot evaluates <code>--stop-when</code> after each successful iteration and sets
 <code>should_fully_stop</code> when it judges the condition met. See
@@ -1651,15 +1651,15 @@ condition:</p>
 an ordinary branch.</p>
 <h2 id="programmatic-use">Programmatic use<a class="headerlink" href="#programmatic-use" title="Permanent link">&para;</a></h2>
 <p>You can also drive a run from Ruby instead of the CLI:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nb">require</span><span class="w"> </span><span class="s2">&quot;robot_lab&quot;</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nb">require</span><span class="w"> </span><span class="s2">&quot;robot_lab/to&quot;</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nb">require</span><span class="w"> </span><span class="s2">"robot_lab"</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nb">require</span><span class="w"> </span><span class="s2">"robot_lab/to"</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">To</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="s2">&quot;Add a CHANGELOG.md and document the public API&quot;</span><span class="p">,</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="s2">"Add a CHANGELOG.md and document the public API"</span><span class="p">,</span>
 </span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span><span class="ss">provider</span><span class="p">:</span><span class="w"> </span><span class="ss">:anthropic</span><span class="p">,</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span><span class="ss">model</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span><span class="ss">model</span><span class="p">:</span><span class="w"> </span><span class="s2">"claude-sonnet-4-6"</span><span class="p">,</span>
 </span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="ss">max_iterations</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">  </span><span class="ss">verify_command</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bundle exec rake test&quot;</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">  </span><span class="ss">verify_command</span><span class="p">:</span><span class="w"> </span><span class="s2">"bundle exec rake test"</span>
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="p">)</span>
 </span></code></pre></div>
 <p><code>RobotLab::To.run(objective, **opts)</code> accepts the same options as the CLI flags

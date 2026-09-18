@@ -1494,14 +1494,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../local-models/ollama/" class="md-nav__link">
+      <a href="../../local-models/lm-studio/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Ollama Setup
+    LM Studio Setup
   
 
     
@@ -2272,25 +2272,25 @@ CLI flag, or a <code>RobotLab::To.run</code> keyword argument (see
 <li><strong>CLI:</strong> <code>--provider NAME</code></li>
 </ul>
 <p>The LLM provider, passed through to RobotLab / RubyLLM. Use <code>anthropic</code>,
-<code>openai</code>, etc. For <strong>local Ollama models</strong>, set this to <code>openai</code> and point
-RubyLLM at Ollama's OpenAI-compatible endpoint — see <a href="../../local-models/ollama/">Ollama Setup</a>.</p>
+<code>openai</code>, etc. For <strong>local LM Studio models</strong>, require the
+ruby_llm-providers-lms gem and set this to <code>lms</code> — see
+<a href="../../local-models/lm-studio/">LM Studio Setup</a>.</p>
 <h3 id="model"><code>model</code><a class="headerlink" href="#model" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Default:</strong> <code>gpt-5.5</code></li>
 <li><strong>CLI:</strong> <code>--model MODEL</code></li>
 </ul>
 <p>The model identifier for the chosen provider (e.g. <code>claude-sonnet-4-6</code>,
-<code>gpt-5.5</code>, <code>gpt-oss:20b</code>).</p>
+<code>gpt-5.5</code>, <code>qwen/qwen3.8-27b</code>).</p>
 <h3 id="stream"><code>stream</code><a class="headerlink" href="#stream" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Default:</strong> <code>true</code></li>
 <li><strong>CLI:</strong> <code>--no-stream</code> to disable</li>
 </ul>
 <p>Whether to stream the model response. Streaming enables per-chunk token
-accounting and mid-iteration token-budget enforcement. <strong>Local Ollama models must
-run with <code>--no-stream</code></strong> — Ollama suppresses tool calls when streaming. With
-streaming off, tokens are accounted from each iteration's result instead. See
-<a href="../../local-models/ollama/#streaming-and-tool-calls">Streaming and tool calls</a>.</p>
+accounting and mid-iteration token-budget enforcement. With streaming off,
+tokens are accounted from each iteration's result instead. See
+<a href="../../local-models/lm-studio/">LM Studio Setup</a>.</p>
 <h2 id="loop-control">Loop control<a class="headerlink" href="#loop-control" title="Permanent link">&para;</a></h2>
 <h3 id="max_iterations"><code>max_iterations</code><a class="headerlink" href="#max_iterations" title="Permanent link">&para;</a></h3>
 <ul>

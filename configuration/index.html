@@ -1150,14 +1150,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../local-models/ollama/" class="md-nav__link">
+      <a href="../local-models/lm-studio/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Ollama Setup
+    LM Studio Setup
   
 
     
@@ -1603,18 +1603,17 @@ defaults; higher layers override them.</p>
 <h2 id="2-user-config-file">2. User config file<a class="headerlink" href="#2-user-config-file" title="Permanent link">&para;</a></h2>
 <p>Create <code>~/.config/robot_lab/to.yml</code> to set your own defaults — for example, to
 always use a local model:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">openai</span><span class="w">          </span><span class="c1"># routes to Ollama&#39;s OpenAI-compatible endpoint</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gpt-oss:20b</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lms</span><span class="w">             </span><span class="c1"># LM Studio via the ruby_llm-providers-lms gem</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">qwen/qwen3.8-27b</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nt">local_guards</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nt">stream</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nt">max_consecutive_failures</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nt">max_consecutive_failures</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
 </span></code></pre></div>
 <p>These apply to every <code>robot-to</code> run unless overridden by an env var or CLI flag.</p>
 <h2 id="3-environment-variables">3. Environment variables<a class="headerlink" href="#3-environment-variables" title="Permanent link">&para;</a></h2>
 <p>Every setting can be set via an environment variable prefixed with
 <code>ROBOT_LAB_TO_</code>. Nested keys use a double underscore (rare here, since the config
 is flat):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_TO_MODEL</span><span class="o">=</span><span class="s2">&quot;gpt-oss:20b&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_TO_MODEL</span><span class="o">=</span><span class="s2">"gpt-oss:20b"</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_TO_LOCAL_GUARDS</span><span class="o">=</span><span class="nb">true</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_TO_MAX_CONSECUTIVE_FAILURES</span><span class="o">=</span><span class="m">4</span>
 </span></code></pre></div>
@@ -1623,9 +1622,9 @@ underlying provider (e.g. <code>ANTHROPIC_API_KEY</code>, <code>OPENAI_API_KEY</
 <h2 id="4-cli-flags-torun-arguments">4. CLI flags / <code>To.run</code> arguments<a class="headerlink" href="#4-cli-flags-torun-arguments" title="Permanent link">&para;</a></h2>
 <p>The highest-precedence layer. Anything passed on the command line (or as a keyword
 to <code>RobotLab::To.run</code>) wins over all other layers:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="w"> </span>--model<span class="w"> </span>claude-sonnet-4-6<span class="w"> </span>--max-iterations<span class="w"> </span><span class="m">20</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>robot-to<span class="w"> </span><span class="s2">"..."</span><span class="w"> </span>--model<span class="w"> </span>claude-sonnet-4-6<span class="w"> </span>--max-iterations<span class="w"> </span><span class="m">20</span>
 </span></code></pre></div>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">To</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">model</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">max_iterations</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="no">RobotLab</span><span class="o">::</span><span class="no">To</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"..."</span><span class="p">,</span><span class="w"> </span><span class="ss">model</span><span class="p">:</span><span class="w"> </span><span class="s2">"claude-sonnet-4-6"</span><span class="p">,</span><span class="w"> </span><span class="ss">max_iterations</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="p">)</span>
 </span></code></pre></div>
 <p>Some options are <strong>CLI-only</strong> (no YAML default) because they are run-specific:
 <code>--max-iterations</code>, <code>--max-tokens</code>, <code>--stop-when</code>, <code>--verify-command</code>, and the

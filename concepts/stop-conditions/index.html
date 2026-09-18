@@ -1200,14 +1200,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../local-models/ollama/" class="md-nav__link">
+      <a href="../../local-models/lm-studio/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Ollama Setup
+    LM Studio Setup
   
 
     
@@ -1736,9 +1736,9 @@ limit.</p>
 <ul>
 <li><strong>Streaming runs</strong> (the default) account tokens per chunk and can interrupt an
   in-flight iteration the moment the budget is exhausted.</li>
-<li><strong>Non-streaming runs</strong> (<code>--no-stream</code>, used for local models) account tokens
-  from each iteration's result and stop at the next iteration boundary. See
-  <a href="../../local-models/ollama/#streaming-and-tool-calls">Local Models</a>.</li>
+<li><strong>Non-streaming runs</strong> (<code>--no-stream</code>) account tokens from each iteration's
+  result and stop at the next iteration boundary. See
+  <a href="../../local-models/">Local Models</a>.</li>
 </ul>
 <h3 id="consecutive-failures">Consecutive failures<a class="headerlink" href="#consecutive-failures" title="Permanent link">&para;</a></h3>
 <p>Resets to zero on every successful, committed iteration; increments on every
@@ -1755,9 +1755,9 @@ plateau counts <em>valid, gate-passing work that just wasn't better</em> (includ
 "same" verdicts, which are common and normal for prose), while consecutive
 failures counts the robot being genuinely broken (errors, gate failures, no
 submit). Conflating the two would throttle legitimate exploration.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Write an opinionated guide to VSM&quot;</span><span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>robot-to<span class="w"> </span><span class="s2">"Write an opinionated guide to VSM"</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span>--eval<span class="w"> </span>prose<span class="w"> </span>--spec<span class="w"> </span>outline.md<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span>--stop-on-plateau<span class="w"> </span><span class="m">3</span><span class="w">   </span><span class="c1"># stop after 3 drafts that didn&#39;t improve</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span>--stop-on-plateau<span class="w"> </span><span class="m">3</span><span class="w">   </span><span class="c1"># stop after 3 drafts that didn't improve</span>
 </span></code></pre></div>
 <p>See <a href="../evals/">Evals</a> for the full scoring model.</p>
 <h3 id="stop-when-natural-language">Stop-when (natural language)<a class="headerlink" href="#stop-when-natural-language" title="Permanent link">&para;</a></h3>
@@ -1765,9 +1765,9 @@ submit). Conflating the two would throttle legitimate exploration.</p>
 robot decides whether the condition is met and, if so, returns
 <code>should_fully_stop: true</code> in its result. The orchestrator then aborts with
 <code>stop condition met: &lt;text&gt;</code>.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Refactor the auth module for clarity&quot;</span><span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>robot-to<span class="w"> </span><span class="s2">"Refactor the auth module for clarity"</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>--max-iterations<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>--stop-when<span class="w"> </span><span class="s2">&quot;the auth module has no method longer than 15 lines and tests pass&quot;</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>--stop-when<span class="w"> </span><span class="s2">"the auth module has no method longer than 15 lines and tests pass"</span>
 </span></code></pre></div>
 <p><code>--stop-when</code> only ends the loop on a <strong>successful</strong> iteration — a failing
 iteration never triggers it, even if the robot thinks the goal is met.</p>

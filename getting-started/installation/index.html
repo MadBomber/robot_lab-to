@@ -1150,14 +1150,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../local-models/ollama/" class="md-nav__link">
+      <a href="../../local-models/lm-studio/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Ollama Setup
+    LM Studio Setup
   
 
     
@@ -1596,7 +1596,7 @@
 </tr>
 <tr>
 <td>An LLM provider</td>
-<td>A cloud API key, <strong>or</strong> a local <a href="https://ollama.com">Ollama</a> server (see <a href="../../local-models/">Local Models</a>).</td>
+<td>A cloud API key, <strong>or</strong> a local <a href="https://lmstudio.ai">LM Studio</a> server (see <a href="../../local-models/">Local Models</a>).</td>
 </tr>
 </tbody>
 </table>
@@ -1604,7 +1604,7 @@
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>gem<span class="w"> </span>install<span class="w"> </span>robot_lab-to
 </span></code></pre></div>
 <p>Or add it to a <code>Gemfile</code>:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">gem</span><span class="w"> </span><span class="s2">&quot;robot_lab-to&quot;</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">gem</span><span class="w"> </span><span class="s2">"robot_lab-to"</span>
 </span></code></pre></div>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bundle<span class="w"> </span>install
 </span></code></pre></div>
@@ -1612,22 +1612,22 @@
 <h2 id="provider-credentials">Provider credentials<a class="headerlink" href="#provider-credentials" title="Permanent link">&para;</a></h2>
 <p><code>robot_lab-to</code> passes your configured provider and model straight through to
 RobotLab / RubyLLM. Provide credentials the usual way for your provider:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Anthropic</label><label for="__tabbed_1_2">OpenAI</label><label for="__tabbed_1_3">Local (Ollama)</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Anthropic</label><label for="__tabbed_1_2">OpenAI</label><label for="__tabbed_1_3">Local (LM Studio)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ANTHROPIC_API_KEY</span><span class="o">=</span><span class="s2">&quot;sk-ant-...&quot;</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>robot-to<span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="w"> </span>--provider<span class="w"> </span>anthropic<span class="w"> </span>--model<span class="w"> </span>claude-sonnet-4-6
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ANTHROPIC_API_KEY</span><span class="o">=</span><span class="s2">"sk-ant-..."</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>robot-to<span class="w"> </span><span class="s2">"..."</span><span class="w"> </span>--provider<span class="w"> </span>anthropic<span class="w"> </span>--model<span class="w"> </span>claude-sonnet-4-6
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span><span class="s2">&quot;sk-...&quot;</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>robot-to<span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="w"> </span>--provider<span class="w"> </span>openai<span class="w"> </span>--model<span class="w"> </span>gpt-5.5
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span><span class="s2">"sk-..."</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>robot-to<span class="w"> </span><span class="s2">"..."</span><span class="w"> </span>--provider<span class="w"> </span>openai<span class="w"> </span>--model<span class="w"> </span>gpt-5.5
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<p>No API key required. See <a href="../../local-models/ollama/">Ollama Setup</a> for the
-full configuration — local models need <code>--provider openai</code> against Ollama's
-OpenAI-compatible endpoint plus <code>--no-stream</code> and <code>--local-guards</code>.</p>
+<p>No API key required. See <a href="../../local-models/lm-studio/">LM Studio Setup</a>
+for the full configuration — require the ruby_llm-providers-lms gem, then
+run with <code>--provider lms</code> and <code>--local-guards</code>.</p>
 </div>
 </div>
 </div>
@@ -1641,7 +1641,7 @@ OpenAI-compatible endpoint plus <code>--no-stream</code> and <code>--local-guard
 working repository must have at least one commit:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>git<span class="w"> </span>init
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>git<span class="w"> </span>add<span class="w"> </span>-A
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;initial&quot;</span><span class="w">          </span><span class="c1"># or: git commit --allow-empty -m &quot;initial&quot;</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"initial"</span><span class="w">          </span><span class="c1"># or: git commit --allow-empty -m "initial"</span>
 </span></code></pre></div>
 <p>Run state is written under <code>.robot_lab_to/</code> and automatically added to
 <code>.git/info/exclude</code>, so it never pollutes your working tree or commits.</p>

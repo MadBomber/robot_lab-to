@@ -1216,14 +1216,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../local-models/ollama/" class="md-nav__link">
+      <a href="../../local-models/lm-studio/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Ollama Setup
+    LM Studio Setup
   
 
     
@@ -1814,9 +1814,9 @@ commands:</p>
 </tr>
 </tbody>
 </table>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Raise parser coverage to 90%&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>--verify<span class="w">  </span><span class="s2">&quot;bundle exec rake test&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">     </span><span class="c1"># floor: must stay green</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>--measure<span class="w"> </span><span class="s2">&quot;bundle exec rake coverage&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w"> </span><span class="c1"># descent signal</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>robot-to<span class="w"> </span><span class="s2">"Raise parser coverage to 90%"</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>--verify<span class="w">  </span><span class="s2">"bundle exec rake test"</span><span class="w"> </span><span class="se">\ </span><span class="w">     </span><span class="c1"># floor: must stay green</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>--measure<span class="w"> </span><span class="s2">"bundle exec rake coverage"</span><span class="w"> </span><span class="se">\ </span><span class="w"> </span><span class="c1"># descent signal</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span>--target<span class="w">  </span><span class="m">90</span><span class="w">                             </span><span class="c1"># stop once the score reaches this</span>
 </span></code></pre></div>
 <p><code>Evals::Code#score</code>:</p>
@@ -1840,11 +1840,11 @@ harness, <code>ruby -e 'puts passing_count'</code>, <code>grep -c</code> of a li
 scores from an LLM are too noisy to descend against — but "is B better than A?"
 is a reliable judgement. <code>Evals::Prose</code> asks a <strong>judge model</strong> to compare the
 working tree to the last <em>committed</em> version:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;Write an opinionated guide to the Viable Systems Model&quot;</span><span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>robot-to<span class="w"> </span><span class="s2">"Write an opinionated guide to the Viable Systems Model"</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>--eval<span class="w">  </span>prose<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>--spec<span class="w">  </span>outline.md<span class="w"> </span><span class="se">\ </span><span class="w">         </span><span class="c1"># the spec the judge measures against</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span>--floor<span class="w"> </span><span class="s2">&quot;rake docs:lint&quot;</span><span class="w"> </span><span class="se">\ </span><span class="w">   </span><span class="c1"># optional mechanizable checks (links, TODOs)</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span>--judge-model<span class="w"> </span>claude-opus-4<span class="w"> </span><span class="se">\ </span><span class="c1"># defaults to the doer&#39;s --model</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span>--floor<span class="w"> </span><span class="s2">"rake docs:lint"</span><span class="w"> </span><span class="se">\ </span><span class="w">   </span><span class="c1"># optional mechanizable checks (links, TODOs)</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span>--judge-model<span class="w"> </span>claude-opus-4<span class="w"> </span><span class="se">\ </span><span class="c1"># defaults to the doer's --model</span>
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span>--stop-on-plateau<span class="w"> </span><span class="m">3</span><span class="w">           </span><span class="c1"># stop after 3 drafts with no improvement</span>
 </span></code></pre></div>
 <p><code>Evals::Prose#score</code>:</p>
@@ -1922,7 +1922,7 @@ string references one (matched conservatively, by absolute path or basename).</p
 paths resolve, <strong>independent of <code>--local-guards</code></strong> — unlike the small-model
 guardrails (see <a href="../../local-models/guardrails/">Guardrails</a>), a frontier model
 can reward-hack too, so this one is always on.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>robot-to<span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="w"> </span>--eval<span class="w"> </span>code<span class="w"> </span>--measure<span class="w"> </span><span class="s2">&quot;ruby score.rb&quot;</span><span class="w"> </span>--target<span class="w"> </span><span class="m">100</span><span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>robot-to<span class="w"> </span><span class="s2">"..."</span><span class="w"> </span>--eval<span class="w"> </span>code<span class="w"> </span>--measure<span class="w"> </span><span class="s2">"ruby score.rb"</span><span class="w"> </span>--target<span class="w"> </span><span class="m">100</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--protect-path<span class="w"> </span>score.rb<span class="w"> </span>--protect-path<span class="w"> </span>test/scoring_test.rb
 </span></code></pre></div>
 <h2 id="custom-evals">Custom evals<a class="headerlink" href="#custom-evals" title="Permanent link">&para;</a></h2>
