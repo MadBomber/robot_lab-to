@@ -1015,6 +1015,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-decisions-subcommand" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The decisions subcommand
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#examples" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1448,6 +1459,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-decisions-subcommand" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The decisions subcommand
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#examples" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1554,6 +1576,8 @@
 <p>The <code>robot-to</code> executable runs an autonomous loop toward an objective.</p>
 <h2 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>robot-to [objective] [options]
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>robot-to --resume RUN_ID [options]
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>robot-to decisions [RUN_ID]
 </span></code></pre></div>
 <p>The <strong>objective</strong> is a single argument (quote it). If omitted, <code>robot-to</code> reads
 the objective from standard input — handy for long objectives:</p>
@@ -1694,6 +1718,36 @@ the objective from standard input — handy for long objectives:</p>
 <td>Directory for run state.</td>
 </tr>
 <tr>
+<td><code>--resume</code></td>
+<td><code>RUN_ID</code></td>
+<td>—</td>
+<td>Resume a paused/stopped run; the objective and state are loaded from its <code>run.json</code> (no objective argument).</td>
+</tr>
+<tr>
+<td><code>--decision-mode</code></td>
+<td><code>wait</code>|<code>exit</code></td>
+<td><code>wait</code></td>
+<td>On a blocking decision: <code>wait</code> polls the decision file; <code>exit</code> stops the run for a later <code>--resume</code>.</td>
+</tr>
+<tr>
+<td><code>--decision-timeout</code></td>
+<td><code>SECONDS</code></td>
+<td><em>no limit</em></td>
+<td>Max seconds to wait on a blocking decision (<code>wait</code> mode).</td>
+</tr>
+<tr>
+<td><code>--decision-poll</code></td>
+<td><code>SECONDS</code></td>
+<td><code>30</code></td>
+<td>Seconds between polls while waiting on a decision (the <code>decision_wait_poll</code> setting).</td>
+</tr>
+<tr>
+<td><code>--no-decisions</code></td>
+<td>—</td>
+<td>decisions on</td>
+<td>Don't give the robot the <code>request_decision</code> tool.</td>
+</tr>
+<tr>
 <td><code>--local-guards</code></td>
 <td>—</td>
 <td>off</td>
@@ -1727,6 +1781,12 @@ the objective from standard input — handy for long objectives:</p>
 </table>
 <p>See the <a href="../settings/">Settings Reference</a> for the full meaning of each option and
 its config-file / environment-variable equivalents.</p>
+<p>Option names must be spelled out where a prefix is ambiguous — <code>--verify</code> is
+rejected (<code>--verify-command</code> vs <code>--verify-timeout</code>).</p>
+<h2 id="the-decisions-subcommand">The <code>decisions</code> subcommand<a class="headerlink" href="#the-decisions-subcommand" title="Permanent link">&para;</a></h2>
+<p><code>robot-to decisions [RUN_ID]</code> lists the pending decisions (and the resolved ones
+not yet consumed) for a run, with each decision file's path. Without <code>RUN_ID</code> it
+uses the most recent run under the configured <code>run_dir</code>.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <p>A bounded run with a verification gate:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>robot-to<span class="w"> </span><span class="s2">"Fix the failing parser tests"</span><span class="w"> </span><span class="se">\</span>
@@ -1745,9 +1805,9 @@ its config-file / environment-variable equivalents.</p>
 </span></code></pre></div>
 <p>A scored run that descends toward a measured target (see <a href="../../concepts/evals/">Evals</a>):</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>robot-to<span class="w"> </span><span class="s2">"Raise parser coverage to 90%"</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--verify<span class="w">  </span><span class="s2">"bundle exec rake test"</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--verify-command<span class="w"> </span><span class="s2">"bundle exec rake test"</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--measure<span class="w"> </span><span class="s2">"bundle exec rake coverage"</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--target<span class="w">  </span><span class="m">90</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--target<span class="w"> </span><span class="m">90</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>--protect-path<span class="w"> </span>test/coverage_helper.rb
 </span></code></pre></div>
 <p>A judged prose run that ends on plateau instead of a target:</p>

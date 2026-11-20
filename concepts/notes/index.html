@@ -1580,7 +1580,8 @@ orchestrator maintains and injects into every iteration's system prompt.</p>
 <h2 id="who-writes-it-who-reads-it">Who writes it, who reads it<a class="headerlink" href="#who-writes-it-who-reads-it" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>The orchestrator writes it.</strong> After every iteration it appends an entry
-  (success, failure, verify-failure, or error).</li>
+  (success, failure, verify-failure, no-improvement, error, or a raised
+  decision).</li>
 <li><strong>The robot reads it.</strong> The <code>PromptBuilder</code> embeds the current notes into the
   system prompt under a "Prior Work" section.</li>
 <li><strong>The robot must not edit it.</strong> The prompt explicitly tells the robot that
@@ -1651,6 +1652,11 @@ directly if it has file tools.</p>
 <td><code>[ERROR]</code></td>
 <td>An exception was raised during the iteration</td>
 <td>error class and message</td>
+</tr>
+<tr>
+<td><code>[DECISION]</code></td>
+<td>The robot raised a decision with <code>request_decision</code></td>
+<td>question, blocking yes/no, recommendation, decision file path</td>
 </tr>
 </tbody>
 </table>

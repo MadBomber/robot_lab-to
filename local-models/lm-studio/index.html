@@ -1635,7 +1635,8 @@ configure the base URL:</p>
 </span></code></pre></div>
 <p>No API key is needed — LM Studio's local server does not require one.</p>
 <h2 id="4-run">4. Run<a class="headerlink" href="#4-run" title="Permanent link">&para;</a></h2>
-<p>From the launcher above, or from the CLI:</p>
+<p>From the launcher above, or from the CLI (which loads the <code>:lms</code> provider gem
+itself when it sees <code>--provider lms</code>):</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>robot-to<span class="w"> </span><span class="s2">"Add a greet(name) method in greeter.rb"</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--provider<span class="w"> </span>lms<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--model<span class="w"> </span>qwen/qwen3.8-27b<span class="w"> </span><span class="se">\</span>

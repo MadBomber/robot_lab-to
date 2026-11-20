@@ -1569,10 +1569,12 @@ gated:</p>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>                                                 ▼
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>                                              ROLLBACK  (recorded as [VERIFY FAILED])
 </span></code></pre></div>
-<p>If verification fails, the working tree is reset with <code>git reset --hard</code>, the
-iteration counts as a failure (incrementing the consecutive-failure counter), and
-the verification output is written to <code>notes.md</code> so the next robot can see <em>why</em>
-it failed.</p>
+<p>If verification fails, the failure output is first handed back to the <strong>same</strong>
+robot (chat and working tree intact) for up to <code>--max-verify-repairs</code> repair
+attempts (default 2), re-running the command after each. If it is still failing,
+the working tree is reset with <code>git reset --hard</code>, the iteration counts as a
+failure (incrementing the consecutive-failure counter), and the verification
+output is written to <code>notes.md</code> so the next robot can see <em>why</em> it failed.</p>
 <h2 id="how-it-runs">How it runs<a class="headerlink" href="#how-it-runs" title="Permanent link">&para;</a></h2>
 <p>The <code>Verifier</code>:</p>
 <ul>

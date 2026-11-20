@@ -1576,8 +1576,8 @@ adds two things:</p>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span>--local-guards<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">  </span>--max-iterations<span class="w"> </span><span class="m">5</span>
 </span></code></pre></div>
-<p>The full setup — including requiring the ruby_llm-providers-lms gem — is on
-the <a href="lm-studio/">LM Studio Setup</a> page.</p>
+<p>The full setup — including configuring the ruby_llm-providers-lms gem from
+Ruby — is on the <a href="lm-studio/">LM Studio Setup</a> page.</p>
 <h2 id="why-these-flags">Why these flags<a class="headerlink" href="#why-these-flags" title="Permanent link">&para;</a></h2>
 <p>Driving a local model end-to-end takes two settings. Each exists because of a
 concrete limitation discovered in testing:</p>
@@ -1611,7 +1611,7 @@ frontier model forgives a sloppy tool loop; a 9–35B local model does not.</p>
 <li><strong><code>write-guard</code></strong> — refuses <code>write</code> on a file that already exists (small models
   rewrite whole files and destroy content); redirects to <code>edit</code>.</li>
 <li><strong><code>read-before-edit</code></strong> — refuses <code>edit</code> on a file the model hasn't read this run,
-  so <code>oldText</code> reflects the real contents.</li>
+  so <code>old_text</code> reflects the real contents.</li>
 <li><strong><code>checkpoint</code></strong> — snapshots a file before the first Write/Edit, for fine-grained
   recovery within an iteration.</li>
 <li><strong><code>quality-monitor</code></strong> — detects a model spinning on the same tool call and stops

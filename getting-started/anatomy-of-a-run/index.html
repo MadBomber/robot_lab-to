@@ -1609,10 +1609,10 @@ untouched.</p>
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>feat(scope): &lt;result summary&gt;
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>chore: &lt;result summary&gt;
 </span></code></pre></div>
-<p>The <code>type</code> and <code>scope</code> come from the robot's submitted result (defaulting to
-<code>chore</code>). See <a href="../../configuration/settings/#commit_format">Commit conventions</a>.</p>
+<p>The submitted result carries no <code>type</code> or <code>scope</code>, so the type is always
+<code>chore</code>. See <a href="../../configuration/settings/#commit_format">Commit conventions</a>.</p>
 </div>
 </div>
 </div>
@@ -1624,13 +1624,19 @@ to <code>.git/info/exclude</code> automatically):</p>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    └── 20260623-144554-3e5c27/
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        ├── notes.md         # cross-iteration memory (human-readable)
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>        ├── run.log          # JSONL event log (machine-readable)
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        └── checkpoints/     # pre-edit file snapshots (local_guards only)
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        ├── run.json         # serialized run state (enables --resume)
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>        ├── decisions/       # decision files (d-*.md) the robot raised
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>        └── checkpoints/     # pre-edit file snapshots (local_guards only)
 </span></code></pre></div>
 <ul>
 <li><strong><code>notes.md</code></strong> — written by the orchestrator after each iteration; read by the
   robot at the start of the next. See <a href="../../concepts/notes/">Cross-Iteration Memory</a>.</li>
 <li><strong><code>run.log</code></strong> — one JSON object per line, one per lifecycle event. See
   <a href="../../concepts/run-state/">Run State &amp; Event Log</a>.</li>
+<li><strong><code>run.json</code></strong> — the run's counters, branch, and paths, rewritten after every
+  iteration so <code>robot-to --resume &lt;run_id&gt;</code> can continue it.</li>
+<li><strong><code>decisions/</code></strong> — one markdown file per decision the robot raised with
+  <code>request_decision</code>; list them with <code>robot-to decisions</code>.</li>
 <li><strong><code>checkpoints/</code></strong> — first-write-wins file snapshots taken before a Write/Edit,
   created only when <code>--local-guards</code> is active. See <a href="../../local-models/guardrails/">Guardrails</a>.</li>
 </ul>
@@ -1660,17 +1666,24 @@ page's simpler mental model.</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>robot-to complete — claude-sonnet-4-6 — 4m 12s
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>Branch: robot-to/migrate-to-rspec-20260623-144554
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>  Iterations:   8   (6 committed, 2 rolled back)
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>  Changes:      +312 / -47 across 14 files
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>  Tokens:       1,204,883 in / 38,902 out
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>Run state:  .robot_lab_to/runs/20260623-144554-3e5c27/
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>Next steps:
-</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>  git log robot-to/migrate-to-rspec-20260623-144554
-</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>  git diff 362b8d9..HEAD
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>Iterations:      8 total  (6 good / 2 failed)
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>Tokens:          1,243,785  (1,204,883 in / 38,902 out)
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>Commits:         6
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>Changes:         +312 / -47 lines across 14 files
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>Notes:   .robot_lab_to/runs/20260623-144554-3e5c27/notes.md
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>Log:     .robot_lab_to/runs/20260623-144554-3e5c27/run.log
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>Next steps:
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>  git log --oneline &lt;base_commit&gt;..HEAD
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>  git diff --stat &lt;base_commit&gt;..HEAD
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>  gh pr create
 </span></code></pre></div>
-<p>If the run was stopped early, the header shows the reason (e.g. <code>max iterations
-reached (8)</code>, <code>4 consecutive failures</code>, or <code>stop condition met: ...</code>).</p>
+<p><code>&lt;base_commit&gt;</code> is printed as the full SHA; the "Next steps" block appears only
+when at least one commit was made. If the run was stopped early, the header reads
+<code>robot-to stopped — &lt;model&gt; — &lt;elapsed&gt;</code> and the <code>Branch:</code> line is replaced by a
+<code>Reason:</code> line (e.g. <code>max iterations reached (8)</code>, <code>4 consecutive failures</code>, or
+<code>stop condition met: ...</code>).</p>
 <hr />
 <p>Next: the full lifecycle in <a href="../../concepts/iteration-loop/">The Iteration Loop</a>.</p>
 

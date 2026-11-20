@@ -1314,6 +1314,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#decisions-human-in-the-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decisions (human-in-the-loop)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Decisions (human-in-the-loop)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#decisions_enabled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        decisions_enabled
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decision_mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        decision_mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decision_wait_poll" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        decision_wait_poll
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decision_timeout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        decision_timeout
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#git-output" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2130,6 +2191,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#decisions-human-in-the-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decisions (human-in-the-loop)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Decisions (human-in-the-loop)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#decisions_enabled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        decisions_enabled
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decision_mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        decision_mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decision_wait_poll" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        decision_wait_poll
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decision_timeout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        decision_timeout
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#git-output" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2261,10 +2383,11 @@
 
 
 <h1 id="settings-reference">Settings Reference<a class="headerlink" href="#settings-reference" title="Permanent link">&para;</a></h1>
-<p>Every <code>robot_lab-to</code> setting, its default, and what it controls. Each setting can
-be supplied via the user config file, an <code>ROBOT_LAB_TO_*</code> environment variable, a
-CLI flag, or a <code>RobotLab::To.run</code> keyword argument (see
-<a href="../#the-cascade">the cascade</a>).</p>
+<p>Every <code>robot_lab-to</code> setting, its default, and what it controls. Every setting is
+a <code>RobotLab::To.run</code> keyword argument; settings with a bundled default can also be
+supplied via a config file or an <code>ROBOT_LAB_TO_*</code> environment variable, and those
+with a <strong>CLI</strong> line via a flag (see <a href="../#the-cascade">the cascade</a>). Settings
+marked CLI-only have no config-file or environment-variable form.</p>
 <h2 id="model-provider">Model &amp; provider<a class="headerlink" href="#model-provider" title="Permanent link">&para;</a></h2>
 <h3 id="provider"><code>provider</code><a class="headerlink" href="#provider" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2272,8 +2395,9 @@ CLI flag, or a <code>RobotLab::To.run</code> keyword argument (see
 <li><strong>CLI:</strong> <code>--provider NAME</code></li>
 </ul>
 <p>The LLM provider, passed through to RobotLab / RubyLLM. Use <code>anthropic</code>,
-<code>openai</code>, etc. For <strong>local LM Studio models</strong>, require the
-ruby_llm-providers-lms gem and set this to <code>lms</code> — see
+<code>openai</code>, etc. For <strong>local LM Studio models</strong>, set this to <code>lms</code> (the
+ruby_llm-providers-lms gem is a <code>robot_lab</code> dependency and is loaded on
+demand) — see
 <a href="../../local-models/lm-studio/">LM Studio Setup</a>.</p>
 <h3 id="model"><code>model</code><a class="headerlink" href="#model" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2343,7 +2467,7 @@ counting the iteration as a failure.</p>
 </ul>
 <p>How many consecutive <em>errors</em> (exceptions, e.g. transient API failures) to retry
 before aborting. Retries use an interruptible exponential backoff
-(<code>60 × 2ⁿ</code> seconds).</p>
+(<code>60 × 2ⁿ⁻¹</code> seconds: 60, 120, 240, …).</p>
 <h3 id="max_tool_rounds"><code>max_tool_rounds</code><a class="headerlink" href="#max_tool_rounds" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Default:</strong> <code>100</code></li>
@@ -2461,6 +2585,35 @@ the robot freely overwrite a file it is iteratively refining — WriteGuard
 otherwise refuses <code>write</code> on a file that already exists and redirects to <code>edit</code>,
 which is unhelpful for a robot rewriting a whole prose draft each pass. See
 <a href="../../local-models/guardrails/">Guardrails</a>.</p>
+<h2 id="decisions-human-in-the-loop">Decisions (human-in-the-loop)<a class="headerlink" href="#decisions-human-in-the-loop" title="Permanent link">&para;</a></h2>
+<h3 id="decisions_enabled"><code>decisions_enabled</code><a class="headerlink" href="#decisions_enabled" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Default:</strong> <code>true</code></li>
+<li><strong>CLI:</strong> <code>--no-decisions</code> to disable</li>
+</ul>
+<p>Give the robot the <code>request_decision</code> tool so it can escalate a choice it should
+not make alone as a decision file under <code>runs/&lt;run_id&gt;/decisions/</code>.</p>
+<h3 id="decision_mode"><code>decision_mode</code><a class="headerlink" href="#decision_mode" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Default:</strong> <code>wait</code></li>
+<li><strong>CLI:</strong> <code>--decision-mode wait|exit</code></li>
+</ul>
+<p>What a pending <strong>blocking</strong> decision does to the loop: <code>wait</code> polls the decision
+file until it is resolved; <code>exit</code> stops the run so it can be continued later with
+<code>robot-to --resume &lt;run_id&gt;</code>.</p>
+<h3 id="decision_wait_poll"><code>decision_wait_poll</code><a class="headerlink" href="#decision_wait_poll" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Default:</strong> <code>30</code> (seconds)</li>
+<li><strong>CLI:</strong> <code>--decision-poll SECONDS</code></li>
+</ul>
+<p>Seconds between polls of the decision files in <code>wait</code> mode.</p>
+<h3 id="decision_timeout"><code>decision_timeout</code><a class="headerlink" href="#decision_timeout" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Default:</strong> <em>(unset — wait indefinitely)</em></li>
+<li><strong>CLI:</strong> <code>--decision-timeout SECONDS</code></li>
+</ul>
+<p>Maximum seconds to wait on a blocking decision in <code>wait</code> mode before the run
+stops with <code>awaiting human decision (timed out after Ns)</code>.</p>
 <h2 id="git-output">Git &amp; output<a class="headerlink" href="#git-output" title="Permanent link">&para;</a></h2>
 <h3 id="commit_format"><code>commit_format</code><a class="headerlink" href="#commit_format" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2474,8 +2627,8 @@ which is unhelpful for a robot rewriting a whole prose draft each pass. See
 <p><code>robot-to &lt;iteration&gt;: &lt;summary&gt;</code></p>
 </div>
 <div class="tabbed-block">
-<p><code>&lt;type&gt;(&lt;scope&gt;): &lt;summary&gt;</code> — <code>type</code>/<code>scope</code> come from the robot's result
-(defaulting to <code>chore</code>). Follows <a href="https://www.conventionalcommits.org/">Conventional Commits</a>.</p>
+<p><code>chore: &lt;summary&gt;</code> — the submitted result carries no <code>type</code>/<code>scope</code>, so the
+type is always <code>chore</code>. Follows <a href="https://www.conventionalcommits.org/">Conventional Commits</a>.</p>
 </div>
 </div>
 </div>

@@ -1779,9 +1779,19 @@ single-purpose collaborator it drives.</p>
 <td>Mutable run-state value object (iteration, counters, tokens, timing, paths, <code>last_score_value</code>, <code>iterations_since_improvement</code>).</td>
 </tr>
 <tr>
-<td><code>SubmitResult</code></td>
+<td><code>Tools::SubmitResult</code></td>
 <td><code>tools/submit_result.rb</code></td>
-<td>Tool the robot calls to report its result.</td>
+<td>Tool (<code>submit_iteration_result</code>) the robot calls to report its result.</td>
+</tr>
+<tr>
+<td><code>Tools::RequestDecision</code></td>
+<td><code>tools/request_decision.rb</code></td>
+<td>Tool (<code>request_decision</code>) the robot calls to escalate a choice to a human.</td>
+</tr>
+<tr>
+<td><code>Decision</code> / <code>DecisionManager</code></td>
+<td><code>decision.rb</code>, <code>decision_manager.rb</code></td>
+<td>Value object for one decision file; reads/writes/queries the files under <code>decisions/</code>.</td>
 </tr>
 <tr>
 <td><code>IterationResult</code></td>
@@ -1826,7 +1836,7 @@ single-purpose collaborator it drives.</p>
 <tr>
 <td><code>AtomicFile</code></td>
 <td><code>atomic_file.rb</code></td>
-<td>Atomic writes/appends for <code>notes.md</code>.</td>
+<td>Atomic writes/appends for <code>notes.md</code>, <code>run.json</code>, and decision files.</td>
 </tr>
 </tbody>
 </table>

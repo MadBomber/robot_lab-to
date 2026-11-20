@@ -1724,7 +1724,8 @@ injected into the system prompt. The prompt (built by <code>PromptBuilder</code>
 <li>the requirement to call <code>submit_iteration_result</code>,</li>
 <li>optional repair and stop-when sections.</li>
 </ul>
-<p>The robot is given the <code>submit_iteration_result</code> tool. With <code>--local-guards</code>, it
+<p>The robot is given the <code>submit_iteration_result</code> tool (and <code>request_decision</code>,
+unless <code>--no-decisions</code>). With <code>--local-guards</code>, it
 also receives built-in file tools (<code>read</code>, <code>write</code>, <code>edit</code>, <code>bash</code>) and the
 guardrail hooks. See <a href="../../local-models/tools/">Built-in Tools</a>. If the
 configured eval (or <code>--protect-path</code>) has protected paths, <code>Guards::GraderLock</code>
@@ -1766,7 +1767,7 @@ calls <code>submit_iteration_result</code> with:</p>
 <h3 id="3-handle-thinks-but-doesnt-act">3. Handle "thinks but doesn't act"<a class="headerlink" href="#3-handle-thinks-but-doesnt-act" title="Permanent link">&para;</a></h3>
 <p>If the robot ends its turn <strong>without</strong> calling <code>submit_iteration_result</code>, the
 orchestrator re-prompts the <em>same</em> robot (preserving its chat) up to
-<code>--max-submit-nudges</code> times, asking only for the result. This recovers the common
+<code>max_submit_nudges</code> times (a setting, default 1 — no CLI flag), asking only for the result. This recovers the common
 degenerate case where a model does work but forgets the final report. If it still
 doesn't submit, the iteration is treated as a failure.</p>
 <h3 id="4-decide-commit-or-roll-back">4. Decide: commit or roll back<a class="headerlink" href="#4-decide-commit-or-roll-back" title="Permanent link">&para;</a></h3>
@@ -1811,8 +1812,9 @@ hit their limits; if the eval reports <code>met_target</code>; or if the robot s
 <ul>
 <li><strong>Authentication errors</strong> are permanent — the run aborts immediately.</li>
 <li>Other errors roll back the tree, record the error in notes, and <strong>retry</strong> after
-  an interruptible exponential backoff (<code>60 × 2ⁿ</code> seconds), up to <code>--max-retries</code>
-  consecutive errors.</li>
+  an interruptible exponential backoff (<code>60 × 2ⁿ⁻¹</code> seconds: 60, 120, 240, …), up
+  to <code>max_retries</code> consecutive errors (a setting, default 2 — no CLI flag). One
+  more error after that ends the run as a fatal error.</li>
 </ul>
 <p>A <code>SIGINT</code>/<code>SIGTERM</code> (Ctrl-C) requests a graceful stop: the in-flight robot is
 interrupted, the loop exits cleanly, and the exit summary still prints.</p>

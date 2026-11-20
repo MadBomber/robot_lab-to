@@ -970,10 +970,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-environment-variables" class="md-nav__link">
+  <a href="#3-project-config-file" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Environment variables
+        3. Project config file
       
     </span>
   </a>
@@ -981,10 +981,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-cli-flags-torun-arguments" class="md-nav__link">
+  <a href="#4-environment-variables" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. CLI flags / To.run arguments
+        4. Environment variables
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-cli-flags-torun-arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. CLI flags / To.run arguments
       
     </span>
   </a>
@@ -1470,10 +1481,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-environment-variables" class="md-nav__link">
+  <a href="#3-project-config-file" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Environment variables
+        3. Project config file
       
     </span>
   </a>
@@ -1481,10 +1492,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-cli-flags-torun-arguments" class="md-nav__link">
+  <a href="#4-environment-variables" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. CLI flags / To.run arguments
+        4. Environment variables
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-cli-flags-torun-arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. CLI flags / To.run arguments
       
     </span>
   </a>
@@ -1579,9 +1601,10 @@ defaults; higher layers override them.</p>
 <h2 id="the-cascade">The cascade<a class="headerlink" href="#the-cascade" title="Permanent link">&para;</a></h2>
 <p>From lowest to highest precedence:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>1. Bundled defaults        lib/robot_lab/to/config/defaults.yml
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>2. User config file        ~/.config/robot_lab/to.yml
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>3. Environment variables   ROBOT_LAB_TO_*
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>4. CLI flags / To.run args  (highest — always wins)
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>2. User config file        ~/.config/robot_lab_to/robot_lab_to.yml
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>3. Project config file     ./config/robot_lab_to.yml
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>4. Environment variables   ROBOT_LAB_TO_*
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>5. CLI flags / To.run args  (highest — always wins)
 </span></code></pre></div>
 <p>A value set at a higher layer overrides the same value from any lower layer.</p>
 <h2 id="1-bundled-defaults">1. Bundled defaults<a class="headerlink" href="#1-bundled-defaults" title="Permanent link">&para;</a></h2>
@@ -1593,33 +1616,44 @@ defaults; higher layers override them.</p>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nt">max_consecutive_failures</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">max_retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nt">max_submit_nudges</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="nt">verify_timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">600</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="nt">commit_format</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="nt">run_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.robot_lab_to</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="nt">local_guards</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">  </span><span class="nt">stream</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">  </span><span class="nt">debug</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="nt">max_verify_repairs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="nt">verify_timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">600</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="nt">commit_format</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="nt">run_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.robot_lab_to</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">  </span><span class="nt">local_guards</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">  </span><span class="nt">stream</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">  </span><span class="nt">debug</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">  </span><span class="nt">decisions_enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">  </span><span class="nt">decision_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wait</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">  </span><span class="nt">decision_wait_poll</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">  </span><span class="nt">decision_timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
 </span></code></pre></div>
 <h2 id="2-user-config-file">2. User config file<a class="headerlink" href="#2-user-config-file" title="Permanent link">&para;</a></h2>
-<p>Create <code>~/.config/robot_lab/to.yml</code> to set your own defaults — for example, to
-always use a local model:</p>
+<p>Create <code>~/.config/robot_lab_to/robot_lab_to.yml</code> (or
+<code>$XDG_CONFIG_HOME/robot_lab_to/robot_lab_to.yml</code>) to set your own defaults — for
+example, to always use a local model:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lms</span><span class="w">             </span><span class="c1"># LM Studio via the ruby_llm-providers-lms gem</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">qwen/qwen3.8-27b</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nt">local_guards</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nt">max_consecutive_failures</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
 </span></code></pre></div>
-<p>These apply to every <code>robot-to</code> run unless overridden by an env var or CLI flag.</p>
-<h2 id="3-environment-variables">3. Environment variables<a class="headerlink" href="#3-environment-variables" title="Permanent link">&para;</a></h2>
-<p>Every setting can be set via an environment variable prefixed with
-<code>ROBOT_LAB_TO_</code>. Nested keys use a double underscore (rare here, since the config
+<p>These apply to every <code>robot-to</code> run unless overridden by a higher layer. Only the
+keys shown in the bundled defaults are read from a config file.</p>
+<h2 id="3-project-config-file">3. Project config file<a class="headerlink" href="#3-project-config-file" title="Permanent link">&para;</a></h2>
+<p>A <code>./config/robot_lab_to.yml</code> in the directory you run <code>robot-to</code> from is read the
+same way and overrides the user config file.</p>
+<h2 id="4-environment-variables">4. Environment variables<a class="headerlink" href="#4-environment-variables" title="Permanent link">&para;</a></h2>
+<p>Every setting in the bundled defaults can be set via an environment variable
+prefixed with <code>ROBOT_LAB_TO_</code>. Nested keys use a double underscore (rare here, since the config
 is flat):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_TO_MODEL</span><span class="o">=</span><span class="s2">"gpt-oss:20b"</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_TO_LOCAL_GUARDS</span><span class="o">=</span><span class="nb">true</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_TO_MAX_CONSECUTIVE_FAILURES</span><span class="o">=</span><span class="m">4</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_TO_PROVIDER</span><span class="o">=</span>lms
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_TO_MODEL</span><span class="o">=</span><span class="s2">"qwen/qwen3.8-27b"</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_TO_LOCAL_GUARDS</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ROBOT_LAB_TO_MAX_CONSECUTIVE_FAILURES</span><span class="o">=</span><span class="m">4</span>
 </span></code></pre></div>
 <p>Provider <strong>API keys</strong> are <em>not</em> <code>robot_lab-to</code> settings — they are read by the
 underlying provider (e.g. <code>ANTHROPIC_API_KEY</code>, <code>OPENAI_API_KEY</code>).</p>
-<h2 id="4-cli-flags-torun-arguments">4. CLI flags / <code>To.run</code> arguments<a class="headerlink" href="#4-cli-flags-torun-arguments" title="Permanent link">&para;</a></h2>
+<h2 id="5-cli-flags-torun-arguments">5. CLI flags / <code>To.run</code> arguments<a class="headerlink" href="#5-cli-flags-torun-arguments" title="Permanent link">&para;</a></h2>
 <p>The highest-precedence layer. Anything passed on the command line (or as a keyword
 to <code>RobotLab::To.run</code>) wins over all other layers:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>robot-to<span class="w"> </span><span class="s2">"..."</span><span class="w"> </span>--model<span class="w"> </span>claude-sonnet-4-6<span class="w"> </span>--max-iterations<span class="w"> </span><span class="m">20</span>

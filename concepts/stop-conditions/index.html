@@ -1708,7 +1708,7 @@ Five independent conditions can end a run; whichever trips first wins.</p>
 <td>Plateau</td>
 <td><code>--stop-on-plateau N</code></td>
 <td>after each iteration</td>
-<td>Abort after <code>N</code> iterations with no committed improvement (eval-gated runs only).</td>
+<td>Abort after <code>N</code> iterations in a row with no committed improvement.</td>
 </tr>
 <tr>
 <td>Stop-when</td>
@@ -1742,18 +1742,20 @@ limit.</p>
 </ul>
 <h3 id="consecutive-failures">Consecutive failures<a class="headerlink" href="#consecutive-failures" title="Permanent link">&para;</a></h3>
 <p>Resets to zero on every successful, committed iteration; increments on every
-failure, verify-failure, or commit-failure. This is the safety net that stops a
+failure, verify-failure, commit-failure, or error. This is the safety net that stops a
 run that is going nowhere. The default is <strong>3</strong>.</p>
 <h3 id="plateau-no-improvement">Plateau (no improvement)<a class="headerlink" href="#plateau-no-improvement" title="Permanent link">&para;</a></h3>
-<p><code>--stop-on-plateau N</code> aborts once <code>N</code> consecutive iterations pass the eval's gate
-but fail to beat the parent commit's score (<code>iterations_since_improvement &gt;= N</code>).
-It resets to zero on every committed improvement.</p>
+<p><code>--stop-on-plateau N</code> aborts once <code>N</code> consecutive iterations end without a
+committed improvement (<code>iterations_since_improvement &gt;= N</code>). Every
+non-committing outcome counts — a gate-passing change that didn't beat the parent
+commit's score, but also a reported failure, a gate failure, or an error. It
+resets to zero on every committed improvement.</p>
 <p>This is the <strong>primary terminator for <code>Evals::Prose</code></strong>, which never sets a
 measurable <code>met_target</code> — a pairwise judge has no absolute bar to reach, only
 "better than last time." It's distinct from <code>--max-consecutive-failures</code>:
-plateau counts <em>valid, gate-passing work that just wasn't better</em> (including
+plateau also counts <em>valid, gate-passing work that just wasn't better</em> (including
 "same" verdicts, which are common and normal for prose), while consecutive
-failures counts the robot being genuinely broken (errors, gate failures, no
+failures counts only the robot being genuinely broken (errors, gate failures, no
 submit). Conflating the two would throttle legitimate exploration.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>robot-to<span class="w"> </span><span class="s2">"Write an opinionated guide to VSM"</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span>--eval<span class="w"> </span>prose<span class="w"> </span>--spec<span class="w"> </span>outline.md<span class="w"> </span><span class="se">\</span>
@@ -1778,13 +1780,14 @@ exits, and the exit summary still prints. The current iteration's incomplete wor
 is rolled back.</p>
 <h2 id="what-youll-see">What you'll see<a class="headerlink" href="#what-youll-see" title="Permanent link">&para;</a></h2>
 <p>The exit summary header reports the reason:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>robot-to stopped — claude-sonnet-4-6 — 41m 08s
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>robot-to stopped — claude-sonnet-4-6 — 41m 8s
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Reason: max iterations reached (30)
 </span></code></pre></div>
 <p>Possible reasons include <code>max iterations reached (N)</code>, <code>max tokens reached (N)</code>,
 <code>N consecutive failures</code>, <code>plateau: N iterations without improvement</code>,
-<code>target met: &lt;detail&gt;</code>, <code>stop condition met: &lt;text&gt;</code>, a permanent error, or a
-fatal error.</p>
+<code>target met: &lt;detail&gt;</code>, <code>stop condition met: &lt;text&gt;</code>, <code>awaiting human decision …</code>
+(a blocking decision in <code>--decision-mode exit</code>, or a <code>--decision-timeout</code>),
+<code>permanent error: …</code>, or <code>fatal: …</code>.</p>
 <hr />
 <p>Next: <a href="../verification/">Verification Gate</a>.</p>
 
