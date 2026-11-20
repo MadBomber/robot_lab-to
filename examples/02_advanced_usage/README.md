@@ -11,7 +11,7 @@ autonomously implements the plan behind a real **quality gate**.
 │  (AskUser tool)   │   │  acceptance      │ spec │  passes AND the quality gate  │
 │                   │   │  test suite      │      │  is clean                     │
 └───────────────────┘   └──────────────────┘      └───────────────────────────────┘
-        gpt-5.5 (cloud)  ·  robot_lab Network          qwen3.6:latest (local Ollama)
+        gpt-5.5 (cloud)  ·  robot_lab Network          qwen/qwen3.8-27b (local LM Studio)
 ```
 
 This is the natural progression from
@@ -25,11 +25,11 @@ the implementer) writes the spec, so the implementer still can't game it.
 |-------|-------------------|-------|
 | 1 — Ideate | `AskUser` tool, network task, templated robot | OpenAI `gpt-5.5` |
 | 2 — Plan | sequential network `task … depends_on`, data hand-off, file tools | OpenAI `gpt-5.5` |
-| 3 — Implement | `RobotLab::To.run` autonomous loop, verify gate, `stop_when`, guardrails | local Ollama `qwen3.6:latest` |
+| 3 — Implement | `RobotLab::To.run` autonomous loop, verify gate, `stop_when`, guardrails | local LM Studio `qwen/qwen3.8-27b` |
 
 The reasoning phases run on a capable cloud model; the implementation loop runs
 fully local. Because both use RubyLLM's `:openai` provider but different endpoints
-(`api.openai.com` vs Ollama's `/v1`), and `openai_api_base` is global, the example
+(`api.openai.com` vs LM Studio's `/v1`), and `openai_api_base` is global, the example
 toggles it between the sequential phases.
 
 ## The quality gate
@@ -55,9 +55,11 @@ flog + flay) into an autonomous gate. Tune the thresholds with `FLOG_MAX` /
 
 ```bash
 export OPENAI_API_KEY="sk-..."     # ideation + planning (gpt-5.5)
-ollama serve &                     # implementation (local)
-ollama pull qwen3.6:latest
 ```
+
+`common.rb` starts the LM Studio server and loads the build model itself if
+they aren't already running/loaded, so there's nothing to start by hand for
+the implementation phase.
 
 ## Run it
 
@@ -75,8 +77,9 @@ acceptance suite and the local model implement it.
 |----------|---------|-------------|
 | `RLTO_REASON_MODEL` | `gpt-5.5` | model for ideate + plan |
 | `RLTO_REASON_PROVIDER` | `openai` | provider for ideate + plan |
-| `RLTO_BUILD_MODEL` | `qwen3.6:latest` | model for implementation |
-| `OLLAMA_BASE` | `http://localhost:11434/v1` | Ollama OpenAI-compatible endpoint |
+| `RLTO_BUILD_PROVIDER` | `lms` (falls back to `RLTO_PROVIDER`) | provider label for implementation; `lms` resolves to `:openai` routed at `LMS_BASE_URL` |
+| `RLTO_BUILD_MODEL` | `qwen/qwen3.8-27b` (falls back to `RLTO_MODEL`) | model for implementation |
+| `LMS_BASE_URL` | `http://localhost:1234/v1` | LM Studio OpenAI-compatible endpoint |
 | `FLOG_MAX` | `25` | per-method complexity ceiling |
 | `FLAY_MAX` | `40` | duplication-mass ceiling |
 

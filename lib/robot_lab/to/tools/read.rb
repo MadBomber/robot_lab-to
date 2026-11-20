@@ -14,9 +14,9 @@ module RobotLab
           start line) and limit (max lines). Always read a file before editing it.
         DESC
 
-        param :path, type: "string", desc: "Path to the file to read"
-        param :offset, type: "integer", desc: "1-based first line to return", required: false
-        param :limit, type: "integer", desc: "Maximum number of lines to return", required: false
+        parameter :path, type: "string", description: "Path to the file to read"
+        parameter :offset, type: "integer", description: "1-based first line to return", required: false
+        parameter :limit, type: "integer", description: "Maximum number of lines to return", required: false
 
         def execute(path:, offset: nil, limit: nil, **)
           resolved = File.expand_path(path, Dir.pwd)

@@ -103,10 +103,10 @@ robot actually exposes the submit tool, guarding against that class of mistake.
 
 ### Streaming is optional
 
-By default the robot streams, enabling per-chunk token accounting and mid-stream
-budget enforcement. Local Ollama models run non-streaming (`stream: false`), so
-tokens are accounted from each iteration's result and the budget is enforced at
-iteration boundaries. See [Ollama Setup](../local-models/ollama.md#streaming-and-tool-calls).
+By default the robot streams, enabling per-chunk token accounting and
+mid-stream budget enforcement. Non-streaming runs (`stream: false`) account
+tokens from each iteration's result and enforce the budget at iteration
+boundaries. See [LM Studio Setup](../local-models/lm-studio.md).
 
 ### Interruptible by design
 

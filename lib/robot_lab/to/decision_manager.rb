@@ -40,6 +40,11 @@ module RobotLab
       end
 
       # Persist a decision the robot raised. Returns the parsed Decision.
+      # :reek:BooleanParameter -- blocking is stored data (front matter), not a
+      # behavior switch.
+      # :reek:ControlParameter -- the ternary only coerces blocking to true/false.
+      # :reek:LongParameterList { max_params: 6 } -- one field per front-matter
+      # attribute; a hash would just move the same six names elsewhere.
       def record(question:, situation: "", options: [], recommendation: "", blocking: false, iteration: 0)
         id   = generate_id
         path = @dir.join("#{id}.md")
@@ -57,6 +62,7 @@ module RobotLab
       def pending       = all.select(&:pending?)
       # resolved but not yet closed
       def resolved_open = all.select(&:resolved?)
+      # :reek:FeatureEnvy -- filtering by a Decision's own predicates.
       def blocking_pending = all.select { |d| d.pending? && d.blocking? }
       def blocking_pending? = blocking_pending.any?
 
@@ -66,6 +72,7 @@ module RobotLab
       # Mark a resolved decision closed: its resolution has been delivered to a
       # robot and committed, so it should no longer be re-injected. Flips only
       # the status line, preserving whatever the human wrote in the body.
+      # :reek:FeatureEnvy -- reading/rewriting the decision's own file.
       def close(decision)
         raw = File.read(decision.path)
         AtomicFile.write(decision.path, flip_status(raw, "closed"))
@@ -82,8 +89,10 @@ module RobotLab
         raw.sub(/^status:.*$/, "status: #{status}")
       end
 
+      # :reek:LongParameterList { max_params: 7 } -- one field per front-matter
+      # attribute, mirroring #record.
       def render_new(id:, question:, situation:, options:, recommendation:, blocking:, iteration:)
-        options_md = options.empty? ? "(none provided)\n" : options.each_with_index.map { |o, i| "#{i + 1}. #{o}" }.join("\n") + "\n"
+        options_md = options.empty? ? "(none provided)\n" : options.each_with_index.map { |opt, i| "#{i + 1}. #{opt}" }.join("\n") + "\n"
         # Build the front matter with YAML.dump so question/recommendation are
         # escaped correctly (they can contain colons, quotes, etc.).
         front = {
@@ -116,6 +125,7 @@ module RobotLab
 
       # Split a file into (front_matter_hash, body). Returns a Decision or nil
       # when the file is unreadable.
+      # :reek:FeatureEnvy -- building a Decision from its own front matter hash.
       def parse(path)
         text = File.read(path)
         fm, body = split_front_matter(text)
@@ -138,6 +148,7 @@ module RobotLab
         nil
       end
 
+      # :reek:FeatureEnvy -- slicing the raw file text into front matter/body.
       def split_front_matter(text)
         if text.start_with?("---\n") && (close_idx = text.index("\n---", 4))
           raw_fm = text[4...close_idx]

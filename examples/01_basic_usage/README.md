@@ -30,14 +30,13 @@ the `1..3999` range, round-trip correctness, case-insensitive parsing, and
 
 ## Prerequisites
 
-Either a **local Ollama** server (default, no API key) or a **cloud** provider key.
+Either **local LM Studio** (default, no API key) or a **cloud** provider key.
 
-=== "Local Ollama (default)"
+=== "Local LM Studio (default)"
 
-    ```bash
-    ollama serve &                # if not already running
-    ollama pull qwen3.6:latest    # a tool-capable model
-    ```
+    Nothing to start by hand -- `common.rb` (required by the script) starts the
+    LM Studio server and loads the model for you if they aren't already
+    running/loaded.
 
 === "Cloud provider"
 
@@ -50,7 +49,7 @@ Either a **local Ollama** server (default, no API key) or a **cloud** provider k
 From the gem root:
 
 ```bash
-# Local Ollama (default)
+# Local LM Studio (default)
 bundle exec ruby examples/01_basic_usage/basic_usage.rb
 
 # A cloud model instead
@@ -64,10 +63,10 @@ All optional, set via environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `RLTO_LOCAL` | `true` | Use a local Ollama model. Set `false` for a cloud provider. |
-| `RLTO_PROVIDER` | `openai` (local) | LLM provider passed to `RobotLab::To.run`. |
-| `RLTO_MODEL` | `qwen3.6:latest` (local) | Model id. Any tool-capable model works. |
-| `OLLAMA_BASE` | `http://localhost:11434/v1` | Ollama's OpenAI-compatible endpoint. |
+| `RLTO_LOCAL` | `true` | Use a local LM Studio model. Set `false` for a cloud provider. |
+| `RLTO_PROVIDER` | `lms` (local) | Provider label. `lms` resolves to RubyLLM's `:openai` adapter pointed at `LMS_BASE_URL` -- ruby_llm has no native `lms` adapter. |
+| `RLTO_MODEL` | `qwen/qwen3.8-27b` (local) | Model id. Any tool-capable model works. |
+| `LMS_BASE_URL` | `http://localhost:1234/v1` | LM Studio's OpenAI-compatible endpoint. |
 
 ## What you'll see
 
@@ -77,7 +76,7 @@ live, so the run never sits silent while the model works:
 ```
 Cleaning leftover: .../examples/01_basic_usage/project
 Project dir:     examples/01_basic_usage/project
-Provider/model:  openai/qwen3.6:latest (local Ollama)
+Provider/model:  lms/qwen/qwen3.8-27b (local LM Studio)
 Objective:       implement lib/roman_numeral.rb to pass the test suite
 
       🤔 thinking…
@@ -157,10 +156,10 @@ The whole example is one call:
 ```ruby
 RobotLab::To.run(
   objective,
-  provider:       :openai,    # routes to Ollama for local runs
-  model:          "qwen3.6:latest",
+  provider:       :openai,    # "lms" (RLTO_PROVIDER's default) resolves to :openai, routed at LM Studio
+  model:          "qwen/qwen3.8-27b",
   local_guards:   true,       # built-in file tools + guardrails
-  stream:         false,      # Ollama tool calls need non-streaming
+  stream:         false,      # local LM Studio tool calls run non-streaming
   max_iterations: 6,
   verify_command: "ruby -Ilib -Itest test/roman_numeral_test.rb",
   stop_when:      "test/roman_numeral_test.rb passes with 0 failures and 0 errors"

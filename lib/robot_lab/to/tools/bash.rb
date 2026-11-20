@@ -17,14 +17,16 @@ module RobotLab
           output and exit status. Use for building, testing, listing, and git.
         DESC
 
-        param :command, type: "string", desc: "The shell command to run"
-        param :timeout, type: "integer", desc: "Seconds before the command is killed", required: false
+        parameter :command, type: "string", description: "The shell command to run"
+        parameter :timeout, type: "integer", description: "Seconds before the command is killed", required: false
 
         def initialize(robot: nil, timeout: DEFAULT_TIMEOUT)
           super(robot: robot)
           @default_timeout = timeout
         end
 
+        # :reek:ControlParameter -- falling back to the instance default when
+        # the LLM omits the optional `timeout` argument.
         def execute(command:, timeout: nil, **)
           out, status = run(command, (timeout || @default_timeout).to_i)
           format_result(out, status)
@@ -34,6 +36,9 @@ module RobotLab
         # status_string is "0".."n" for an exit code, or "timeout"/"error: ...".
         #
         # @return [Array(String, String)]
+        # :reek:TooManyStatements :reek:NestedIterators -- spawn, read
+        # concurrently, wait-or-kill, join: each step is one statement and the
+        # streaming reader inherently nests a loop inside its own Thread.
         def run(command, timeout)
           out_str = +""
           status = nil

@@ -13,6 +13,8 @@ module RobotLab
                     :commits, :input_tokens, :output_tokens,
                     :last_score_value, :iterations_since_improvement
 
+      # :reek:ControlParameter -- run_dir/decisions_path fall back to a sibling
+      # path when omitted; that's a constructor default, not a behavior branch.
       def initialize(run_id:, objective:, branch:, base_commit:, notes_path:, log_path:,
                      run_dir: nil, decisions_path: nil)
         @run_id              = run_id
@@ -38,6 +40,7 @@ module RobotLab
       def elapsed_seconds  = Time.now - started_at
       def state_path       = @run_dir.join("run.json")
 
+      # :reek:FeatureEnvy -- decomposing our own elapsed_seconds into h/m/s.
       def elapsed_human
         secs = elapsed_seconds.to_i
         h = secs / 3600
@@ -71,14 +74,11 @@ module RobotLab
                    base_commit: data[:base_commit], notes_path: data[:notes_path],
                    log_path: data[:log_path], run_dir: data[:run_dir],
                    decisions_path: data[:decisions_path])
-        run.iteration            = data[:iteration].to_i
-        run.consecutive_failures = data[:consecutive_failures].to_i
-        run.consecutive_errors   = data[:consecutive_errors].to_i
-        run.commits              = data[:commits].to_i
-        run.input_tokens         = data[:input_tokens].to_i
-        run.output_tokens        = data[:output_tokens].to_i
-        run.last_score_value     = data[:last_score_value]
-        run.iterations_since_improvement = data[:iterations_since_improvement].to_i
+        %i[iteration consecutive_failures consecutive_errors commits input_tokens
+           output_tokens iterations_since_improvement].each do |key|
+          run.public_send(:"#{key}=", data[key].to_i)
+        end
+        run.last_score_value = data[:last_score_value]
         run.instance_variable_set(:@started_at, Time.parse(data[:started_at])) if data[:started_at]
         run
       end

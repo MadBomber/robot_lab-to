@@ -68,7 +68,7 @@ See [The Iteration Loop](concepts/iteration-loop.md) for the full lifecycle.
   `robot-to --resume <run_id>` continues a stopped run and an external scheduler
   can drive it one commit per tick.
 - **Runs on local models.** With `--local-guards` it ships built-in file tools and
-  small-model guardrails, so it can drive a local Ollama model offline. See
+  small-model guardrails, so it can drive a local LM Studio model offline. See
   [Local Models](local-models/index.md).
 
 ---
@@ -80,7 +80,7 @@ See [The Iteration Loop](concepts/iteration-loop.md) for the full lifecycle.
 - :material-rocket-launch: **[Installation](getting-started/installation.md)** — install the gem and the `robot-to` CLI.
 - :material-play: **[Quick Start](getting-started/quick-start.md)** — your first overnight run in five minutes.
 - :material-cog: **[Configuration](configuration/index.md)** — every setting, the config cascade, and the CLI.
-- :material-laptop: **[Local Models](local-models/index.md)** — drive a local Ollama model with guardrails.
+- :material-laptop: **[Local Models](local-models/index.md)** — drive a local LM Studio model with guardrails.
 - :material-sitemap: **[Architecture](reference/architecture.md)** — how the pieces fit together.
 
 </div>
@@ -93,4 +93,4 @@ See [The Iteration Loop](concepts/iteration-loop.md) for the full lifecycle.
 - A git repository with at least one commit (the loop branches and commits there)
 - The [`robot_lab`](https://github.com/MadBomber/robot_lab) gem and an LLM provider
   (a cloud key such as `ANTHROPIC_API_KEY` / `OPENAI_API_KEY`, **or** a local
-  [Ollama](https://ollama.com) server)
+  [LM Studio](https://lmstudio.ai) server via ruby_llm-providers-lms)

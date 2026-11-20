@@ -15,8 +15,8 @@ module RobotLab
           do not exist yet; to change an existing file, use Edit.
         DESC
 
-        param :path, type: "string", desc: "Path of the file to create"
-        param :content, type: "string", desc: "Full text content to write"
+        parameter :path, type: "string", description: "Path of the file to create"
+        parameter :content, type: "string", description: "Full text content to write"
 
         def execute(path:, content:, **)
           resolved = File.expand_path(path, Dir.pwd)

@@ -8,6 +8,10 @@ and [Conventional Commits](https://www.conventionalcommits.org/) (see `COMMITS.m
 
 ## [Unreleased]
 
+## [0.2.8] - 2026-09-09
+
+Released in lockstep with `robot_lab` core v0.2.8: this gem now resolves the released core gem from RubyGems instead of the local sibling checkout (local-path development remains available via `BUNDLE_GEMFILE=Gemfile.local`). Also in this release: reek pass completed, archspec added to the development bundle, and shared LM Studio example configuration extracted for the examples.
+
 ### Added
 
 - **Human-in-the-loop decision files.** When the robot hits a choice it must not

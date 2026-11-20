@@ -11,6 +11,15 @@ module RobotLab
     #   2. User config file (~/.config/robot_lab/to.yml)
     #   3. Environment variables (ROBOT_LAB_TO_*)
     #   4. Constructor keyword arguments (CLI overrides)
+    # :reek:TooManyInstanceVariables -- a flat CLI-override bag for ~24
+    # independent settings; each ivar is genuinely one distinct setting.
+    # :reek:InstanceVariableAssumption -- the defaults.yml-backed ivars
+    # (provider, model, max_consecutive_failures, max_submit_nudges,
+    # max_verify_repairs, verify_timeout, run_dir, commit_format, local_guards,
+    # stream, debug, decisions_enabled, decision_mode, decision_wait_poll,
+    # decision_timeout) ARE assigned -- by `super()` (MywayConfig::Base /
+    # Anyway::Config), before any of this class's own code runs. Do NOT
+    # pre-nil them here: that overwrites the real loaded values with nil.
     class Config < MywayConfig::Base
       config_name :robot_lab_to
       env_prefix :robot_lab_to
@@ -34,6 +43,9 @@ module RobotLab
 
       def initialize(**overrides)
         super()
+        # CLI-only, no YAML default (nil means "no limit / not set") -- unlike
+        # the defaults.yml-backed ivars above, super() never touches these.
+        @max_iterations = @max_tokens = @stop_when = @verify_command = nil
         @eval = @eval_measure = @eval_target = nil
         @require_improvement = @stop_on_plateau = nil
         @eval_judge_model = @eval_spec = @eval_floor = nil

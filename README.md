@@ -244,16 +244,18 @@ RobotLab::To.run(
 ## Local models
 
 `robot_lab-to` can drive a local model running offline against
-[Ollama](https://ollama.com) — no API keys, no per-token cost.
+[LM Studio](https://lmstudio.ai) via the
+[ruby_llm-providers-lms](https://github.com/madbomber/ruby_llm-providers-lms)
+gem — no API keys, no per-token cost.
 
 ```bash
-ollama pull gpt-oss:20b
+lms server start
+lms get qwen/qwen3.8-27b
 
 robot-to "Add a greet(name) method in greeter.rb" \
-  --provider openai \
-  --model gpt-oss:20b \
+  --provider lms \
+  --model qwen/qwen3.8-27b \
   --local-guards \
-  --no-stream \
   --max-iterations 5
 ```
 
@@ -320,8 +322,8 @@ export ROBOT_LAB_TO_STREAM=false
 
 API keys are read by the underlying provider (via RobotLab / RubyLLM), **not** by
 `robot_lab-to` itself — e.g. `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`. Local
-[Ollama](https://ollama.com) models need no key; see the
-[Local Models guide](https://madbomber.github.io/robot_lab-to/local-models/ollama/).
+[LM Studio](https://lmstudio.ai) models need no key; see the
+[Local Models guide](https://madbomber.github.io/robot_lab-to/local-models/lm-studio/).
 
 ---
 

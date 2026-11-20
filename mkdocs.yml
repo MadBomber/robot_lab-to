@@ -136,7 +136,7 @@ nav:
       - CLI Reference: configuration/cli.md
   - Local Models:
       - Overview: local-models/index.md
-      - Ollama Setup: local-models/ollama.md
+      - LM Studio Setup: local-models/lm-studio.md
       - Built-in Tools: local-models/tools.md
       - Guardrails: local-models/guardrails.md
   - Reference:

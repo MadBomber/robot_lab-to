@@ -73,8 +73,9 @@ module RobotLab
             return :empty_response if text.to_s.strip.empty? && calls.empty?
 
             calls.each do |c|
-              return :empty_tool_name if c[:name].to_s.empty?
-              return "unknown_tool:#{c[:name]}" if known.any? && !known.include?(c[:name])
+              name = c[:name]
+              return :empty_tool_name if name.to_s.empty?
+              return "unknown_tool:#{name}" if known.any? && !known.include?(name)
             end
 
             return :repeated_tool_call if repeated?(calls, previous)
@@ -83,6 +84,7 @@ module RobotLab
           end
 
           # True when any current call exactly matches any previous call.
+          # :reek:NestedIterators -- an all-pairs comparison needs both loops.
           def repeated?(calls, previous)
             return false if calls.empty? || previous.empty?
 

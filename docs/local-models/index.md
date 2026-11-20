@@ -1,7 +1,7 @@
 # Local Models
 
 `robot_lab-to` can drive a **local** model — running entirely offline against an
-[Ollama](https://ollama.com) server — instead of a cloud API. This is the
+[LM Studio](https://lmstudio.ai) server via the `:lms` provider — instead of a cloud API. This is the
 "local assistant" mode: no API keys, no per-token cost, no data leaving your
 machine.
 
@@ -19,33 +19,31 @@ Both are enabled together with `--local-guards`.
 
 ```bash
 # 1. Serve a tool-capable model
-ollama pull gpt-oss:20b
+lms server start
+lms get qwen/qwen3.8-27b
 
 # 2. Run robot-to against it
 robot-to "Add a greet(name) method in greeter.rb" \
-  --provider openai \
-  --model gpt-oss:20b \
+  --provider lms \
+  --model qwen/qwen3.8-27b \
   --local-guards \
-  --no-stream \
   --max-iterations 5
 ```
 
-The full setup — including the RubyLLM configuration that points `:openai` at
-Ollama — is on the [Ollama Setup](ollama.md) page.
+The full setup — including requiring the ruby_llm-providers-lms gem — is on
+the [LM Studio Setup](lm-studio.md) page.
 
 ## Why these flags
 
-Driving a local model end-to-end requires three non-obvious settings. Each exists
-because of a concrete limitation discovered in testing:
+Driving a local model end-to-end takes two settings. Each exists because of a
+concrete limitation discovered in testing:
 
 | Flag / setting | Why |
 |----------------|-----|
-| `--provider openai` (+ Ollama base URL) | RubyLLM's native `:ollama` provider doesn't reliably get these models to emit tool calls. Routing through the `:openai` provider against Ollama's OpenAI-compatible `/v1` endpoint does. |
-| `--no-stream` | Ollama suppresses tool calls when the response is streamed. With streaming off, tool calls come through. |
+| `--provider lms` | The ruby_llm-providers-lms gem's LM Studio provider — no API key, and local model ids are assumed to exist. Its default `:chat_completions` protocol supports client tools, structured output, and streaming. |
 | `--local-guards` | Attaches the file tools the model needs to do work, plus guardrails that make those tools safe for a small model. |
 
-See [Ollama Setup → Streaming and tool calls](ollama.md#streaming-and-tool-calls)
-for the details.
+See [LM Studio Setup](lm-studio.md) for the details.
 
 ## The design philosophy
 
@@ -74,15 +72,14 @@ The model **must support tool calling**. In testing on an M2 Max:
 
 | Model | Size | Tool calls? | Notes |
 |-------|------|-------------|-------|
-| `gpt-oss:20b` | 20B | ✅ reliable | Called tools *and* `submit_iteration_result`; completed full runs cleanly. **Recommended.** |
-| `qwen3` | 8B | ✅ tools work | Created files via the write tool, but didn't reliably call `submit_iteration_result` (the final-report step). |
-| `phi4-mini` | 3.8B | ❌ | Explains instead of calling tools. |
+| `qwen/qwen3.8-27b` | 27B | ✅ reliable | Honors `tool_choice` and structured output; the right pick for the autonomous loop. **Recommended.** |
+| `openai/gpt-oss-20b` | 20B | ⚠️ partial | Accepts tool definitions but ignores `tool_choice: required`, and its structured output parses without meaning anything. Fine for simple chat, not for the loop. |
 
 Prefer a larger, instruction-following model for the autonomous loop — it has to
 both use tools *and* remember to submit its result every iteration.
 
 ---
 
-- [Ollama Setup](ollama.md) — install, serve, and configure.
+- [LM Studio Setup](lm-studio.md) — install, serve, and configure.
 - [Built-in Tools](tools.md) — what `read`/`write`/`edit`/`bash` do.
 - [Guardrails](guardrails.md) — the small-model safety policies.

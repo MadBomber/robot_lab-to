@@ -48,7 +48,12 @@ module RobotLab
 
             tracked << path
             FileUtils.mkdir_p(dir)
-            dest = File.join(dir, safe_name(path))
+            write_backup(path, File.join(dir, safe_name(path)))
+          rescue SystemCallError, IOError
+            nil
+          end
+
+          def write_backup(path, dest)
             if File.exist?(path)
               FileUtils.cp(path, dest)
               dest
@@ -56,8 +61,6 @@ module RobotLab
               File.write("#{dest}.absent", "")
               "#{dest}.absent"
             end
-          rescue SystemCallError, IOError
-            nil
           end
 
           # @return [String] directory for this run's checkpoints (created)
