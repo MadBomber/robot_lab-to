@@ -89,7 +89,7 @@ See [The Iteration Loop](concepts/iteration-loop.md) for the full lifecycle.
 
 ## Requirements
 
-- Ruby **>= 3.2**
+- Ruby **>= 4.0.9**
 - A git repository with at least one commit (the loop branches and commits there)
 - The [`robot_lab`](https://github.com/MadBomber/robot_lab) gem and an LLM provider
   (a cloud key such as `ANTHROPIC_API_KEY` / `OPENAI_API_KEY`, **or** a local

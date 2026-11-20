@@ -8,6 +8,13 @@ and [Conventional Commits](https://www.conventionalcommits.org/) (see `COMMITS.m
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-19
+
+### Changed
+
+- **Minimum Ruby raised to 4.0.9.** `required_ruby_version` is now `>= 4.0.9` (was `>= 3.2.0`), and a `.ruby-version` file pins development to 4.0.9.
+- **Requires `robot_lab ~> 0.6`** (was `~> 0.3.0`). Verified against robot_lab 0.6.1 and ruby_llm 2.2.3; no code changes were needed.
+
 ## [0.2.8] - 2026-09-09
 
 Released in lockstep with `robot_lab` core v0.2.8: this gem now resolves the released core gem from RubyGems instead of the local sibling checkout (local-path development remains available via `BUNDLE_GEMFILE=Gemfile.local`). Also in this release: reek pass completed, archspec added to the development bundle, and shared LM Studio example configuration extracted for the examples.

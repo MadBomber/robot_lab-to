@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
   DESC
   spec.homepage = "https://github.com/MadBomber/robot_lab-to"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 4.0"
+  spec.required_ruby_version = ">= 4.0.9"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
@@ -38,6 +38,6 @@ Gem::Specification.new do |spec|
   spec.executables = ["robot-to"]
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "robot_lab", "~> 0.3.0"
+  spec.add_dependency "robot_lab", "~> 0.6"
   spec.add_dependency "myway_config"
 end

@@ -4,7 +4,7 @@
 
 | Requirement | Notes |
 |-------------|-------|
-| Ruby **>= 3.2** | Set in the gemspec `required_ruby_version`. |
+| Ruby **>= 4.0.9** | Set in the gemspec `required_ruby_version`. |
 | Git | A repository with at least one commit. The loop creates a branch and commits there. |
 | `robot_lab` | The core framework `robot_lab-to` builds on. |
 | An LLM provider | A cloud API key, **or** a local [LM Studio](https://lmstudio.ai) server (see [Local Models](../local-models/index.md)). |
