@@ -26,10 +26,12 @@ robot says success ──► run verify-command ──► exit 0 ? ──► COM
                                               ROLLBACK  (recorded as [VERIFY FAILED])
 ```
 
-If verification fails, the working tree is reset with `git reset --hard`, the
-iteration counts as a failure (incrementing the consecutive-failure counter), and
-the verification output is written to `notes.md` so the next robot can see *why*
-it failed.
+If verification fails, the failure output is first handed back to the **same**
+robot (chat and working tree intact) for up to `--max-verify-repairs` repair
+attempts (default 2), re-running the command after each. If it is still failing,
+the working tree is reset with `git reset --hard`, the iteration counts as a
+failure (incrementing the consecutive-failure counter), and the verification
+output is written to `notes.md` so the next robot can see *why* it failed.
 
 ## How it runs
 

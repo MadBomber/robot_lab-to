@@ -27,7 +27,7 @@ fields:
 | `improved` | Better than the parent commit? The descent signal. |
 | `met_target` | The objective is measurably reached — an orchestrator-owned stop. |
 | `value` | The score itself (higher = better); `nil` for pure-pairwise evals. |
-| `detail` | One-line human summary, written to `notes.md` and the log. |
+| `detail` | One-line human summary, written to the log (and to `notes.md` on a `[NO IMPROVEMENT]` entry). |
 | `output` | Diagnostic text (gate output, judge rationale) fed to repair prompts; `nil` when there is none. |
 
 `gate_ok?`, `improved?`, and `met_target?` predicate readers are also defined.
@@ -82,10 +82,13 @@ commands:
 | `--target FLOAT` | Stop once the measured value reaches this. |
 
 ```bash
+# --verify-command  floor: must stay green
+# --measure         descent signal
+# --target          stop once the score reaches this
 robot-to "Raise parser coverage to 90%" \
-  --verify  "bundle exec rake test" \      # floor: must stay green
-  --measure "bundle exec rake coverage" \  # descent signal
-  --target  90                             # stop once the score reaches this
+  --verify-command "bundle exec rake test" \
+  --measure "bundle exec rake coverage" \
+  --target 90
 ```
 
 `Evals::Code#score`:
@@ -114,12 +117,16 @@ is a reliable judgement. `Evals::Prose` asks a **judge model** to compare the
 working tree to the last *committed* version:
 
 ```bash
+# --spec             the spec the judge measures against
+# --floor            optional mechanizable checks (links, TODOs)
+# --judge-model      defaults to the doer's --model
+# --stop-on-plateau  stop after 3 drafts with no improvement
 robot-to "Write an opinionated guide to the Viable Systems Model" \
-  --eval  prose \
-  --spec  outline.md \          # the spec the judge measures against
-  --floor "rake docs:lint" \    # optional mechanizable checks (links, TODOs)
-  --judge-model claude-opus-4 \ # defaults to the doer's --model
-  --stop-on-plateau 3           # stop after 3 drafts with no improvement
+  --eval prose \
+  --spec outline.md \
+  --floor "rake docs:lint" \
+  --judge-model claude-opus-4 \
+  --stop-on-plateau 3
 ```
 
 `Evals::Prose#score`:
@@ -225,7 +232,7 @@ RobotLab::To.run(objective, eval: BenchmarkEval.new)
 RobotLab::To.run(objective, eval: ->(ctx) { RobotLab::To::Evals::Score.new(...) })
 
 # (c) a registered symbol
-RobotLab::To.register_eval(:benchmark) { |config| BenchmarkEval.new(target: config.eval_target) }
+RobotLab::To.register_eval(:benchmark) { |_config| BenchmarkEval.new }  # the block receives the Config
 RobotLab::To.run(objective, eval: :benchmark)
 ```
 

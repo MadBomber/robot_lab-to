@@ -11,4 +11,4 @@ Each iteration: read outline.md and list the sections/ directory, then write the
 NEXT outline section that has no file yet. Write real, opinionated, concrete
 prose — no placeholders. Read REVIEW.md for the reviewer's feedback on the last
 section and fix it if asked. Do not touch outline.md. Use bare relative paths
-(no ".robot_lab_to"). Call submit_result each iteration naming the section.
+(no ".robot_lab_to"). Call submit_iteration_result each iteration naming the section.

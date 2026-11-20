@@ -64,7 +64,7 @@ All optional, set via environment variables:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `RLTO_LOCAL` | `true` | Use a local LM Studio model. Set `false` for a cloud provider. |
-| `RLTO_PROVIDER` | `lms` (local) | Provider label. `lms` resolves to RubyLLM's `:openai` adapter pointed at `LMS_BASE_URL` -- ruby_llm has no native `lms` adapter. |
+| `RLTO_PROVIDER` | `lms` (local) | Provider. `lms` is the ruby_llm-providers-lms gem's native LM Studio provider, pointed at `LMS_BASE_URL` by `common.rb`. |
 | `RLTO_MODEL` | `qwen/qwen3.8-27b` (local) | Model id. Any tool-capable model works. |
 | `LMS_BASE_URL` | `http://localhost:1234/v1` | LM Studio's OpenAI-compatible endpoint. |
 
@@ -129,10 +129,10 @@ shipped with `--local-guards` use the same mechanism.
 > [02_advanced_usage](../02_advanced_usage/README.md#live-feedback) example uses
 > it. We hand-write the hook here to teach the API.
 
-> **Note:** robot_lab-to's own `robot-to: …` progress lines use `Kernel#warn`,
-> which is silenced when Ruby warnings are disabled (`$VERBOSE` is `nil`, common
-> under `bundle exec`). The hook writes to `$stderr` directly, so its narration
-> always shows.
+> **Note:** like robot_lab-to's own `robot-to: …` progress lines, the hook writes
+> to `$stderr` directly rather than through `Kernel#warn`, which is silenced when
+> Ruby warnings are disabled (`$VERBOSE` is `nil`, common under `bundle exec`) —
+> so its narration always shows.
 
 Everything the example produces stays under `examples/01_basic_usage/`:
 
@@ -156,11 +156,12 @@ The whole example is one call:
 ```ruby
 RobotLab::To.run(
   objective,
-  provider:       :openai,    # "lms" (RLTO_PROVIDER's default) resolves to :openai, routed at LM Studio
+  provider:       :lms,       # RLTO_PROVIDER's default: the native LM Studio provider
   model:          "qwen/qwen3.8-27b",
   local_guards:   true,       # built-in file tools + guardrails
   stream:         false,      # local LM Studio tool calls run non-streaming
   max_iterations: 6,
+  run_dir:        RUN_DIR,    # examples/01_basic_usage/.robot_lab_to
   verify_command: "ruby -Ilib -Itest test/roman_numeral_test.rb",
   stop_when:      "test/roman_numeral_test.rb passes with 0 failures and 0 errors"
 )

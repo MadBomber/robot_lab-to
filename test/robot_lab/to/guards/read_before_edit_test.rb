@@ -48,6 +48,14 @@ module RobotLab
           assert ReadBeforeEdit.read?(path)
         end
 
+        # Regression: the refusal used to tell the model to fill `oldText`, a
+        # parameter the Edit tool does not have (its parameter is `old_text`).
+        def test_refusal_names_the_edit_tools_real_parameter
+          assert_includes Tools::Edit.instance_method(:execute).parameters, %i[keyreq old_text]
+          assert_includes ReadBeforeEdit.edit_before_read_reason("/x.rb"), "old_text"
+          refute_includes ReadBeforeEdit.edit_before_read_reason("/x.rb"), "oldText"
+        end
+
         def test_non_edit_tools_pass_through
           ctx = tool_ctx("bash", { "command" => "ls" })
           assert_equal :EXECUTED, dispatch(ReadBeforeEdit, :around_tool_call, ctx) { :EXECUTED }

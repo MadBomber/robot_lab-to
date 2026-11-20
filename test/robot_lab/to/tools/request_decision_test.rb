@@ -6,6 +6,13 @@ module RobotLab
   module To
     module Tools
       class RequestDecisionTest < Minitest::Test
+        # Regression: the prompt and the CLI help call this tool
+        # `request_decision`; it used to be exposed under RubyLLM's derived name
+        # "robot_lab--to--tools--request_decision".
+        def test_name_matches_the_name_the_prompts_use
+          assert_equal "request_decision", RequestDecision.new.name
+        end
+
         def test_captured_requests_empty_before_call
           assert_empty RequestDecision.new.captured_requests
         end

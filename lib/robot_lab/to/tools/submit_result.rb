@@ -34,6 +34,13 @@ module RobotLab
 
         attr_reader :captured_result
 
+        # The short name the prompts refer to. Without this RubyLLM derives the
+        # namespaced "robot_lab--to--tools--submit_result", which no prompt names.
+        TOOL_NAME = "submit_iteration_result"
+
+        # @return [String] the name the model calls this tool by
+        def name = TOOL_NAME
+
         # :reek:LongParameterList -- one field per tool param declared above.
         def execute(success:, summary:, key_changes: [], key_learnings: [], should_fully_stop: nil, **)
           @captured_result = IterationResult.new(

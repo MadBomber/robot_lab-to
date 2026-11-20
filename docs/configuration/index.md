@@ -10,9 +10,10 @@ From lowest to highest precedence:
 
 ```
 1. Bundled defaults        lib/robot_lab/to/config/defaults.yml
-2. User config file        ~/.config/robot_lab/to.yml
-3. Environment variables   ROBOT_LAB_TO_*
-4. CLI flags / To.run args  (highest — always wins)
+2. User config file        ~/.config/robot_lab_to/robot_lab_to.yml
+3. Project config file     ./config/robot_lab_to.yml
+4. Environment variables   ROBOT_LAB_TO_*
+5. CLI flags / To.run args  (highest — always wins)
 ```
 
 A value set at a higher layer overrides the same value from any lower layer.
@@ -29,18 +30,24 @@ defaults:
   max_consecutive_failures: 3
   max_retries: 2
   max_submit_nudges: 1
+  max_verify_repairs: 2
   verify_timeout: 600
   commit_format: default
   run_dir: .robot_lab_to
   local_guards: false
   stream: true
   debug: false
+  decisions_enabled: true
+  decision_mode: wait
+  decision_wait_poll: 30
+  decision_timeout: null
 ```
 
 ## 2. User config file
 
-Create `~/.config/robot_lab/to.yml` to set your own defaults — for example, to
-always use a local model:
+Create `~/.config/robot_lab_to/robot_lab_to.yml` (or
+`$XDG_CONFIG_HOME/robot_lab_to/robot_lab_to.yml`) to set your own defaults — for
+example, to always use a local model:
 
 ```yaml
 provider: lms             # LM Studio via the ruby_llm-providers-lms gem
@@ -49,16 +56,23 @@ local_guards: true
 max_consecutive_failures: 4
 ```
 
-These apply to every `robot-to` run unless overridden by an env var or CLI flag.
+These apply to every `robot-to` run unless overridden by a higher layer. Only the
+keys shown in the bundled defaults are read from a config file.
 
-## 3. Environment variables
+## 3. Project config file
 
-Every setting can be set via an environment variable prefixed with
-`ROBOT_LAB_TO_`. Nested keys use a double underscore (rare here, since the config
+A `./config/robot_lab_to.yml` in the directory you run `robot-to` from is read the
+same way and overrides the user config file.
+
+## 4. Environment variables
+
+Every setting in the bundled defaults can be set via an environment variable
+prefixed with `ROBOT_LAB_TO_`. Nested keys use a double underscore (rare here, since the config
 is flat):
 
 ```bash
-export ROBOT_LAB_TO_MODEL="gpt-oss:20b"
+export ROBOT_LAB_TO_PROVIDER=lms
+export ROBOT_LAB_TO_MODEL="qwen/qwen3.8-27b"
 export ROBOT_LAB_TO_LOCAL_GUARDS=true
 export ROBOT_LAB_TO_MAX_CONSECUTIVE_FAILURES=4
 ```
@@ -66,7 +80,7 @@ export ROBOT_LAB_TO_MAX_CONSECUTIVE_FAILURES=4
 Provider **API keys** are *not* `robot_lab-to` settings — they are read by the
 underlying provider (e.g. `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`).
 
-## 4. CLI flags / `To.run` arguments
+## 5. CLI flags / `To.run` arguments
 
 The highest-precedence layer. Anything passed on the command line (or as a keyword
 to `RobotLab::To.run`) wins over all other layers:

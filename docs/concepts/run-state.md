@@ -11,10 +11,18 @@ directory. This page documents that layout and the JSONL event log.
     └── <run_id>/                 # e.g. 20260623-144554-3e5c27
         ├── notes.md              # human-readable cross-iteration memory
         ├── run.log               # JSONL event log (one event per line)
+        ├── run.json              # serialized run state (enables --resume)
+        ├── decisions/            # decision files, d-<timestamp>-<hex>.md
         └── checkpoints/          # pre-edit file snapshots (local_guards only)
 ```
 
 - `<run_id>` is `YYYYMMDD-HHMMSS-<random hex>`.
+- `run.json` is rewritten after every iteration (`Run#to_h`: run id, objective,
+  branch, base commit, paths, iteration/failure/commit/token counters,
+  `last_score_value`, `iterations_since_improvement`); `robot-to --resume <run_id>`
+  reloads it.
+- `notes.md`, `run.json`, and decision files are written atomically, which leaves
+  hidden `.<name>.lock` files beside them.
 - The whole `.robot_lab_to/` directory is added to `.git/info/exclude` at startup,
   so it never appears in `git status` or commits.
 - Change `--run-dir` to relocate it (default `.robot_lab_to`).
@@ -22,8 +30,9 @@ directory. This page documents that layout and the JSONL event log.
 ## The JSONL event log (`run.log`)
 
 `run.log` contains one JSON object per line — a structured, append-only trace of
-the run. Every line has an `event` name and a UTC `ts` timestamp; other keys
-depend on the event. The logger buffers up to 100 events before the file is open,
+the run. Every line has an `event` name and an ISO 8601 `ts` timestamp (local time with
+UTC offset, millisecond precision); other keys depend on the event, and keys
+whose value is `nil` are omitted. The logger buffers up to 100 events before the file is open,
 so the very first setup events are never lost.
 
 A typical successful iteration:
@@ -33,7 +42,7 @@ A typical successful iteration:
 {"event":"iteration:start","ts":"...","iteration":1}
 {"event":"agent:run:start","ts":"...","iteration":1}
 {"event":"agent:run:end","ts":"...","iteration":1}
-{"event":"eval","ts":"...","iteration":1,"gate":true,"improved":true,"value":null,"met_target":false,"detail":"verify=true"}
+{"event":"eval","ts":"...","iteration":1,"gate":true,"improved":true,"met_target":false,"detail":"verify=true"}
 {"event":"commit:success","ts":"...","iteration":1,"message":"robot-to 1: ..."}
 ```
 
@@ -48,7 +57,7 @@ A typical successful iteration:
 | `agent:nudge` | The robot didn't submit; re-asking (`attempt` N). |
 | `agent:run:error` | An exception occurred during the iteration (`error`, `message`). |
 | `backoff:start` / `backoff:end` | Retry backoff sleep around a transient error. |
-| `eval` | The [eval's](evals.md) verdict for this iteration: `gate`, `improved`, `value`, `met_target`, `detail`. |
+| `eval` | The [eval's](evals.md) verdict for this iteration: `gate`, `improved`, `value` (omitted when `nil`), `met_target`, `detail`. |
 | `eval:repair` | R2 repair attempt after a gate failure (`attempt` N of `--max-verify-repairs`). |
 | `eval:repair_error` | The repair attempt itself raised (`message`); repair loop stops. |
 | `commit:success` | Iteration committed (`message`). |
@@ -58,6 +67,7 @@ A typical successful iteration:
 | `iteration:no_improvement` | Gate passed but the eval didn't rule it an improvement (`detail`); rolled back. |
 | `orchestrator:abort` | Run stopped by a stop condition, `met_target`, or permanent error (`reason`). |
 | `orchestrator:fatal` | Unexpected fatal error (`error`, `message`). |
+| `run_state:write_failed` | Writing `run.json` failed (`message`); the run continues. |
 | `orchestrator:end` | Final totals: `iterations`, `commits`, `input_tokens`, `output_tokens`, `abort_reason`, `elapsed`. |
 
 Decision-file events (`decision:blocking`, `decision:wait:start`,

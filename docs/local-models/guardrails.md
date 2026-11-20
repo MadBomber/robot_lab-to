@@ -90,7 +90,7 @@ orchestrator calls it from `build_robot` only when `local_guards` is enabled:
 
 ```ruby
 robot = RobotLab.build(..., local_tools: iteration_tools(submit_tool))
-RobotLab::To::Guards.install(robot, run: @run) if @config.local_guards?
+RobotLab::To::Guards.install(robot, run: @run, except: guard_exclusions) if @config.local_guards?
 ```
 
 ## Per-run state

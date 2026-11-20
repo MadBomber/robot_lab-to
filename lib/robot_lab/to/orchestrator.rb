@@ -7,7 +7,7 @@ module RobotLab
   module To
     # Main autonomous loop.
     #
-    # Creates a new robot per iteration, reads the iteration result from SubmitResultTool,
+    # Creates a new robot per iteration, reads the iteration result from Tools::SubmitResult,
     # then commits, rolls back, or queues repair depending on the outcome.
     #
     # Human-in-the-loop is asynchronous: when the robot raises a decision it must
@@ -28,10 +28,10 @@ module RobotLab
     class Orchestrator
       SIGNAL_STOP = "graceful_stop"
 
-      # Sent to a robot that ended its turn without calling submit_result
+      # Sent to a robot that ended its turn without calling submit_iteration_result
       # (the "thinks but doesn't act" degenerate case).
       SUBMIT_NUDGE = <<~MSG
-        You ended your turn without calling submit_result. You MUST call it now:
+        You ended your turn without calling submit_iteration_result. You MUST call it now:
         report success: true with a one-sentence summary (and key_changes if you
         modified files), or success: false with what blocked you. Do not do any
         further work first -- just submit the result of what you have done.
@@ -340,10 +340,10 @@ module RobotLab
         true
       end
 
-      # A robot that ends its turn without calling submit_result is the
+      # A robot that ends its turn without calling submit_iteration_result is the
       # "thinks but doesn't act" degenerate case. Rather than burning the
       # iteration as a failure, re-prompt the same robot (preserving its chat
-      # context) up to max_submit_nudges times to call submit_result.
+      # context) up to max_submit_nudges times to call submit_iteration_result.
       def nudge_for_missing_submit(robot, tool)
         @config.max_submit_nudges.times do |i|
           break if @stop_requested
@@ -376,7 +376,11 @@ module RobotLab
       # whether the objective is met.
       def commit_improvement(result, score)
         @notes.append_success(result, @run.iteration)
-        attempt_commit(result)
+        # A failed git commit is queued for repair (see #attempt_commit): the
+        # work is NOT on the branch yet, so it must not reset the failure
+        # counters, become the score to beat, close decisions, or end the run.
+        return unless attempt_commit(result)
+
         record_improvement(score)
         close_injected_decisions
         stop_if_target_met(score, result)
@@ -511,10 +515,12 @@ module RobotLab
 
       # :reek:TooManyStatements -- commit path plus its own CommitFailedError
       # rescue; the two branches (success, queue-for-repair) are each tight.
+      # @return [Boolean] false only when git commit failed and was queued for
+      #   repair; true when committed or when there was nothing to commit
       def attempt_commit(result)
         iteration = @run.iteration
         @git.add_all
-        return unless @git.staged?
+        return true unless @git.staged?
 
         message = commit_message(result)
         @git.commit(message)
@@ -522,12 +528,14 @@ module RobotLab
         @pending_commit_failure = nil
         @logger.log("commit:success", iteration: iteration, message: message)
         progress "iteration #{iteration} committed: #{message}"
+        true
       rescue CommitFailedError => e
         @pending_commit_failure = e
         @run.consecutive_failures += 1
         @run.consecutive_errors = 0
         @logger.log("commit:failed", iteration: iteration, output: e.output)
         progress "iteration #{iteration} commit failed — queued for repair"
+        false
       end
 
       # :reek:FeatureEnvy -- formatting the commit message from result's own fields.

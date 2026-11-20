@@ -30,8 +30,8 @@ robot-to "Add a greet(name) method in greeter.rb" \
   --max-iterations 5
 ```
 
-The full setup — including requiring the ruby_llm-providers-lms gem — is on
-the [LM Studio Setup](lm-studio.md) page.
+The full setup — including configuring the ruby_llm-providers-lms gem from
+Ruby — is on the [LM Studio Setup](lm-studio.md) page.
 
 ## Why these flags
 
@@ -58,7 +58,7 @@ The guardrails are policies that intercept the model's tool calls:
 - **`write-guard`** — refuses `write` on a file that already exists (small models
   rewrite whole files and destroy content); redirects to `edit`.
 - **`read-before-edit`** — refuses `edit` on a file the model hasn't read this run,
-  so `oldText` reflects the real contents.
+  so `old_text` reflects the real contents.
 - **`checkpoint`** — snapshots a file before the first Write/Edit, for fine-grained
   recovery within an iteration.
 - **`quality-monitor`** — detects a model spinning on the same tool call and stops

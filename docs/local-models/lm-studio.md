@@ -55,7 +55,8 @@ No API key is needed — LM Studio's local server does not require one.
 
 ## 4. Run
 
-From the launcher above, or from the CLI:
+From the launcher above, or from the CLI (which loads the `:lms` provider gem
+itself when it sees `--provider lms`):
 
 ```bash
 robot-to "Add a greet(name) method in greeter.rb" \

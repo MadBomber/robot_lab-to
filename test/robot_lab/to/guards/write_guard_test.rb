@@ -39,6 +39,14 @@ module RobotLab
           assert_equal :EXECUTED, dispatch(WriteGuard, :around_tool_call, ctx) { :EXECUTED }
         end
 
+        # Regression: the refusal used to tell the model to fill `oldText`, a
+        # parameter the Edit tool does not have (its parameter is `old_text`).
+        def test_refusal_names_the_edit_tools_real_parameter
+          assert_includes Tools::Edit.instance_method(:execute).parameters, %i[keyreq old_text]
+          assert_includes WriteGuard.edit_recipe("/x.rb"), "old_text"
+          refute_includes WriteGuard.edit_recipe("/x.rb"), "oldText"
+        end
+
         def test_before_normalizes_root_bare_path_in_place
           ctx = tool_ctx("write", { "path" => "/bare.rb", "content" => "x" })
           dispatch(WriteGuard, :before_tool_call, ctx)

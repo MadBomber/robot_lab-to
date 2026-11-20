@@ -33,11 +33,11 @@ Controlled by `--commit-format`:
 === "conventional"
 
     ```
-    feat(scope): <result summary>
+    chore: <result summary>
     ```
 
-    The `type` and `scope` come from the robot's submitted result (defaulting to
-    `chore`). See [Commit conventions](../configuration/settings.md#commit_format).
+    The submitted result carries no `type` or `scope`, so the type is always
+    `chore`. See [Commit conventions](../configuration/settings.md#commit_format).
 
 ## The run directory
 
@@ -50,6 +50,8 @@ to `.git/info/exclude` automatically):
     └── 20260623-144554-3e5c27/
         ├── notes.md         # cross-iteration memory (human-readable)
         ├── run.log          # JSONL event log (machine-readable)
+        ├── run.json         # serialized run state (enables --resume)
+        ├── decisions/       # decision files (d-*.md) the robot raised
         └── checkpoints/     # pre-edit file snapshots (local_guards only)
 ```
 
@@ -57,6 +59,10 @@ to `.git/info/exclude` automatically):
   robot at the start of the next. See [Cross-Iteration Memory](../concepts/notes.md).
 - **`run.log`** — one JSON object per line, one per lifecycle event. See
   [Run State & Event Log](../concepts/run-state.md).
+- **`run.json`** — the run's counters, branch, and paths, rewritten after every
+  iteration so `robot-to --resume <run_id>` can continue it.
+- **`decisions/`** — one markdown file per decision the robot raised with
+  `request_decision`; list them with `robot-to decisions`.
 - **`checkpoints/`** — first-write-wins file snapshots taken before a Write/Edit,
   created only when `--local-guards` is active. See [Guardrails](../local-models/guardrails.md).
 
@@ -93,18 +99,25 @@ When the loop ends — whether it completed, hit a stop condition, or aborted �
 robot-to complete — claude-sonnet-4-6 — 4m 12s
 Branch: robot-to/migrate-to-rspec-20260623-144554
 
-  Iterations:   8   (6 committed, 2 rolled back)
-  Changes:      +312 / -47 across 14 files
-  Tokens:       1,204,883 in / 38,902 out
+Iterations:      8 total  (6 good / 2 failed)
+Tokens:          1,243,785  (1,204,883 in / 38,902 out)
+Commits:         6
+Changes:         +312 / -47 lines across 14 files
 
-Run state:  .robot_lab_to/runs/20260623-144554-3e5c27/
+Notes:   .robot_lab_to/runs/20260623-144554-3e5c27/notes.md
+Log:     .robot_lab_to/runs/20260623-144554-3e5c27/run.log
+
 Next steps:
-  git log robot-to/migrate-to-rspec-20260623-144554
-  git diff 362b8d9..HEAD
+  git log --oneline <base_commit>..HEAD
+  git diff --stat <base_commit>..HEAD
+  gh pr create
 ```
 
-If the run was stopped early, the header shows the reason (e.g. `max iterations
-reached (8)`, `4 consecutive failures`, or `stop condition met: ...`).
+`<base_commit>` is printed as the full SHA; the "Next steps" block appears only
+when at least one commit was made. If the run was stopped early, the header reads
+`robot-to stopped — <model> — <elapsed>` and the `Branch:` line is replaced by a
+`Reason:` line (e.g. `max iterations reached (8)`, `4 consecutive failures`, or
+`stop condition met: ...`).
 
 ---
 

@@ -34,7 +34,8 @@ injected into the system prompt. The prompt (built by `PromptBuilder`) contains:
 - the requirement to call `submit_iteration_result`,
 - optional repair and stop-when sections.
 
-The robot is given the `submit_iteration_result` tool. With `--local-guards`, it
+The robot is given the `submit_iteration_result` tool (and `request_decision`,
+unless `--no-decisions`). With `--local-guards`, it
 also receives built-in file tools (`read`, `write`, `edit`, `bash`) and the
 guardrail hooks. See [Built-in Tools](../local-models/tools.md). If the
 configured eval (or `--protect-path`) has protected paths, `Guards::GraderLock`
@@ -58,7 +59,7 @@ calls `submit_iteration_result` with:
 
 If the robot ends its turn **without** calling `submit_iteration_result`, the
 orchestrator re-prompts the *same* robot (preserving its chat) up to
-`--max-submit-nudges` times, asking only for the result. This recovers the common
+`max_submit_nudges` times (a setting, default 1 — no CLI flag), asking only for the result. This recovers the common
 degenerate case where a model does work but forgets the final report. If it still
 doesn't submit, the iteration is treated as a failure.
 
@@ -110,8 +111,9 @@ Exceptions during an iteration (e.g. transient API errors) are caught:
 
 - **Authentication errors** are permanent — the run aborts immediately.
 - Other errors roll back the tree, record the error in notes, and **retry** after
-  an interruptible exponential backoff (`60 × 2ⁿ` seconds), up to `--max-retries`
-  consecutive errors.
+  an interruptible exponential backoff (`60 × 2ⁿ⁻¹` seconds: 60, 120, 240, …), up
+  to `max_retries` consecutive errors (a setting, default 2 — no CLI flag). One
+  more error after that ends the run as a fatal error.
 
 A `SIGINT`/`SIGTERM` (Ctrl-C) requests a graceful stop: the in-flight robot is
 interrupted, the loop exits cleanly, and the exit summary still prints.

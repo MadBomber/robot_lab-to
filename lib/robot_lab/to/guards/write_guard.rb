@@ -59,7 +59,7 @@ module RobotLab
             <<~MSG
               Write refused — #{resolved} already exists. Write is for creating
               NEW files only. To change an existing file, Read it first to get the
-              exact current text, then use Edit with that text as oldText
+              exact current text, then use Edit with that text as old_text
               (whitespace and indentation must match). Do NOT retry Write; it will
               be refused again.
             MSG
