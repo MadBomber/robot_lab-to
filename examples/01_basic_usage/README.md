@@ -66,6 +66,7 @@ All optional, set via environment variables:
 | `RLTO_LOCAL` | `true` | Use a local LM Studio model. Set `false` for a cloud provider. |
 | `RLTO_PROVIDER` | `lms` (local) | Provider. `lms` is the ruby_llm-providers-lms gem's native LM Studio provider, pointed at `LMS_BASE_URL` by `common.rb`. |
 | `RLTO_MODEL` | `qwen/qwen3.8-27b` (local) | Model id. Any tool-capable model works. |
+| `RLTO_CONTEXT_LENGTH` | `32768` | Context window (tokens) the local model is loaded with. A model already loaded with a smaller window is reloaded. |
 | `LMS_BASE_URL` | `http://localhost:1234/v1` | LM Studio's OpenAI-compatible endpoint. |
 
 ## What you'll see

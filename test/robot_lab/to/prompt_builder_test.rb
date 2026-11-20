@@ -21,6 +21,20 @@ module RobotLab
         end
       end
 
+      def test_names_the_working_directory_as_the_project_root
+        stub_run do |run, _dir|
+          prompt = @builder.build(run, "", root: "/work/project")
+          assert_includes prompt, "## Working Directory"
+          assert_includes prompt, "You are working in `/work/project`"
+        end
+      end
+
+      def test_working_directory_defaults_to_the_current_directory
+        stub_run do |run, _dir|
+          assert_includes @builder.build(run, ""), "You are working in `#{Dir.pwd}`"
+        end
+      end
+
       def test_omits_verify_section_without_command
         stub_run do |run, _dir|
           refute_includes @builder.build(run, ""), "## Verification"

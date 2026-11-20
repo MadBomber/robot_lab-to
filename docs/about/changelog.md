@@ -8,6 +8,8 @@ All notable changes to `robot_lab-to` are documented here. The format is based o
 
 ### Fixed
 
+- **The iteration prompt names the working directory.** The only absolute path in the prompt was the notes file, so models inferred the project root from it and began each run reading paths that do not exist. A `## Working Directory` section now states the project root.
+- **Example helper loads local models with an explicit context window.** `examples/common.rb` ran `lms load <model>` with LM Studio's default context (8192 tokens for some models), which the loop overflows inside the first iteration. It now loads with `RLTO_CONTEXT_LENGTH` tokens (default 32768) and reloads a model that is loaded with less.
 - **The result and decision tools are exposed under the names the prompts use.** Every prompt told the model to call `submit_iteration_result` / `request_decision`, but the tools were registered as `robot_lab--to--tools--submit_result` and `robot_lab--to--tools--request_decision`, and the nudge message used a third name. Both tools now define `#name`.
 - **A failed commit is no longer recorded as an improvement.** After a `CommitFailedError` the orchestrator still reset the failure counter, stored the uncommitted score as the one to beat, closed decisions, and could end the run as "target met".
 - **Guard refusals name the real Edit parameter** (`old_text`, not `oldText`).
