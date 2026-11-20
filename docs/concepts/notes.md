@@ -9,7 +9,8 @@ This is what lets the loop make progress instead of repeating the same attempt.
 ## Who writes it, who reads it
 
 - **The orchestrator writes it.** After every iteration it appends an entry
-  (success, failure, verify-failure, or error).
+  (success, failure, verify-failure, no-improvement, error, or a raised
+  decision).
 - **The robot reads it.** The `PromptBuilder` embeds the current notes into the
   system prompt under a "Prior Work" section.
 - **The robot must not edit it.** The prompt explicitly tells the robot that
@@ -63,6 +64,7 @@ Objective: Migrate the codebase from Minitest to RSpec
 | `[VERIFY FAILED]` | Robot claimed success but the eval's gate failed (`--verify-command` / `--floor`) | summary, gate output |
 | `[NO IMPROVEMENT]` | Gate passed but the eval didn't rule it better than the parent commit (rolled back unless `--no-require-improvement`) | summary, score detail |
 | `[ERROR]` | An exception was raised during the iteration | error class and message |
+| `[DECISION]` | The robot raised a decision with `request_decision` | question, blocking yes/no, recommendation, decision file path |
 
 `[VERIFY FAILED]` and `[NO IMPROVEMENT]` come from the [Evals](evals.md) scoring
 gate, not the robot — see there for how `gate_ok` and `improved` are decided.

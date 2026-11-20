@@ -86,6 +86,16 @@ module RobotLab
         refute opts.key?(:version)
       end
 
+      # Regression: the help text named Ollama (retired; local models run through
+      # LM Studio's :lms provider), claimed --debug enabled JSONL logging to
+      # stderr (it keeps provider logging on), and omitted the prose eval.
+      def test_help_text_describes_current_behavior
+        out, = capture_io { assert_raises(SystemExit) { CLI.run(["--help"]) } }
+        refute_match(/ollama/i, out)
+        refute_match(/JSONL logging to stderr/, out)
+        assert_match(/code \| null \| prose/, out)
+      end
+
       def test_help_flag_exits
         assert_raises(SystemExit) { CLI.run(["--help"]) }
       end

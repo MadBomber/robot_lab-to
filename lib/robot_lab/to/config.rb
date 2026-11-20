@@ -8,9 +8,10 @@ module RobotLab
     #
     # Sources (lowest to highest precedence):
     #   1. Bundled defaults (config/defaults.yml)
-    #   2. User config file (~/.config/robot_lab/to.yml)
-    #   3. Environment variables (ROBOT_LAB_TO_*)
-    #   4. Constructor keyword arguments (CLI overrides)
+    #   2. User config file (~/.config/robot_lab_to/robot_lab_to.yml)
+    #   3. Project config file (./config/robot_lab_to.yml)
+    #   4. Environment variables (ROBOT_LAB_TO_*)
+    #   5. Constructor keyword arguments (CLI overrides)
     # :reek:TooManyInstanceVariables -- a flat CLI-override bag for ~24
     # independent settings; each ivar is genuinely one distinct setting.
     # :reek:InstanceVariableAssumption -- the defaults.yml-backed ivars

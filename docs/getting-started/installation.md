@@ -49,8 +49,9 @@ RobotLab / RubyLLM. Provide credentials the usual way for your provider:
 === "Local (LM Studio)"
 
     No API key required. See [LM Studio Setup](../local-models/lm-studio.md)
-    for the full configuration — require the ruby_llm-providers-lms gem, then
-    run with `--provider lms` and `--local-guards`.
+    for the full configuration — the ruby_llm-providers-lms gem is installed as
+    a `robot_lab` dependency and loaded on demand, so just run with
+    `--provider lms` and `--local-guards`.
 
 The default provider/model is `openai` / `gpt-5.5` (see
 [Settings Reference](../configuration/settings.md)).

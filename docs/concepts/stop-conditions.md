@@ -10,7 +10,7 @@ Five independent conditions can end a run; whichever trips first wins.
 | Max iterations | `--max-iterations N` | before & after each iteration | Stop after `N` iterations. |
 | Max tokens | `--max-tokens N` | before & after each iteration (and mid-stream when streaming) | Stop once cumulative tokens reach `N`. |
 | Consecutive failures | `--max-consecutive-failures N` | after each iteration | Abort after `N` failures in a row (default **3**). |
-| Plateau | `--stop-on-plateau N` | after each iteration | Abort after `N` iterations with no committed improvement (eval-gated runs only). |
+| Plateau | `--stop-on-plateau N` | after each iteration | Abort after `N` iterations in a row with no committed improvement. |
 | Stop-when | `--stop-when "<text>"` | after each *successful* iteration | The robot judges the condition; sets `should_fully_stop`. |
 
 There is a sixth, orchestrator-owned stop that isn't a `StopConditions` check at
@@ -44,21 +44,23 @@ limit.
 ### Consecutive failures
 
 Resets to zero on every successful, committed iteration; increments on every
-failure, verify-failure, or commit-failure. This is the safety net that stops a
+failure, verify-failure, commit-failure, or error. This is the safety net that stops a
 run that is going nowhere. The default is **3**.
 
 ### Plateau (no improvement)
 
-`--stop-on-plateau N` aborts once `N` consecutive iterations pass the eval's gate
-but fail to beat the parent commit's score (`iterations_since_improvement >= N`).
-It resets to zero on every committed improvement.
+`--stop-on-plateau N` aborts once `N` consecutive iterations end without a
+committed improvement (`iterations_since_improvement >= N`). Every
+non-committing outcome counts — a gate-passing change that didn't beat the parent
+commit's score, but also a reported failure, a gate failure, or an error. It
+resets to zero on every committed improvement.
 
 This is the **primary terminator for `Evals::Prose`**, which never sets a
 measurable `met_target` — a pairwise judge has no absolute bar to reach, only
 "better than last time." It's distinct from `--max-consecutive-failures`:
-plateau counts *valid, gate-passing work that just wasn't better* (including
+plateau also counts *valid, gate-passing work that just wasn't better* (including
 "same" verdicts, which are common and normal for prose), while consecutive
-failures counts the robot being genuinely broken (errors, gate failures, no
+failures counts only the robot being genuinely broken (errors, gate failures, no
 submit). Conflating the two would throttle legitimate exploration.
 
 ```bash
@@ -97,14 +99,15 @@ is rolled back.
 The exit summary header reports the reason:
 
 ```
-robot-to stopped — claude-sonnet-4-6 — 41m 08s
+robot-to stopped — claude-sonnet-4-6 — 41m 8s
 Reason: max iterations reached (30)
 ```
 
 Possible reasons include `max iterations reached (N)`, `max tokens reached (N)`,
 `N consecutive failures`, `plateau: N iterations without improvement`,
-`target met: <detail>`, `stop condition met: <text>`, a permanent error, or a
-fatal error.
+`target met: <detail>`, `stop condition met: <text>`, `awaiting human decision …`
+(a blocking decision in `--decision-mode exit`, or a `--decision-timeout`),
+`permanent error: …`, or `fatal: …`.
 
 ---
 

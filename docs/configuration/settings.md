@@ -1,9 +1,10 @@
 # Settings Reference
 
-Every `robot_lab-to` setting, its default, and what it controls. Each setting can
-be supplied via the user config file, an `ROBOT_LAB_TO_*` environment variable, a
-CLI flag, or a `RobotLab::To.run` keyword argument (see
-[the cascade](index.md#the-cascade)).
+Every `robot_lab-to` setting, its default, and what it controls. Every setting is
+a `RobotLab::To.run` keyword argument; settings with a bundled default can also be
+supplied via a config file or an `ROBOT_LAB_TO_*` environment variable, and those
+with a **CLI** line via a flag (see [the cascade](index.md#the-cascade)). Settings
+marked CLI-only have no config-file or environment-variable form.
 
 ## Model & provider
 
@@ -13,8 +14,9 @@ CLI flag, or a `RobotLab::To.run` keyword argument (see
 - **CLI:** `--provider NAME`
 
 The LLM provider, passed through to RobotLab / RubyLLM. Use `anthropic`,
-`openai`, etc. For **local LM Studio models**, require the
-ruby_llm-providers-lms gem and set this to `lms` — see
+`openai`, etc. For **local LM Studio models**, set this to `lms` (the
+ruby_llm-providers-lms gem is a `robot_lab` dependency and is loaded on
+demand) — see
 [LM Studio Setup](../local-models/lm-studio.md).
 
 ### `model`
@@ -94,7 +96,7 @@ counting the iteration as a failure.
 
 How many consecutive *errors* (exceptions, e.g. transient API failures) to retry
 before aborting. Retries use an interruptible exponential backoff
-(`60 × 2ⁿ` seconds).
+(`60 × 2ⁿ⁻¹` seconds: 60, 120, 240, …).
 
 ### `max_tool_rounds`
 
@@ -231,6 +233,40 @@ otherwise refuses `write` on a file that already exists and redirects to `edit`,
 which is unhelpful for a robot rewriting a whole prose draft each pass. See
 [Guardrails](../local-models/guardrails.md).
 
+## Decisions (human-in-the-loop)
+
+### `decisions_enabled`
+
+- **Default:** `true`
+- **CLI:** `--no-decisions` to disable
+
+Give the robot the `request_decision` tool so it can escalate a choice it should
+not make alone as a decision file under `runs/<run_id>/decisions/`.
+
+### `decision_mode`
+
+- **Default:** `wait`
+- **CLI:** `--decision-mode wait|exit`
+
+What a pending **blocking** decision does to the loop: `wait` polls the decision
+file until it is resolved; `exit` stops the run so it can be continued later with
+`robot-to --resume <run_id>`.
+
+### `decision_wait_poll`
+
+- **Default:** `30` (seconds)
+- **CLI:** `--decision-poll SECONDS`
+
+Seconds between polls of the decision files in `wait` mode.
+
+### `decision_timeout`
+
+- **Default:** *(unset — wait indefinitely)*
+- **CLI:** `--decision-timeout SECONDS`
+
+Maximum seconds to wait on a blocking decision in `wait` mode before the run
+stops with `awaiting human decision (timed out after Ns)`.
+
 ## Git & output
 
 ### `commit_format`
@@ -246,8 +282,8 @@ How commit messages are formatted:
 
 === "conventional"
 
-    `<type>(<scope>): <summary>` — `type`/`scope` come from the robot's result
-    (defaulting to `chore`). Follows [Conventional Commits](https://www.conventionalcommits.org/).
+    `chore: <summary>` — the submitted result carries no `type`/`scope`, so the
+    type is always `chore`. Follows [Conventional Commits](https://www.conventionalcommits.org/).
 
 ### `run_dir`
 

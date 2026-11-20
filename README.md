@@ -61,10 +61,13 @@ For software, "better" is measurable. Give the loop a **measure** command that
 prints a number (higher = better), and optionally a **target**:
 
 ```bash
+# --verify-command  floor: must stay green (correctness)
+# --measure         descent signal (higher = better)
+# --target          stop once the score reaches this
 robot-to "Raise parser coverage to 90%" \
-  --verify  "bundle exec rake test" \      # floor: must stay green (correctness)
-  --measure "bundle exec rake coverage" \  # descent signal (higher = better)
-  --target  90                             # stop once the score reaches this
+  --verify-command "bundle exec rake test" \
+  --measure "bundle exec rake coverage" \
+  --target 90
 ```
 
 An iteration is committed only if it **improves** the measured score *and* the
@@ -80,11 +83,14 @@ against the last committed version — an LLM's absolute scores are too noisy to
 descend, but "is B better than A?" is reliable:
 
 ```bash
+# --spec             the spec the judge measures against
+# --floor            optional mechanizable checks (links, TODOs)
+# --stop-on-plateau  stop after 3 drafts with no improvement
 robot-to "Write an opinionated guide to the Viable Systems Model" \
-  --eval  prose \
-  --spec  outline.md \          # the spec the judge measures against
-  --floor "rake docs:lint" \    # optional mechanizable checks (links, TODOs)
-  --stop-on-plateau 3           # stop after 3 drafts with no improvement
+  --eval prose \
+  --spec outline.md \
+  --floor "rake docs:lint" \
+  --stop-on-plateau 3
 ```
 
 A draft is committed only when the judge rules it **better** than its parent.
@@ -100,8 +106,9 @@ suite is deliberately *not* locked; adding tests is legitimate work.)
 
 ### Custom evals
 
-Point `--eval` at a strategy registered with `RobotLab::To.register_eval`, or in
-Ruby pass any object responding to `#score(context)` (or a proc) as `eval:`. See
+In Ruby, pass any object responding to `#score(context)` (or a proc) as `eval:`,
+or a Symbol registered with `RobotLab::To.register_eval`. (The CLI's `--eval`
+flag only resolves the built-ins `code`, `null`, and `prose`.) See
 `RobotLab::To::Evals::Base`.
 
 ---
@@ -237,7 +244,7 @@ RobotLab::To.run(
   `robot-to --resume <run_id>` continues a stopped run, so an external scheduler
   can drive it one commit per tick.
 - **Runs on local models** — with `--local-guards` it ships built-in file tools
-  and small-model guardrails to drive a local Ollama model offline.
+  and small-model guardrails to drive a local LM Studio model offline.
 
 ---
 
@@ -262,9 +269,8 @@ robot-to "Add a greet(name) method in greeter.rb" \
 `--local-guards` attaches built-in `read`/`write`/`edit`/`bash` tools plus
 guardrail hooks (`write-guard`, `read-before-edit`, `checkpoint`,
 `quality-monitor`) adapted from [`little-coder`](https://github.com/itayinbarr/little-coder)
-that catch the mistakes small models reliably make. `--no-stream` is required —
-Ollama suppresses tool calls when streaming, and `:openai` is used as the
-provider against Ollama's OpenAI-compatible endpoint.
+that catch the mistakes small models reliably make. The bundled examples run
+local models non-streaming (`--no-stream` / `stream: false`).
 
 See the [Local Models guide](https://madbomber.github.io/robot_lab-to/local-models/)
 for the full setup, including the RubyLLM configuration and model selection.
@@ -276,7 +282,7 @@ for the full setup, including the RubyLLM configuration and model selection.
 Settings cascade from lowest to highest precedence:
 
 ```
-bundled defaults → ~/.config/robot_lab/to.yml → ROBOT_LAB_TO_* env → CLI flags
+bundled defaults → ~/.config/robot_lab_to/robot_lab_to.yml → ./config/robot_lab_to.yml → ROBOT_LAB_TO_* env → CLI flags
 ```
 
 Run `robot-to --help` for all flags, or see the
@@ -305,18 +311,20 @@ bundled default and the user config file, but is overridden by a CLI flag.
 | `ROBOT_LAB_TO_DECISIONS_ENABLED` | Offer the `request_decision` tool | `true` |
 | `ROBOT_LAB_TO_DECISION_MODE` | On a blocking decision: `wait` or `exit` | `wait` |
 | `ROBOT_LAB_TO_DECISION_WAIT_POLL` | Seconds between polls while waiting | `30` |
+| `ROBOT_LAB_TO_DECISION_TIMEOUT` | Max seconds to wait on a blocking decision | *(unset — no limit)* |
 | `ROBOT_LAB_TO_DEBUG` | Keep verbose provider logging enabled | `false` |
 
 ```bash
-export ROBOT_LAB_TO_MODEL="gpt-oss:20b"
+export ROBOT_LAB_TO_PROVIDER=lms
+export ROBOT_LAB_TO_MODEL="qwen/qwen3.8-27b"
 export ROBOT_LAB_TO_LOCAL_GUARDS=true
 export ROBOT_LAB_TO_STREAM=false
 ```
 
 > **Per-run settings have no env var.** `--max-iterations`, `--max-tokens`,
-> `--stop-when`, `--verify-command`, and `--decision-timeout` are intentionally
-> CLI-only (they default to "unset / no limit") and must be passed on the command
-> line or to `RobotLab::To.run`.
+> `--stop-when`, `--verify-command`, and the eval flags (`--eval`, `--measure`,
+> `--target`, …) are intentionally CLI-only (they default to "unset / no limit")
+> and must be passed on the command line or to `RobotLab::To.run`.
 
 ### Provider credentials
 

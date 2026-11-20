@@ -15,7 +15,9 @@ single-purpose collaborator it drives.
 | `Orchestrator` | `orchestrator.rb` | The main loop: setup → iterate → eval-gated commit/rollback → stop → finalize. |
 | `PromptBuilder` | `prompt_builder.rb` | Builds each iteration's system prompt (objective, notes, task, submit, repair, score feedback, stop-when). |
 | `Run` | `run.rb` | Mutable run-state value object (iteration, counters, tokens, timing, paths, `last_score_value`, `iterations_since_improvement`). |
-| `SubmitResult` | `tools/submit_result.rb` | Tool the robot calls to report its result. |
+| `Tools::SubmitResult` | `tools/submit_result.rb` | Tool (`submit_iteration_result`) the robot calls to report its result. |
+| `Tools::RequestDecision` | `tools/request_decision.rb` | Tool (`request_decision`) the robot calls to escalate a choice to a human. |
+| `Decision` / `DecisionManager` | `decision.rb`, `decision_manager.rb` | Value object for one decision file; reads/writes/queries the files under `decisions/`. |
 | `IterationResult` | `iteration_result.rb` | `Data.define` value object for a submitted result. |
 | `CommitManager` | `commit_manager.rb` | All git operations via `Open3` (no shell interpolation); also diffs the working tree vs. a ref for `Evals::Prose`. |
 | `NotesManager` | `notes_manager.rb` | Reads/writes the cross-iteration `notes.md`. |
@@ -24,7 +26,7 @@ single-purpose collaborator it drives.
 | `Backoff` | `backoff.rb` | Interruptible exponential backoff for retries. |
 | `JsonlLogger` | `jsonl_logger.rb` | Append-only JSONL event log with a pre-init buffer. |
 | `ExitSummary` | `exit_summary.rb` | Prints the post-run report. |
-| `AtomicFile` | `atomic_file.rb` | Atomic writes/appends for `notes.md`. |
+| `AtomicFile` | `atomic_file.rb` | Atomic writes/appends for `notes.md`, `run.json`, and decision files. |
 
 ## Evals — orchestrator-owned scoring
 

@@ -250,6 +250,14 @@ module RobotLab
                         "submit tool must be attached via local_tools: so the model can call it"
       end
 
+      # Regression: the name the built robot exposes must be the one the system
+      # prompt (PromptBuilder) and the nudge message tell the model to call.
+      def test_built_robot_exposes_submit_tool_under_prompted_name
+        robot = built_robot(Tools::SubmitResult.new)
+        assert_includes robot.local_tools.map(&:name), "submit_iteration_result"
+        assert_includes Orchestrator::SUBMIT_NUDGE, "submit_iteration_result"
+      end
+
       def test_build_robot_attaches_only_submit_without_local_guards
         submit = Tools::SubmitResult.new
         assert_equal [submit], built_robot(submit, local_guards: false).local_tools
@@ -539,6 +547,41 @@ module RobotLab
           Dir.chdir(@tmpdir) { CommitFailOrchestrator.new("test", config).run }
         end
         assert_equal 1, commit_call
+      end
+
+      # Regression: a failed git commit used to be recorded as an improvement —
+      # record_improvement reset consecutive_failures to 0 right after
+      # attempt_commit bumped it, so a repo whose commits always fail never
+      # tripped max_consecutive_failures and ran to max_iterations.
+      def test_commit_failures_count_toward_consecutive_failures
+        write_path = File.join(@tmpdir, "change.rb")
+        fake_build = ->(**kw) { FakeRobot.new(kw[:local_tools].first, write_file: write_path) }
+        config = Config.new(max_iterations: 6, max_consecutive_failures: 2)
+        RobotLab.stub(:build, fake_build) do
+          Dir.chdir(@tmpdir) { CommitFailOrchestrator.new("test", config).run }
+        end
+        state = JSON.parse(File.read(File.join(@tmpdir, ".robot_lab_to", "runs", latest_run_id, "run.json")))
+        assert_equal 2, state["consecutive_failures"]
+        assert_equal 2, state["iteration"], "run must stop at max_consecutive_failures, not max_iterations"
+        assert_equal 0, state["commits"]
+      end
+
+      # Regression: with a measured eval, a failed commit must not become the
+      # score to beat, and must not end the run as "target met" with the work
+      # still uncommitted.
+      def test_commit_failure_does_not_record_score_or_meet_target
+        work  = File.join(@tmpdir, "work.txt")
+        score = File.join(@tmpdir, "score.txt")
+        fake  = ->(**kw) { ImprovingRobot.new(kw[:local_tools].first, work: work, score: score, counter: [9]) }
+        config = Config.new(max_iterations: 1, eval_measure: "cat #{score}", eval_target: 50.0)
+        RobotLab.stub(:build, fake) do
+          Dir.chdir(@tmpdir) { CommitFailOrchestrator.new("test", config).run }
+        end
+        state = JSON.parse(File.read(File.join(@tmpdir, ".robot_lab_to", "runs", latest_run_id, "run.json")))
+        assert_nil state["last_score_value"]
+        log = File.read(File.join(@tmpdir, ".robot_lab_to", "runs", latest_run_id, "run.log"))
+        refute_match(/target met/, log)
+        assert_match(/commit:failed/, log)
       end
 
       # ---- Decision files (async human-in-the-loop) --------------------------

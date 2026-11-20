@@ -6,6 +6,8 @@ The `robot-to` executable runs an autonomous loop toward an objective.
 
 ```
 robot-to [objective] [options]
+robot-to --resume RUN_ID [options]
+robot-to decisions [RUN_ID]
 ```
 
 The **objective** is a single argument (quote it). If omitted, `robot-to` reads
@@ -42,6 +44,11 @@ echo "Add request logging middleware and tests" | robot-to
 | `--protect-path` | `GLOB` (repeatable) | *none* | Lock a grader file from robot edits (always-on `GraderLock`). |
 | `--commit-format` | `default`\|`conventional` | `default` | Commit message format. |
 | `--run-dir` | `PATH` | `.robot_lab_to` | Directory for run state. |
+| `--resume` | `RUN_ID` | — | Resume a paused/stopped run; the objective and state are loaded from its `run.json` (no objective argument). |
+| `--decision-mode` | `wait`\|`exit` | `wait` | On a blocking decision: `wait` polls the decision file; `exit` stops the run for a later `--resume`. |
+| `--decision-timeout` | `SECONDS` | *no limit* | Max seconds to wait on a blocking decision (`wait` mode). |
+| `--decision-poll` | `SECONDS` | `30` | Seconds between polls while waiting on a decision (the `decision_wait_poll` setting). |
+| `--no-decisions` | — | decisions on | Don't give the robot the `request_decision` tool. |
 | `--local-guards` | — | off | Add built-in file tools + small-model guardrails. |
 | `--no-stream` | — | streaming on | Disable streaming (tokens are then accounted per iteration instead of per chunk). |
 | `--debug` | — | off | Keep verbose provider logging enabled. |
@@ -50,6 +57,15 @@ echo "Add request logging middleware and tests" | robot-to
 
 See the [Settings Reference](settings.md) for the full meaning of each option and
 its config-file / environment-variable equivalents.
+
+Option names must be spelled out where a prefix is ambiguous — `--verify` is
+rejected (`--verify-command` vs `--verify-timeout`).
+
+## The `decisions` subcommand
+
+`robot-to decisions [RUN_ID]` lists the pending decisions (and the resolved ones
+not yet consumed) for a run, with each decision file's path. Without `RUN_ID` it
+uses the most recent run under the configured `run_dir`.
 
 ## Examples
 
@@ -78,9 +94,9 @@ A scored run that descends toward a measured target (see [Evals](../concepts/eva
 
 ```bash
 robot-to "Raise parser coverage to 90%" \
-  --verify  "bundle exec rake test" \
+  --verify-command "bundle exec rake test" \
   --measure "bundle exec rake coverage" \
-  --target  90 \
+  --target 90 \
   --protect-path test/coverage_helper.rb
 ```
 

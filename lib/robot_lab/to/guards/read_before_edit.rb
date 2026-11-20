@@ -8,7 +8,7 @@ module RobotLab
     module Guards
       # Read-before-edit invariant, ported from little-coder read-guard-edit.
       #
-      # Small models fire Edit with an oldText they never actually saw, guessing
+      # Small models fire Edit with an old_text they never actually saw, guessing
       # the file's contents — which either fails the exact-match (wasted turn) or
       # matches the wrong span (silent corruption). We block any Edit whose
       # target wasn't Read this run.
@@ -71,8 +71,8 @@ module RobotLab
             <<~MSG
               File must be read before edit — #{resolved} has not been read in
               this session. Read #{resolved} first to get the exact current text
-              for oldText (whitespace and indentation must match exactly), then
-              issue the Edit. Include 2-3 surrounding lines so oldText is unique.
+              for old_text (whitespace and indentation must match exactly), then
+              issue the Edit. Include 2-3 surrounding lines so old_text is unique.
               Do NOT guess the file's contents.
             MSG
           end

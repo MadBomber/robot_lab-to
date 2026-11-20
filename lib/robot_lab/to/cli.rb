@@ -22,7 +22,7 @@ module RobotLab
         ["--verify-command CMD", String,
          "Command that must pass before a successful iteration is committed", :verify_command],
         ["--verify-timeout SECONDS", Integer, "Timeout for --verify-command (default: 600)", :verify_timeout],
-        ["--eval NAME", String, "Eval strategy: code | null (default: code when --verify-command set)", :eval],
+        ["--eval NAME", String, "Eval strategy: code | null | prose (default: code when verify/measure/target set)", :eval],
         ["--measure CMD", String,
          "Command printing a numeric score; higher is better (Evals::Code)", :eval_measure],
         ["--target FLOAT", Float, "Stop once the measured score reaches TARGET", :eval_target],
@@ -52,8 +52,8 @@ module RobotLab
       BOOLEAN_FLAGS = [
         ["--no-decisions", "Disable the request_decision tool for this run", :decisions_enabled, false],
         ["--local-guards", "Add built-in file tools + small-model guardrails (for local models)", :local_guards, true],
-        ["--no-stream", "Disable response streaming (required for local Ollama tool calls)", :stream, false],
-        ["--debug", "Enable verbose JSONL logging to stderr", :debug, true],
+        ["--no-stream", "Disable response streaming (tokens are then accounted per iteration)", :stream, false],
+        ["--debug", "Keep verbose provider (RubyLLM/RobotLab) logging enabled", :debug, true],
         ["--version", "Print version and exit", :version, true]
       ].freeze
 

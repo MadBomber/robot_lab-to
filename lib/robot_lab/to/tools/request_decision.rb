@@ -40,6 +40,13 @@ module RobotLab
         parameter :blocking, type: "boolean",
                          description: "true if work cannot correctly proceed until this is answered", required: false
 
+        # The short name the prompts refer to. Without this RubyLLM derives the
+        # namespaced "robot_lab--to--tools--request_decision".
+        TOOL_NAME = "request_decision"
+
+        # @return [String] the name the model calls this tool by
+        def name = TOOL_NAME
+
         def captured_requests
           @captured_requests ||= []
         end

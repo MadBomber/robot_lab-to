@@ -76,11 +76,13 @@ The orchestrator builds them per iteration and attaches them through RobotLab's
 `local_tools:`:
 
 ```ruby
-# only when local_guards is on
-[submit_tool, Tools::Read.new, Tools::Write.new, Tools::Edit.new, Tools::Bash.new]
+# submit tool first, then the decision tool (unless --no-decisions);
+# the four file tools only when local_guards is on
+[submit_tool, decision_tool, Tools::Read.new, Tools::Write.new, Tools::Edit.new, Tools::Bash.new]
 ```
 
-Without `--local-guards`, the robot gets only `submit_iteration_result` — you're
+Without `--local-guards`, the robot gets only `submit_iteration_result` (and
+`request_decision`, unless `--no-decisions`) — you're
 expected to supply your own tools (typical for cloud-model setups).
 
 The short names come from a small `FileTool` base class that overrides RubyLLM's

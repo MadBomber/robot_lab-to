@@ -13,7 +13,6 @@ bundle exec rake test          # all tests
 bundle exec rake test_verbose  # verbose
 asgard quality                 # all *_check gates in parallel (tests + coverage,
                                #   rubocop, flog, flay, reek, fasterer, typos, ...)
-bin/console                    # IRB shell
 ```
 
 ## Architecture
@@ -21,20 +20,20 @@ bin/console                    # IRB shell
 - **`Orchestrator`** — main loop: setup → iterate → **eval-gated** commit/rollback → stop
 - **`Evals`** — orchestrator-owned scorers (`Evals.build` factory + `register_eval` registry). `Base` returns a `Score(gate_ok, improved, met_target, value, detail, output)`. `Null` (default, unscored), `Code` (measured: verify floor + `--measure`/`--target`, composes `Verifier`), `Prose` (pairwise LLM judge vs. the parent commit + optional `--floor`). Commit requires `gate_ok && improved`; the run stops on `met_target`. `Base#protected_paths` feeds `GraderLock`.
 - **`Guards::GraderLock`** — always-on hook (independent of `--local-guards`) that refuses write/edit/bash on the eval's grader artifacts (spec + `--protect-path`); wired in `Orchestrator#build_robot`.
-- **`SubmitResultTool`** — `RobotLab::Tool` the robot must call to report its result
-- **`RequestDecisionTool`** — `RobotLab::Tool` the robot calls to escalate a choice (async HITL)
+- **`Tools::SubmitResult`** — `RobotLab::Tool` (exposed to the model as `submit_iteration_result`) the robot must call to report its result
+- **`Tools::RequestDecision`** — `RobotLab::Tool` (exposed as `request_decision`) the robot calls to escalate a choice (async HITL)
 - **`IterationResult`** — `Data.define` value object (success, summary, key_changes, key_learnings, should_fully_stop)
 - **`Decision`** — `Data.define` snapshot of one decision file (status, blocking, question, recommendation, resolution)
 - **`DecisionManager`** — read/write/query decision files; parallels `NotesManager`
 - **`CommitManager`** — all git ops via `Open3.capture3` (no shell interpolation); `checkout_branch` for resume
 - **`NotesManager`** — cross-iteration memory file (notes.md); orchestrator writes, robot reads
 - **`StopConditions`** — max_iterations, max_tokens, consecutive_failures, stop_when, **stop_on_plateau** (N iterations without improvement — the primary terminator for prose)
-- **`Backoff`** — exponential (60 × 2^n seconds) + fixed `sleep_seconds` for decision polling; interruptible via `interrupt!`
+- **`Backoff`** — exponential (60 × 2^(n−1) seconds: 60, 120, 240, …) + fixed `sleep_seconds` for decision polling; interruptible via `interrupt!`
 - **`PromptBuilder`** — builds per-iteration system prompt with objective, notes, resolved decisions, a **score-feedback section** (best score / target / plateau warning for scored runs), and conditional sections
 - **`JsonlLogger`** — JSONL event log with 100-event pre-init buffer
 - **`ExitSummary`** — post-run metrics table and next-step commands
 - **`CLI`** — `OptionParser`-based, binary `robot-to`; also `--resume` and the `decisions` subcommand
-- **`Config`** — `MywayConfig::Base`, file `~/.config/robot_lab/to.yml`, prefix `ROBOT_LAB_TO_*`
+- **`Config`** — `MywayConfig::Base` (`config_name :robot_lab_to`), user file `~/.config/robot_lab_to/robot_lab_to.yml`, prefix `ROBOT_LAB_TO_*`
 
 ## Key Pattern: Per-Iteration Robot
 
@@ -51,9 +50,9 @@ body. Status lifecycle: `pending` → `resolved` (human edits the file) → `clo
 (resolution injected into a committed iteration). A **blocking** decision gates
 the loop via `handle_blocking_decisions`: `decision_mode: wait` polls until
 resolved (`decision_wait_poll` / `decision_timeout`); `decision_mode: exit` stops
-with a `--resume` hint. See `decision_files_plan.md` in the parent workspace.
-(Note: the workspace's `hitl_plan.md` is a *separate*, synchronous terminal-gate
-design — not this feature.)
+with a `--resume` hint.
+(Note: the workspace's `ideas/hitl_plan.md` is a *separate*, synchronous
+terminal-gate design — not this feature.)
 
 ## Resume / cron
 
@@ -68,6 +67,7 @@ All run state lives in `.robot_lab_to/runs/<run_id>/` (added to `.git/info/exclu
 - `run.log` — JSONL event log
 - `run.json` — serialized `Run` snapshot (enables `--resume`)
 - `decisions/d-*.md` — decision files
+- `checkpoints/` — pre-edit file snapshots (only with `--local-guards`)
 
 ## Testing
 

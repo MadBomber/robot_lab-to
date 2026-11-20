@@ -69,9 +69,8 @@ LOCAL    = ENV.fetch("RLTO_LOCAL", "true") == "true"
 PROVIDER = ENV.fetch("RLTO_PROVIDER", LOCAL ? "lms" : "anthropic").to_sym
 MODEL    = ENV.fetch("RLTO_MODEL", LOCAL ? "qwen/qwen3.8-27b" : "claude-sonnet-4-6")
 
-# ruby_llm has no native "lms" adapter. "lms" is this example's friendly label for
-# "a local LM Studio model"; setup (common.rb) resolves it to the :lms provider
-# adapter pointed at LM Studio, starting the server and loading MODEL as needed.
+# "lms" is the ruby_llm-providers-lms gem's native LM Studio provider. setup
+# (common.rb) points the :lms provider at LM Studio, starting the server and loading MODEL as needed.
 # Everything passed to RobotLab uses the resolved provider; PROVIDER itself is
 # kept only for display.
 LLM_PROVIDER = setup(provider: PROVIDER, model: MODEL)
@@ -247,7 +246,7 @@ class FeedbackHook < RobotLab::Hook
       when "write" then ["📝", "write #{tidy(path)}"]
       when "edit"  then ["✏️ ", "edit #{tidy(path)}"]
       when "bash"  then ["💻", "bash: #{snippet(args['command'] || args[:command])}"]
-      when /submit_result/ then ["✅", "submit result: #{snippet(args['summary'] || args[:summary], 160)}"]
+      when /submit_iteration_result/ then ["✅", "submit result: #{snippet(args['summary'] || args[:summary], 160)}"]
       else ["🔧", name]
       end
     end
@@ -317,7 +316,7 @@ OBJECTIVE = <<~OBJ.strip
       ruby -Ilib -Itest test/roman_numeral_test.rb
 
   Work incrementally, one focused change per iteration, and do NOT edit the test
-  file. Call submit_result when the suite passes.
+  file. Call submit_iteration_result when the suite passes.
 OBJ
 
 clean_slate! # delete any project / .robot_lab_to left by a previous run

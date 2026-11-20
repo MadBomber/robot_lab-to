@@ -96,8 +96,9 @@ RobotLab::To.run(
 )
 ```
 
-`RobotLab::To.run(objective, **opts)` accepts the same options as the CLI flags
-(as keyword arguments). See the [Settings Reference](../configuration/settings.md).
+`RobotLab::To.run(objective, **opts)` accepts the same options as the CLI flags,
+as keyword arguments named after the settings (e.g. `--measure` is
+`eval_measure:`). See the [Settings Reference](../configuration/settings.md).
 
 ---
 

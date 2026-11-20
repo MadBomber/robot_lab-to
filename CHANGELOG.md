@@ -8,6 +8,13 @@ and [Conventional Commits](https://www.conventionalcommits.org/) (see `COMMITS.m
 
 ## [Unreleased]
 
+### Fixed
+
+- **The result and decision tools are exposed under the names the prompts use.** Every prompt told the model to call `submit_iteration_result` / `request_decision`, but the tools were registered as `robot_lab--to--tools--submit_result` and `robot_lab--to--tools--request_decision`, and the nudge message used a third name. Both tools now define `#name`.
+- **A failed commit is no longer recorded as an improvement.** After a `CommitFailedError` the orchestrator still reset the failure counter, stored the uncommitted score as the one to beat, closed decisions, and could end the run as "target met".
+- **Guard refusals name the real Edit parameter** (`old_text`, not `oldText`).
+- CLI help: `--eval` lists `prose`; `--no-stream` and `--debug` describe what they do. The unknown-eval error lists `prose`.
+
 ## [0.6.1] - 2026-11-19
 
 ### Changed
@@ -55,6 +62,49 @@ Released in lockstep with `robot_lab` core v0.2.8: this gem now resolves the rel
   `submit_iteration_result` tool was never attached to the robot. Now passed via
   `local_tools:`, with a regression test asserting the built robot exposes the
   tool.
+
+## [0.2.7]
+
+### Added
+
+- **Evals: orchestrator-owned scoring.** An `Eval` scores each iteration's
+  working tree and returns a `Score(gate_ok, improved, met_target, value, detail,
+  output)` — the deciding authority for commit/rollback and, for measurable
+  objectives, for when the run is done — instead of the robot's self-reported
+  `should_fully_stop`. See [Evals](docs/concepts/evals.md).
+    - `Evals::Code` — measured/deterministic: the existing `--verify-command`
+      floor plus an optional `--measure CMD` (a command printing a number,
+      higher is better) and `--target FLOAT`. Fully backward compatible: with no
+      `--measure`, behaves exactly like the original verify-only gate.
+    - `Evals::Prose` — judged/pairwise: an LLM judge (`--judge-model`, defaults
+      to `--model`) compares the working tree against the last committed
+      version and rules it `better`/`worse`/`same`; an optional `--floor CMD`
+      gates mechanizable checks before the judge is called.
+    - `Evals::Null` — the default when nothing is configured; preserves the
+      original "commit any reported success" behavior exactly.
+    - `--eval NAME`, `--stop-on-plateau N`, `--[no-]require-improvement`, and
+      Ruby-API extension points (`RobotLab::To.register_eval`, an instance
+      responding to `#score`, or a bare proc, all passable as `eval:`).
+    - `require_improvement` (default **true**) rolls back a gate-passing
+      iteration that doesn't beat the parent's score, keeping the branch
+      strictly descending.
+    - `--stop-on-plateau N` — a new stop condition: abort after `N` iterations
+      with no committed improvement. The primary terminator for `Evals::Prose`,
+      which never sets a measurable target.
+    - `PromptBuilder` **Score Feedback** section — for scored runs, tells each
+      iteration's robot the best score committed so far, the target, and
+      whether recent attempts plateaued, so each attempt is a hypothesis
+      against the target instead of a blind guess.
+- **`GraderLock` guard — grader lockdown.** Refuses `write`/`edit`/`bash` against
+  an eval's own grading criteria (`Evals::Prose#protected_paths`'s `--spec`, plus
+  any `--protect-path GLOB`), so the robot cannot "win" by rewriting the
+  criteria it is scored against. Unlike the small-model guardrails, it is always
+  installed when protected paths exist — independent of `--local-guards`. See
+  [Evals: Guarding the grader](docs/concepts/evals.md#guarding-the-grader-graderlock).
+- **`write_guard` config (Ruby-only, default `true`).** Lets a `--local-guards`
+  run opt out of `Guards::WriteGuard` (`write_guard: false`) so the robot can
+  freely overwrite a file it is iteratively rewriting whole, e.g. a prose draft.
+  See [Guardrails](docs/local-models/guardrails.md#write-guard).
 
 ## [0.1.0]
 

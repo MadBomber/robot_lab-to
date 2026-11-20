@@ -20,8 +20,9 @@ module RobotLab
       # proc, a registered symbol, then the named built-ins, then a default that
       # matches legacy behavior (Code when a verify command is set, else Null).
       #
-      # Phase 1 ships "code" and "null"; "prose", file paths, and "auto" arrive in
-      # later phases (they raise a clear error until then).
+      # The named built-ins are "code", "null", and "prose"; any other string
+      # (file paths, "auto", a registered name given as a String) raises a clear
+      # error.
       def self.build(config, git: CommitManager.new)
         chosen = config.respond_to?(:eval) ? config.eval : nil
         return chosen if chosen.respond_to?(:score)
@@ -75,7 +76,7 @@ module RobotLab
       def self.blank?(value) = presence(value).nil?
 
       def self.unknown_strategy(chosen)
-        "unknown eval strategy: #{chosen.inspect} (available: code, null, " \
+        "unknown eval strategy: #{chosen.inspect} (available: code, null, prose, " \
           "a symbol registered via RobotLab::To.register_eval, " \
           "an object responding to #score, or a proc)"
       end

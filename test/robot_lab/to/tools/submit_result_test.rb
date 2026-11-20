@@ -46,6 +46,13 @@ module RobotLab
           assert_match(/complete/i, result)
         end
 
+        # Regression: every prompt tells the robot to call
+        # `submit_iteration_result`, but the tool used to be exposed under
+        # RubyLLM's derived name "robot_lab--to--tools--submit_result".
+        def test_name_matches_the_name_the_prompts_use
+          assert_equal "submit_iteration_result", SubmitResult.new.name
+        end
+
         def test_each_instance_is_independent
           t1 = SubmitResult.new
           t2 = SubmitResult.new

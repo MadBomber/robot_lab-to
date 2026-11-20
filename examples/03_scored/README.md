@@ -18,10 +18,13 @@ For software, "better" is a number. Add a **measure** command (prints a number,
 higher = better) and a **target**:
 
 ```bash
+# --verify-command  floor: must stay green (correctness)
+# --measure         descent signal (higher = better)
+# --target          stop once the score reaches this
 robot-to "Raise parser test coverage to 90%" \
-  --verify  "bundle exec rake test" \      # floor: must stay green (correctness)
-  --measure "bundle exec rake coverage" \  # descent signal (higher = better)
-  --target  90                             # stop once the score reaches this
+  --verify-command "bundle exec rake test" \
+  --measure "bundle exec rake coverage" \
+  --target 90
 ```
 
 ```ruby
@@ -41,6 +44,16 @@ prompt now includes a **Score Feedback** section — "Best score committed so fa
 84.0 (target: 90.0)" and a plateau warning — so the robot's next attempt is a
 hypothesis against the target, not a blind guess.
 
+The runnable script beside this README, [`scored_run.rb`](scored_run.rb), is this
+recipe end to end: it seeds a failing 9-test Roman-numeral suite plus a grader
+(`score.rb`, which prints the number of passing tests) and runs with
+`eval_measure: "ruby score.rb"`, `eval_target: 9.0`, and
+`protect_paths: ["score.rb", "test/roman_numeral_test.rb"]`:
+
+```bash
+bundle exec ruby examples/03_scored/scored_run.rb
+```
+
 > The `measure` command just has to print a number. `rake coverage`, a benchmark
 > harness, `ruby -e 'puts passing_count'`, `grep -c` of a lint report — anything.
 
@@ -53,11 +66,14 @@ scores each draft with an LLM judge, comparing it *pairwise* against the last
 committed version (absolute LLM scores drift; "is B better than A?" is reliable):
 
 ```bash
+# --spec             the spec the judge measures against
+# --floor            optional mechanizable checks (links, TODOs)
+# --stop-on-plateau  stop after 3 drafts with no improvement
 robot-to "Write an opinionated guide to the Viable Systems Model" \
-  --eval  prose \
-  --spec  outline.md \          # the spec the judge measures against
-  --floor "rake docs:lint" \    # optional mechanizable checks (links, TODOs)
-  --stop-on-plateau 3           # stop after 3 drafts with no improvement
+  --eval prose \
+  --spec outline.md \
+  --floor "rake docs:lint" \
+  --stop-on-plateau 3
 ```
 
 A draft commits only when the judge rules it **better** than its parent. There's
@@ -96,10 +112,12 @@ RobotLab::To.run("Burn down the FIXMEs in lib/", eval: FixmeEval.new, max_iterat
 
 The `context` gives you `work_dir`, `previous_ref` (the parent commit), and
 `previous_value` (the last committed score) so you can compute `improved`
-yourself. For CLI use, register it and pass `--eval fixme`:
+yourself. To select it by name, register it and pass the Symbol as `eval:` (the
+CLI's `--eval` flag only resolves the built-ins `code`, `null`, and `prose`):
 
 ```ruby
 RobotLab::To.register_eval(:fixme) { |_config| FixmeEval.new }
+RobotLab::To.run("Burn down the FIXMEs in lib/", eval: :fixme, max_iterations: 15)
 ```
 
 ---

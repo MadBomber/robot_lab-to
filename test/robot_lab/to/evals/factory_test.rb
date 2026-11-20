@@ -63,6 +63,7 @@ module RobotLab
         def test_unknown_strategy_raises
           error = assert_raises(ArgumentError) { Evals.build(Config.new(eval: "banana")) }
           assert_match(/unknown eval strategy/, error.message)
+          assert_match(/code, null, prose/, error.message)
         end
       end
     end
