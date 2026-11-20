@@ -10,8 +10,8 @@ module RobotLab
 
       # :reek:TooManyStatements -- each line is one optional prompt section, in
       # the exact order they appear; a data-table would hide that ordering.
-      def build(run, notes_content, workspace: nil, pending_commit_failure: nil, resolved_decisions: [])
-        sections = [role_section(run), notes_section(run, notes_content)]
+      def build(run, notes_content, workspace: nil, pending_commit_failure: nil, resolved_decisions: [], root: Dir.pwd)
+        sections = [role_section(run), location_section(root), notes_section(run, notes_content)]
         sections << workspace_section(workspace) if workspace && !workspace.empty?
         sections << decisions_answered_section(resolved_decisions) if resolved_decisions && !resolved_decisions.empty?
         sections << task_section
@@ -127,6 +127,19 @@ module RobotLab
               #{@config.verify_command}
 
           Run it yourself and make it pass BEFORE calling submit_iteration_result.
+        MD
+      end
+
+      # Name the project root. Without it the only absolute path in the prompt is
+      # the notes file, and models infer a wrong root from that and read paths
+      # that do not exist.
+      def location_section(root)
+        <<~MD.chomp
+          ## Working Directory
+
+          You are working in `#{root}` — the project root. Every project file lives
+          under it; use paths relative to it (for example `lib/foo.rb`). The notes
+          file is stored elsewhere: its directory is NOT the project root.
         MD
       end
 

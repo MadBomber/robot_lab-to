@@ -243,9 +243,12 @@ puts "── Phase 1+2: ideation & planning (a network of robots) ──"
 use_real_openai!
 ideator, planner = build_reasoning_robots
 
+# A network task sends its robot no tools unless told to (tools: defaults to
+# :none), so each task opts in to the tools its robot was built with — the
+# Ideator's ask_user and the Planner's write/read.
 network = RobotLab.create_network(name: "ideate_and_plan") do
-  task :ideate, ideator, depends_on: :none
-  task :plan,   planner, depends_on: [:ideate]
+  task :ideate, ideator, depends_on: :none,     tools: :inherit
+  task :plan,   planner, depends_on: [:ideate], tools: :inherit
 end
 
 # Run inside the sandbox so the Planner's `write` lands in project/test/.
