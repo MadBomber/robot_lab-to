@@ -167,7 +167,7 @@ open decision, one commit at a time.
 
 ## Installation
 
-Requires **Ruby >= 4.0** and a git repository with at least one commit.
+Requires **Ruby >= 4.0.9** and a git repository with at least one commit.
 
 ```bash
 gem install robot_lab-to
